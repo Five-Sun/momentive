@@ -40,7 +40,7 @@ docs: spec-format 규칙 추가
 
 ## 브랜치
 
-경량 Git Flow — `develop`, `release`, `hotfix` 브랜치 없이 `main`에서 바로 작업 브랜치를 판다.
+`main` / `develop` 2-트랙 경량 Git Flow. `main`은 배포 트리거 전용(직접 푸시 금지, Git hook으로 배포 연동)이며, 모든 작업은 `develop`을 베이스로 브랜치를 판다.
 
 ```
 <타입>/<feature-slug>
@@ -48,13 +48,15 @@ docs: spec-format 규칙 추가
 
 - `<타입>`: 위 커밋 타입 10종 중 하나를 그대로 접두사로 사용
 - `<feature-slug>`: 해당 작업의 spec 파일(`specs/YYYY-MM-DD-<feature-slug>.md`)과 동일한 slug 사용 — spec, 브랜치, 커밋이 같은 이름으로 추적된다
+- 작업 브랜치는 `develop`에서 분기하고, PR도 `develop`을 대상으로 연다
 
 예: spec이 `specs/2026-08-11-user-signup.md`라면 브랜치는 `feat/user-signup`
 
-급한 수정도 별도 hotfix 브랜치 없이 `fix/<slug>`로 만들어 바로 main을 대상으로 PR을 연다.
+급한 수정도 별도 hotfix 브랜치 없이 `fix/<slug>`로 만들어 `develop`을 대상으로 PR을 연다.
 
 ## 병합
 
-- 항상 GitHub PR을 거친다 (로컬에서 바로 main에 merge하지 않는다)
-- 병합 방식은 **Squash merge** — main 로그는 브랜치당 커밋 1개로 정리됨
+- 항상 GitHub PR을 거친다 (로컬에서 바로 `develop`에 merge하지 않는다)
+- 병합 방식은 **Squash merge** — `develop` 로그는 브랜치당 커밋 1개로 정리됨
 - PR 병합 후 작업 브랜치는 삭제한다
+- `develop → main` 반영은 배포 시점에 별도로 진행 (릴리즈 PR 또는 직접 병합) — `main`에 대한 직접 `git push`는 금지
