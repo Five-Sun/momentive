@@ -1,0 +1,14 @@
+# 기본: 텍스트 파일은 커밋 시 LF로 정규화
+* text=auto eol=lf
+
+# 스크립트류는 항상 LF (Windows에서도)
+*.sh text eol=lf
+gradlew text eol=lf
+
+# Windows 전용 실행 파일은 항상 CRLF
+gradlew.bat text eol=crlf
+
+# 바이너리류는 줄바꿈 변환 대상 아님
+*.jar binary
+*.png binary
+*.jpg binary

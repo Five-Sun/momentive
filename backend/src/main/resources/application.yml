@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: momentive-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/momentive
+    username: momentive
+    password: momentive
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+server:
+  port: 8080

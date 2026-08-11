@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: momentive
+      POSTGRES_USER: momentive
+      POSTGRES_PASSWORD: momentive
+    ports:
+      - "5432:5432"
+    volumes:
+      - momentive-db:/var/lib/postgresql/data
+
+volumes:
+  momentive-db:
