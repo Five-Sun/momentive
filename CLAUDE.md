@@ -14,12 +14,14 @@
 - `backend/` — Spring Boot. 컨벤션은 `backend/CLAUDE.md` 참고
 - `frontend/` — Next.js. 컨벤션은 `frontend/CLAUDE.md` 참고
 - `.claude/rules/spec-format.md` — 스펙 작성 규격 (필수 준수)
+- `.claude/rules/plan-format.md` — 플랜 작성 규격 (필수 준수)
 - `.claude/rules/git.md` — 커밋 메시지·브랜치 규칙 (필수 준수)
 - `.claude/commands/grillme.md` — 요구사항 인터뷰 커맨드
 
 ## 작업 원칙
 1. 새 기능은 반드시 `/grillme`로 스펙부터 작성한다 (스펙 없이 바로 구현 금지)
 2. 스펙은 `.claude/rules/spec-format.md` 규격(파일명, frontmatter, 섹션 구성)을 그대로 따른다
+2-1. 스펙 확정 후 구현 전에는 `.claude/rules/plan-format.md` 규격으로 phase/step 플랜을 작성한다
 3. 스펙의 수용 기준(acceptance criteria)은 체크 가능한 형태로 작성한다
 4. 커밋 메시지와 브랜치명은 `.claude/rules/git.md`를 따른다
 5. 백엔드/프론트 관련 세부 컨벤션은 각 하위 CLAUDE.md를 따른다 — 여기 중복 기재하지 않는다
