@@ -38,6 +38,10 @@ fix(frontend): 장바구니 수량 음수 버그 수정
 docs: spec-format 규칙 추가
 ```
 
+### AI 사용 내역 미기재
+
+커밋 메시지와 PR 본문에 Claude/AI 에이전트 사용 내역을 남기지 않는다. `Co-Authored-By: Claude ...` 등 서명, "Generated with Claude Code" 같은 문구/배지를 포함하지 않는다.
+
 ## 브랜치
 
 `main` / `develop` 2-트랙 경량 Git Flow. `main`은 배포 트리거 전용(직접 푸시 금지, Git hook으로 배포 연동)이며, 모든 작업은 `develop`을 베이스로 브랜치를 판다.
