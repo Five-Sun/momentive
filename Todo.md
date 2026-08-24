@@ -12,9 +12,15 @@
 - [x] `frontend/CLAUDE.md`의 "스타일링 방식" 항목 채우기
 - [x] 스타일링 기반 기술 확정 — Tailwind CSS v4 (`@theme`), shadcn/ui 미사용, 자체 컴포넌트
 
-## 다음 기능
+## 상품 목록/상세 조회 + 홈 화면 (완료)
 
-- [x] `specs/2026-08-18-product-catalog.md` 기반 plan 작성 → `plans/2026-08-23-product-catalog-home.md` (status: planned)
+- [x] `specs/2026-08-18-product-catalog.md` 기반 plan 작성 → `plans/2026-08-23-product-catalog-home.md` (status: done)
 - [x] Phase 1: 백엔드 — Product 도메인 및 조회 API 구현
 - [x] Phase 2: 프론트 — 홈 화면 (목록 + 그리드 + 무한스크롤)
 - [x] Phase 3: 프론트 — 상품 상세 페이지
+- [x] `specs/2026-08-18-product-catalog.md`, `specs/2026-08-23-home-screen.md` — AC 전체 체크, status: implemented로 갱신
+- [x] `./dev.sh` — DB+백엔드+프론트 로컬 일괄 실행 스크립트 추가
+
+## 다음 기능
+
+- [ ] 다음 기능 grillme 필요 (장바구니 등 — `docs/domain-overview.md` 우선순위 참고)
