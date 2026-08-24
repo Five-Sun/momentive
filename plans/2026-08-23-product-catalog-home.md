@@ -48,20 +48,15 @@ backend/CLAUDE.md, frontend/CLAUDE.md의 컨벤션(레이어 구조, `CustomExce
 
 이 phase가 끝나면 `/`에 접속했을 때 헤더와 상품 그리드가 실제 API 데이터로 렌더링되고, 스크롤 시 다음 페이지가 이어붙으며, 로딩/빈 상태/이미지 실패가 모두 시각적으로 확인 가능한 상태가 된다.
 
-- [ ] `frontend/src/lib/api/products.ts` 등 API fetch wrapper 최초 도입 (`NEXT_PUBLIC_API_BASE_URL` 사용, 목록/상세 조회 함수 포함)
-- [ ] `frontend/src/app/page.tsx` 교체: 헤더(로고 + `SearchInput`(readOnly + 클릭 wrapper로 `/search` 이동) + 히어로 문구 + 장바구니 `IconButton`(클릭 시 `/cart` 이동, 대상 화면 없어 404 허용)) 구현
-- [ ] `frontend/src/components/commerce/ProductGridItem.tsx`(가칭) 구현: API 응답 1건을 받아 `ProductCard`가 요구하는 형태로 조립하는 래퍼
-  - `image`: `<img src=... onError={...}>`로 구성, 로드 실패 시 `surface-strong` 배경 + 상품명 텍스트 플레이스홀더로 교체
-  - `price`/`originalPrice`: 원화 포맷 문자열로 변환해 전달 (`discountPrice` 없으면 `originalPrice` 생략)
-  - `badge`: `soldOut`이면 `<Badge tone="soldout" label="품절">`, 아니면 `discountPrice` 있을 때만 `<Badge tone="sale" label="{할인율}%">`, 그 외 뱃지 없음
-  - `favorited`는 항상 `false` 고정, `onToggleFavorite` 미전달(클릭 무동작)
-  - `rating`은 고정 더미값(`<Rating value={4.5} />`)
-  - 카드 전체를 `<Link href="/products/{id}">`로 감싸 상세 페이지 이동 가능하도록 구성(Phase 3에서 실제 대상 페이지 완성 전까지는 404 허용)
-- [ ] 상품 그리드 구현: `ProductGridItem` 반복 렌더링, 반응형 열 수(모바일 2 ~ 데스크톱 5)
-- [ ] 스켈레톤 컴포넌트 구현 및 초기 로드/추가 페이지 로드 중 노출
-- [ ] 빈 상태 문구("아직 준비된 상품이 없어요" 등) 구현
-- [ ] IntersectionObserver 기반 커스텀 훅으로 무한스크롤 구현 (외부 라이브러리 없이, `page+1`/`size=20` 자동 fetch 후 이어붙임)
-- [ ] 검증: `npm run build`, `npm run lint` 통과, 브라우저로 그리드 반응형/무한스크롤/빈 상태/스켈레톤/검색바·장바구니 링크(404 허용)/하트 버튼 클릭 무동작 수동 확인 — home-screen spec AC 대부분 및 product-catalog spec AC 4, 5 충족
+- [x] `frontend/src/lib/api/products.ts` 등 API fetch wrapper 최초 도입 (`NEXT_PUBLIC_API_BASE_URL` 사용, 목록/상세 조회 함수 포함)
+- [x] `frontend/src/app/page.tsx` 교체: 헤더(로고 + 검색바(클릭 시 `/search` 이동) + 히어로 문구 + 장바구니 `IconButton`(클릭 시 `/cart` 이동, 대상 화면 없어 404 허용)) 구현
+- [x] `frontend/src/components/commerce/ProductGridItem.tsx` 구현: API 응답 1건을 받아 `ProductCard`가 요구하는 형태로 조립하는 래퍼 (이미지 실패 플레이스홀더, 원화 포맷, 뱃지 tone 매핑, favorited 고정 false, 더미 평점, 상세 페이지 Link 포함)
+- [x] 상품 그리드 구현: `ProductGridItem` 반복 렌더링, 반응형 열 수(모바일 2 ~ 데스크톱 5)
+- [x] 스켈레톤 컴포넌트 구현 및 초기 로드/추가 페이지 로드 중 노출
+- [x] 빈 상태 문구("아직 준비된 상품이 없어요" 등) 구현
+- [x] IntersectionObserver 기반 커스텀 훅으로 무한스크롤 구현 (외부 라이브러리 없이, `page+1`/`size=20` 자동 fetch 후 이어붙임)
+- [x] 검증: `npm run build`, `npm run lint` 통과, 브라우저로 그리드 반응형/무한스크롤/빈 상태/스켈레톤/검색바·장바구니 링크(404 허용)/하트 버튼 클릭 무동작 수동 확인 — home-screen spec AC 대부분 및 product-catalog spec AC 4, 5 충족
+  - 검증 중 발견: 프론트가 클라이언트 사이드에서 백엔드에 직접 fetch하므로 CORS 설정이 필요했음. 백엔드에 `WebConfig`(허용 오리진 `MOMENTIVE_CORS_ALLOWED_ORIGINS` 환경변수, 기본값 `http://localhost:3000`) 추가로 해결 (plan 범위를 벗어난 필수 보완 사항)
 
 ## Phase 3: 프론트 — 상품 상세 페이지
 
