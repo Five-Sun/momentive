@@ -2,7 +2,7 @@
 date: 2026-08-23
 feature: product-catalog-home
 spec: 2026-08-18-product-catalog.md
-status: planned
+status: done
 ---
 
 # 상품 목록 조회 → 홈 화면 플랜
@@ -62,7 +62,8 @@ backend/CLAUDE.md, frontend/CLAUDE.md의 컨벤션(레이어 구조, `CustomExce
 
 이 phase가 끝나면 홈 화면의 상품 카드를 클릭해 상세 페이지로 이동할 수 있고, 존재하지 않는 id는 404로 처리되어 목록→상세 전체 시나리오가 완결된다.
 
-- [ ] `frontend/src/app/products/[id]/page.tsx` 구현: 이미지 갤러리(전체 이미지, 등록 순서대로), 상품명/설명/가격(할인가 병기)/품절 여부 표시, 장바구니/구매 등 액션 버튼 없음
-- [ ] 존재하지 않는 id로 접근 시 Next.js `notFound()`를 이용한 404 처리
-- [ ] Phase 2의 `ProductGridItem`에 이미 연결된 `<Link href="/products/{id}">`가 실제 상세 페이지로 정상 도달하는지 확인(연결 자체는 Phase 2에서 완료, 이 phase는 대상 페이지 완성)
-- [ ] 검증: `npm run build` 통과, 브라우저로 정상 상세 페이지 및 존재하지 않는 id 접근 시 404 수동 확인 — product-catalog spec AC 6, home-screen spec 마지막 AC 충족
+- [x] `frontend/src/app/products/[id]/page.tsx` 구현: 이미지 갤러리(전체 이미지, 등록 순서대로), 상품명/설명/가격(할인가 병기)/품절 여부 표시, 장바구니/구매 등 액션 버튼 없음
+- [x] 존재하지 않는 id로 접근 시 Next.js `notFound()`를 이용한 404 처리
+- [x] Phase 2의 `ProductGridItem`에 이미 연결된 `<Link href="/products/{id}">`가 실제 상세 페이지로 정상 도달하는지 확인(연결 자체는 Phase 2에서 완료, 이 phase는 대상 페이지 완성)
+- [x] 검증: `npm run build` 통과, 브라우저로 정상 상세 페이지 및 존재하지 않는 id 접근 시 404 수동 확인 — product-catalog spec AC 6, home-screen spec 마지막 AC 충족
+  - 구현 중 추가: 깨진 이미지 URL도 목록 화면과 동일하게 플레이스홀더로 대체하도록 `ProductImage` 클라이언트 컴포넌트 분리 (spec에 명시된 요구는 아니었으나 목록 화면과의 일관성을 위해 반영)

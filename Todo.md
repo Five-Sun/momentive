@@ -17,4 +17,4 @@
 - [x] `specs/2026-08-18-product-catalog.md` 기반 plan 작성 → `plans/2026-08-23-product-catalog-home.md` (status: planned)
 - [x] Phase 1: 백엔드 — Product 도메인 및 조회 API 구현
 - [x] Phase 2: 프론트 — 홈 화면 (목록 + 그리드 + 무한스크롤)
-- [ ] Phase 3: 프론트 — 상품 상세 페이지
+- [x] Phase 3: 프론트 — 상품 상세 페이지
