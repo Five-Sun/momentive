@@ -20,6 +20,7 @@
 - [x] Phase 3: 프론트 — 상품 상세 페이지
 - [x] `specs/2026-08-18-product-catalog.md`, `specs/2026-08-23-home-screen.md` — AC 전체 체크, status: implemented로 갱신
 - [x] `./dev.sh` — DB+백엔드+프론트 로컬 일괄 실행 스크립트 추가
+- [x] `feat/home-screen` 브랜치 푸시 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/1 (머지 대기)
 
 ## 다음 기능
 
