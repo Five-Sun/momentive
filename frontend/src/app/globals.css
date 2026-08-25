@@ -101,8 +101,10 @@ body {
 }
 
 /* Composite type tokens — kept as utility classes since Tailwind's font-* utilities
-   don't compose size/weight/leading in one token the way the design system's did. */
-@layer utilities {
+   don't compose size/weight/leading in one token the way the design system's did.
+   Layered as `components` (lower cascade priority than Tailwind's `utilities` layer)
+   so a combined utility like `font-bold` can still override the shorthand's weight. */
+@layer components {
   .text-display-lg {
     font: 600 30px/1.25 var(--font-display);
   }

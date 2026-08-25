@@ -47,6 +47,10 @@ echo "[3/3] 프론트(Next.js) 기동... (로그: $FRONTEND_LOG)"
 if [ ! -f "$FRONTEND_DIR/.env.local" ]; then
   cp "$FRONTEND_DIR/.env.local.example" "$FRONTEND_DIR/.env.local"
 fi
+if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
+  echo "  node_modules 없음 — npm install 실행..."
+  (cd "$FRONTEND_DIR" && npm install)
+fi
 (cd "$FRONTEND_DIR" && npm run dev) > "$FRONTEND_LOG" 2>&1 &
 
 echo "  프론트 준비 대기 중 (http://localhost:3000)..."

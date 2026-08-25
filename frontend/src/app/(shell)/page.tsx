@@ -67,7 +67,7 @@ export default function Home() {
         <p className="text-display-md text-ink">소중한 순간을 위한 옷</p>
       </header>
 
-      <section className="flex-1 px-4 pb-12">
+      <section className="flex-1 px-4 pb-20">
         {initialLoadDone && products.length === 0 && !loading ? (
           <div className="flex flex-col items-center justify-center gap-2 py-24 text-center">
             <p className="text-title text-ink">아직 준비된 상품이 없어요</p>
@@ -75,7 +75,7 @@ export default function Home() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-4">
               {products.map((product) => (
                 <ProductGridItem key={product.id} product={product} />
               ))}
