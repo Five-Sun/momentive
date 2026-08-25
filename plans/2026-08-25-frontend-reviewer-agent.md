@@ -2,7 +2,7 @@
 date: 2026-08-25
 feature: frontend-reviewer-agent
 spec: 2026-08-25-frontend-reviewer-agent.md
-status: in_progress
+status: done
 ---
 
 # frontend-reviewer 에이전트 플랜
@@ -30,9 +30,9 @@ status: in_progress
 
 이 phase가 끝나면, 작성된 에이전트가 실제로 spec의 시나리오/에러 케이스대로 동작함을 실호출로 확인한 상태가 된다. `plans/2026-08-25-app-shell.md`(이미 `done`)를 테스트 대상으로 사용한다.
 
-- [ ] 존재하지 않는 feature-slug로 호출 → "매칭 plan 없음, spec/plan부터 진행 안내" 동작 확인
-- [ ] `app-shell`의 존재하지 않는 phase 번호(예: Phase 99)로 호출 → "존재하는 phase 목록 안내" 동작 확인
-- [ ] "frontend-reviewer로 app-shell Phase 2 검증해줘" 실호출 → 모든 step이 이미 체크된 상태이므로 재검증 의도 확인 질문이 뜨는지 확인
-- [ ] 재검증 진행 확인 후, `GlobalBottomNav.tsx`/`(shell)/layout.tsx` 등 대상 정적 리뷰 + `npm run build`/`npm run lint` 실행 + `ReportFindings` 보고까지 한 사이클이 정상 동작하는지 확인
-- [ ] dry run 종료 후 `git status`/`git diff`로 소스 코드가 전혀 수정되지 않았음을 확인 (부수효과 없음 검증)
+- [x] 존재하지 않는 feature-slug로 호출 → "매칭 plan 없음, spec/plan부터 진행 안내" 동작 확인
+- [x] `app-shell`의 존재하지 않는 phase 번호(예: Phase 99)로 호출 → "존재하는 phase 목록 안내" 동작 확인
+- [x] "frontend-reviewer로 app-shell Phase 2 검증해줘" 실호출 → 모든 step이 이미 체크된 상태이므로 재검증 의도 확인 질문이 뜨는지 확인
+- [x] 재검증 진행 확인 후, `GlobalBottomNav.tsx`/`(shell)/layout.tsx` 등 대상 정적 리뷰 + `npm run build`/`npm run lint` 실행 + 보고까지 한 사이클이 정상 동작하는지 확인 — 최초 dry-run에서 `ReportFindings` 툴이 커스텀 서브에이전트에 실제로 부여되지 않는 문제 발견 → `specs/2026-08-26-frontend-reviewer-agent.md` + `plans/2026-08-25-frontend-reviewer-agent-fix-1.md`로 대화형 구조화 요약 방식으로 수정 후 재확인 완료
+- [x] dry run 종료 후 `git status`/`git diff`로 소스 코드가 전혀 수정되지 않았음을 확인 (부수효과 없음 검증)
 </content>

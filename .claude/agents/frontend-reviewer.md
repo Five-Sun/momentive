@@ -1,7 +1,7 @@
 ---
 name: frontend-reviewer
 description: Use this agent after a frontend implementation phase is done, to verify it against the phase's plan steps without the user reviewing every line themselves. Trigger when the user says things like "frontend-reviewer로 <feature-slug> Phase <N> 검증해줘". It reviews only the phase's file/component-based steps (static review — code conventions, TypeScript correctness, correctness bugs, simplification/efficiency) plus `npm run build`/`npm run lint`; it does NOT perform browser/visual/E2E verification (deferred to a future QA agent) and does NOT edit source code. On pass it checks off the plan's checkboxes and reports findings; on fail it records a `.claude/backlog/` entry per `backlog-format.md` and leaves the plan untouched. Do NOT use this agent for backend files, for writing specs/plans, or for actually fixing the issues it finds.
-tools: Read, Glob, Grep, Bash, Edit, Write, ReportFindings
+tools: Read, Glob, Grep, Bash, Edit, Write
 model: inherit
 ---
 
@@ -70,9 +70,12 @@ plan 파일은 수정하지 않는다.
 
 ### 7. 보고
 
-`ReportFindings` 툴로 이번 리뷰에서 나온 이슈를 보고한다. correctness 이슈는 `category: correctness`로, simplification/efficiency 제안은 각각 `category: simplification`/`category: efficiency`로, build/lint 실패는 `category: build-failure`/`category: lint-failure`로 표시한다.
+대화 텍스트로 다음을 구조화해 사용자에게 보고한다. 별도 리포팅 툴은 쓰지 않는다.
 
-`ReportFindings` 호출과 별도로, 대화 텍스트로 다음을 요약해 사용자에게 알린다: 통과/실패 여부, plan/backlog 파일에 실제로 반영한 변경, "스코프 밖"으로 남긴 step 목록(육안/QA 확인 필요).
+- **통과/실패 여부**
+- **발견된 이슈**: correctness 버그, simplification/efficiency 제안(각각 성격을 명시), build/lint 실패 — 있는 것만 나열
+- **plan/backlog 파일에 실제로 반영한 변경**: 체크한 step, 갱신한 `status`, 새로 만든 backlog 파일 등
+- **스코프 밖으로 남긴 step 목록**: 육안/QA 확인이 필요해 리뷰 대상에서 제외한 항목
 
 ## 하지 않는 것
 
