@@ -7,8 +7,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProductImage {
 
     @Id
@@ -25,24 +30,9 @@ public class ProductImage {
     @Column(name = "display_order", nullable = false)
     private Integer displayOrder;
 
-    protected ProductImage() {
-    }
-
     public ProductImage(Product product, String url, Integer displayOrder) {
         this.product = product;
         this.url = url;
         this.displayOrder = displayOrder;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public Integer getDisplayOrder() {
-        return displayOrder;
     }
 }

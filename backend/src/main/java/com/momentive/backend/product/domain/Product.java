@@ -11,8 +11,13 @@ import jakarta.persistence.OrderBy;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Product {
 
     @Id
@@ -40,9 +45,6 @@ public class Product {
     @OrderBy("displayOrder asc")
     private List<ProductImage> images = new ArrayList<>();
 
-    protected Product() {
-    }
-
     public Product(String name, String description, Integer price, Integer discountPrice, Boolean soldOut) {
         this.name = name;
         this.description = description;
@@ -54,38 +56,6 @@ public class Product {
 
     public void addImage(String url, int displayOrder) {
         images.add(new ProductImage(this, url, displayOrder));
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Integer getPrice() {
-        return price;
-    }
-
-    public Integer getDiscountPrice() {
-        return discountPrice;
-    }
-
-    public Boolean getSoldOut() {
-        return soldOut;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public List<ProductImage> getImages() {
-        return images;
     }
 
     public String getThumbnailUrl() {
