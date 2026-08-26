@@ -37,6 +37,22 @@
 - [x] 버그 발견 및 수정: `ReportFindings` 툴이 frontmatter에 선언돼 있어도 커스텀 서브에이전트 호출 시 실제로 제공되지 않음 (플랫폼 제약으로 추정) → `specs/2026-08-26-frontend-reviewer-agent.md`(supersedes 2026-08-25) + `plans/2026-08-25-frontend-reviewer-agent-fix-1.md`로 대화형 구조화 요약 방식으로 전환, 에이전트 정의 수정 후 재검증 완료
 - [ ] 관찰됨(미해결, 우선순위 낮음): 재검증 시나리오를 두 번 호출했을 때 한 번은 "재검증 의도 확인" 질문을 했고 한 번은 확인 없이 바로 진행함 — 프롬프트 표현 차이에 따른 비결정적 동작으로 보임. 실사용에 지장 없으면 당장 안 고쳐도 됨
 
+## 앱 전체 재디자인 (진행중)
+
+배경: Claude Design 핸드오프 프로젝트(claude.ai/design `f05007c9-8716-43a5-b06f-1982d8a1b595`, `design_handoff_momentive_app/`)를 근거로 홈/카테고리/검색/상품상세/장바구니/위시리스트/마이 7개 화면 전체를 재구현. `specs/2026-08-26-app-redesign.md`(supersedes `2026-08-23-home-screen.md`), `plans/2026-08-26-app-redesign.md`(status: in_progress). 브랜치 `feat/app-redesign`.
+
+- [x] grillme 세션 (Q1~Q12 결정 — UI 재구현 우선, category/sort만 백엔드 확장, 나머지는 localStorage 목업, 결제/Auth/Review/Coupon 백엔드는 범위 밖)
+- [x] Phase 0: 공통 기반 — 백엔드 category/sort 파라미터, 아이콘 세트(lucide-react) 교체, 디자인 토큰 대조 확인(변경 불필요), BottomNav 5탭 전환, localStorage 유틸(`frontend/src/lib/storage/`)
+- [x] Phase 1: 홈 — 프로모 배너/인기 랭킹/카테고리 칩 필터/최근 본 상품 섹션
+- [x] Phase 2: 카테고리 + 검색 — 자동완성/최근검색어/인기검색어/정렬(`FilterSheet`). 검증 중 correctness 버그 발견·수정(`.claude/backlog/2026-08-26-app-redesign-phase2-01.md`)
+- [x] Phase 3: 상품상세 — 사이즈 셀렉터/사이즈가이드·배송안내 아코디언/`ReviewCard`/위시 토글/장바구니 담기/최근 본 상품 기록
+- [x] Phase 0~3 커밋 및 `origin/feat/app-redesign` 푸시 (커밋 `713eaa2`)
+- [ ] Phase 4: 장바구니 (`/cart`) — `ShippingProgress` 이식, 수량/삭제, 쿠폰 토글, 결제 버튼 무동작 처리
+- [ ] Phase 5: 위시리스트 (`/wishlist`)
+- [ ] Phase 6: 마이 (`/mypage`) + 스펙 전체 수용 기준 최종 회귀 검증
+- [ ] **7개 phase 전부 끝난 뒤 브라우저 시각 확인 일괄 진행** — 지금 구현/리뷰 에이전트들 도구에 브라우저 자동화가 없어 전부 코드 레벨 검증만 하고 넘어간 상태. `./dev.sh`로 로컬 띄워서 BottomNav 5탭, 화면 전환, localStorage 유지 등을 직접 눈으로 확인 필요
+- [ ] 알려진 한계(참고만, 당장 조치 불필요): 시드 상품 15개 대부분이 의류가 아니라 `category`가 ACCESSORY로 쏠림(KNIT/INNERWEAR 상품 없음) — 실제 의류 상품 추가 전까지 카테고리 필터가 밋밋해 보일 수 있음
+
 ## 다음 기능
 
-- [ ] 다음 기능 grillme 필요 (장바구니 등 — `docs/domain-overview.md` 우선순위 참고)
+- [ ] 위 앱 리디자인(Phase 4~6) 마무리 후, 그 다음 기능은 별도 grillme 필요 (실제 결제/Order, 로그인/Auth 등 — 이번 리디자인에서 범위 밖으로 명시적으로 미룬 도메인들이 우선순위 후보)
