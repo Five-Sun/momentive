@@ -1,5 +1,6 @@
 package com.momentive.backend.product.dto;
 
+import com.momentive.backend.product.domain.Category;
 import com.momentive.backend.product.domain.Product;
 import java.util.List;
 
@@ -10,6 +11,7 @@ public record ProductDetailResponse(
         Integer price,
         Integer discountPrice,
         Boolean soldOut,
+        Category category,
         List<ProductImageResponse> images
 ) {
 
@@ -21,6 +23,7 @@ public record ProductDetailResponse(
                 product.getPrice(),
                 product.getDiscountPrice(),
                 product.getSoldOut(),
+                product.getCategory(),
                 product.getImages().stream().map(ProductImageResponse::from).toList()
         );
     }

@@ -3,6 +3,8 @@ package com.momentive.backend.product.domain;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -38,6 +40,10 @@ public class Product {
     @Column(nullable = false)
     private Boolean soldOut;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Category category;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -45,12 +51,13 @@ public class Product {
     @OrderBy("displayOrder asc")
     private List<ProductImage> images = new ArrayList<>();
 
-    public Product(String name, String description, Integer price, Integer discountPrice, Boolean soldOut) {
+    public Product(String name, String description, Integer price, Integer discountPrice, Boolean soldOut, Category category) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.discountPrice = discountPrice;
         this.soldOut = soldOut;
+        this.category = category;
         this.createdAt = LocalDateTime.now();
     }
 

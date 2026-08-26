@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Heart } from "lucide-react";
 
 interface ProductCardProps {
   image: ReactNode;
@@ -33,7 +34,7 @@ export function ProductCard({
               favorited ? "text-brand-pink-active" : "text-muted"
             }`}
           >
-            ♥
+            <Heart className="h-4 w-4" fill={favorited ? "currentColor" : "none"} />
           </button>
         </div>
       </div>

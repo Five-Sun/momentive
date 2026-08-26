@@ -1,13 +1,15 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { Grid2x2, Heart, Home, Search, User } from "lucide-react";
 import { BottomNav } from "./BottomNav";
 
 const TABS = [
-  { key: "home", icon: "⌂", label: "홈", href: "/" },
-  { key: "search", icon: "⌕", label: "검색", href: "/search" },
-  { key: "cart", icon: "🛍", label: "장바구니", href: "/cart" },
-  { key: "mypage", icon: "👤", label: "마이페이지", href: "/mypage" },
+  { key: "home", icon: <Home className="h-5 w-5" />, label: "홈", href: "/" },
+  { key: "category", icon: <Grid2x2 className="h-5 w-5" />, label: "카테고리", href: "/category" },
+  { key: "search", icon: <Search className="h-5 w-5" />, label: "검색", href: "/search" },
+  { key: "wishlist", icon: <Heart className="h-5 w-5" />, label: "위시", href: "/wishlist" },
+  { key: "mypage", icon: <User className="h-5 w-5" />, label: "마이", href: "/mypage" },
 ] as const;
 
 export function GlobalBottomNav() {

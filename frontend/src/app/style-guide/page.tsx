@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ArrowLeft, Heart, MoreHorizontal, Home, Search, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/core/Button";
 import { Badge } from "@/components/core/Badge";
 import { Chip } from "@/components/core/Chip";
@@ -55,9 +56,15 @@ export default function StyleGuidePage() {
       </Section>
 
       <Section title="IconButton">
-        <IconButton>←</IconButton>
-        <IconButton active>♥</IconButton>
-        <IconButton variant="filled">⋯</IconButton>
+        <IconButton>
+          <ArrowLeft className="h-5 w-5" />
+        </IconButton>
+        <IconButton active>
+          <Heart className="h-5 w-5" fill="currentColor" />
+        </IconButton>
+        <IconButton variant="filled">
+          <MoreHorizontal className="h-5 w-5" />
+        </IconButton>
       </Section>
 
       <Section title="Badge">
@@ -115,10 +122,10 @@ export default function StyleGuidePage() {
         <div className="w-90 max-w-full">
           <BottomNav
             items={[
-              { key: "home", icon: "⌂", label: "홈" },
-              { key: "search", icon: "⌕", label: "검색" },
-              { key: "wishlist", icon: "♥", label: "위시" },
-              { key: "cart", icon: "🛍", label: "장바구니" },
+              { key: "home", icon: <Home className="h-5 w-5" />, label: "홈" },
+              { key: "search", icon: <Search className="h-5 w-5" />, label: "검색" },
+              { key: "wishlist", icon: <Heart className="h-5 w-5" />, label: "위시" },
+              { key: "cart", icon: <ShoppingBag className="h-5 w-5" />, label: "장바구니" },
             ]}
             activeKey={tab}
             onSelect={setTab}
