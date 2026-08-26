@@ -8,6 +8,10 @@
 - 백엔드: Spring Boot, Railway 배포, 서브도메인(api.모멘티브도메인)
 - 혼자 개발 + AI 에이전트 팀으로 구현. 비용(API 호출량, 인프라) 항상 염두에 둘 것
 
+## 로컬 개발 환경 실행
+- `./dev.sh` — DB(docker compose) + 백엔드 + 프론트를 한 번에 기동. Ctrl+C로 전체 종료
+- 로그는 `.dev-logs/backend.log`, `.dev-logs/frontend.log`
+
 ## 저장소 구조
 - `specs/` — grillme로 뽑은 기능 스펙 (기능 단위, 프론트+백엔드 통합)
 - `plans/` — 스펙 기반 phase/step 플랜

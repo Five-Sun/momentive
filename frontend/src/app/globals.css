@@ -1,26 +1,138 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand */
+  --color-brand-pink: #f57ea0;
+  --color-brand-pink-active: #e8547f;
+  --color-brand-pink-deep: #d6396a;
+  --color-brand-pink-soft: #fce0ea;
+  --color-brand-pink-tint: #fff2f6;
+  --color-brand-yellow: #fef8c4;
+  --color-brand-yellow-soft: #fffdf0;
+
+  /* Ink & neutrals */
+  --color-ink: #33242b;
+  --color-body: #5c454f;
+  --color-muted: #93818a;
+  --color-muted-soft: #c4aeb7;
+  --color-hairline: #f3e2e9;
+  --color-hairline-soft: #f9edf1;
+  --color-border-strong: #e3c3d0;
+
+  /* Surface */
+  --color-canvas: #fffbfc;
+  --color-surface-soft: #fdf1f4;
+  --color-surface-card: #ffffff;
+  --color-surface-strong: #fbe4ea;
+
+  /* On-color */
+  --color-on-brand: #2b2621;
+  --color-on-dark: #ffffff;
+
+  /* Semantic */
+  --color-success: #5a8a6b;
+  --color-error: #c1543b;
+  --color-sale: #e8547f;
+
+  --color-scrim: rgba(51, 36, 43, 0.5);
+
+  /* Radius */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+
+  /* Shadow */
+  --shadow-card: 0 1px 2px rgba(43, 38, 33, 0.04), 0 6px 16px rgba(43, 38, 33, 0.08);
+  --shadow-float: 0 4px 10px rgba(43, 38, 33, 0.06), 0 12px 28px rgba(43, 38, 33, 0.12);
+
+  /* Spacing — only values missing from Tailwind's default 4px-step scale */
+  --spacing-section: 64px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-brand-pink: var(--color-brand-pink);
+  --color-brand-pink-active: var(--color-brand-pink-active);
+  --color-brand-pink-deep: var(--color-brand-pink-deep);
+  --color-brand-pink-soft: var(--color-brand-pink-soft);
+  --color-brand-pink-tint: var(--color-brand-pink-tint);
+  --color-brand-yellow: var(--color-brand-yellow);
+  --color-brand-yellow-soft: var(--color-brand-yellow-soft);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-ink: var(--color-ink);
+  --color-body: var(--color-body);
+  --color-muted: var(--color-muted);
+  --color-muted-soft: var(--color-muted-soft);
+  --color-hairline: var(--color-hairline);
+  --color-hairline-soft: var(--color-hairline-soft);
+  --color-border-strong: var(--color-border-strong);
+
+  --color-canvas: var(--color-canvas);
+  --color-surface-soft: var(--color-surface-soft);
+  --color-surface-card: var(--color-surface-card);
+  --color-surface-strong: var(--color-surface-strong);
+
+  --color-on-brand: var(--color-on-brand);
+  --color-on-dark: var(--color-on-dark);
+
+  --color-success: var(--color-success);
+  --color-error: var(--color-error);
+  --color-sale: var(--color-sale);
+  --color-scrim: var(--color-scrim);
+
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-float: var(--shadow-float);
+
+  --spacing-section: var(--spacing-section);
+
+  --font-display: var(--font-jua), var(--font-noto-sans-kr), sans-serif;
+  --font-body: var(--font-noto-sans-kr), -apple-system, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+/* Composite type tokens — kept as utility classes since Tailwind's font-* utilities
+   don't compose size/weight/leading in one token the way the design system's did.
+   Layered as `components` (lower cascade priority than Tailwind's `utilities` layer)
+   so a combined utility like `font-bold` can still override the shorthand's weight. */
+@layer components {
+  .text-display-lg {
+    font: 600 30px/1.25 var(--font-display);
+  }
+  .text-display-md {
+    font: 400 24px/1.3 var(--font-display);
+  }
+  .text-title {
+    font: 700 18px/1.35 var(--font-body);
+  }
+  .text-title-sm {
+    font: 600 16px/1.4 var(--font-body);
+  }
+  .text-body {
+    font: 400 15px/1.55 var(--font-body);
+  }
+  .text-body-sm {
+    font: 400 13px/1.5 var(--font-body);
+  }
+  .text-caption {
+    font: 500 12px/1.4 var(--font-body);
+  }
+  .text-price {
+    font: 700 17px/1.3 var(--font-body);
+  }
+  .text-button {
+    font: 600 15px/1 var(--font-body);
+  }
+  .text-tag {
+    font: 600 11px/1 var(--font-body);
+  }
 }

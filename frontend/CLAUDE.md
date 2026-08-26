@@ -10,6 +10,9 @@ Next.js. Vercel 배포 (Root Directory: `frontend/`, Ignored Build Step으로 �
 - 컴포넌트 디렉토리 구조
 - API 호출 방식 (fetch wrapper 등)
 - 스타일링 방식
+  - Tailwind CSS v4. 브랜드 색상/타이포/radius/shadow 토큰은 `globals.css`의 `@theme`로 정의하고, 브랜드 컨셉(색상/톤/무드)은 `../design.md` 참고
+  - 컴포넌트는 `src/components/<category>/` (core, commerce, forms, navigation, feedback 등) 아래 배치
+  - `/style-guide` 페이지에서 구현된 컴포넌트 실물 확인 가능
 
 ## 검증 방법
 - `npm run build`로 빌드 확인
