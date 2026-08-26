@@ -29,7 +29,10 @@ export function ProductCard({
         {badge && <div className="absolute top-2.5 left-2.5">{badge}</div>}
         <div className="absolute top-2 right-2">
           <button
-            onClick={onToggleFavorite}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite?.();
+            }}
             className={`shadow-card flex h-8 w-8 items-center justify-center rounded-full bg-white/90 ${
               favorited ? "text-brand-pink-active" : "text-muted"
             }`}
