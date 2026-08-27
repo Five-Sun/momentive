@@ -1,17 +1,17 @@
 # Plan 작성 규격
 
-스펙(`specs/`)이 확정된 뒤, 구현에 들어가기 전 `grillme`/`grilling` 세션으로 사용자 컨펌을 받고 작성하는 plan 문서의 규격이다. 아래 필드/섹션 정의를 스키마로 취급하고 정확히 따른다.
+스펙(`docs/specs/`)이 확정된 뒤, 구현에 들어가기 전 `grillme`/`grilling` 세션으로 사용자 컨펌을 받고 작성하는 plan 문서의 규격이다. 아래 필드/섹션 정의를 스키마로 취급하고 정확히 따른다.
 
 플랜은 스펙과 달리 "phase/step 단위 진행상황"을 담는 문서다. 내용(phase/step 구성)은 확정 후 불변이지만, 진행상황을 나타내는 필드(`status`, step 체크박스)는 실행하면서 갱신한다.
 
 ## 파일 위치 및 이름
 
 ```
-plans/YYYY-MM-DD-<feature-slug>.md
+docs/plans/YYYY-MM-DD-<feature-slug>.md
 ```
 
 - `YYYY-MM-DD`: plan이 컨펌된 날짜
-- `<feature-slug>`: 기반 스펙과 동일한 slug (`specs/YYYY-MM-DD-<feature-slug>.md`)
+- `<feature-slug>`: 기반 스펙과 동일한 slug (`docs/specs/YYYY-MM-DD-<feature-slug>.md`)
 - 스펙 1개 = 플랜 파일 1개가 원칙. 하나의 플랜 파일 안에 여러 phase를 섹션으로 담는다.
 
 ### 수정 계획 (relates_to)
@@ -19,7 +19,7 @@ plans/YYYY-MM-DD-<feature-slug>.md
 플랜 확정 후 실행하다가 발견된 이슈나 추가로 필요해진 작업은 원본 플랜을 수정하지 않고 별도의 "수정 계획" 파일로 분리한다. 원본을 대체(supersede)하는 것이 아니라 원본에 딸린 추가 작업이므로, 파일명과 `relates_to` 필드로 원본과의 관계를 명시한다.
 
 ```
-plans/YYYY-MM-DD-<feature-slug>-fix-N.md
+docs/plans/YYYY-MM-DD-<feature-slug>-fix-N.md
 ```
 
 - `N`: 1부터 증가하는 순번 (동일 원본 플랜에 대한 수정 계획이 여러 개면 `-fix-1`, `-fix-2`, ...)

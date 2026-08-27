@@ -37,7 +37,7 @@ spec `2026-08-26-plan-runner-cycle.md`을 기반으로, (1) e2e-tester 에이전
 
 이 phase가 끝나면 세 산출물(e2e-tester, reviewer 체이닝, plan-runner)이 실제로 문서 규격을 만족하고 상호 정합적으로 연결되는지 최소 시나리오로 확인된 상태가 된다. 실제 dev.sh 서버 기동 없이도 확인 가능한 범위(문서 정합성, 절차 시뮬레이션)와 서버가 필요한 범위(dev-browser 실제 실행)를 구분해 진행한다.
 
-- [x] e2e-format.md 규격대로 임시 `e2e/` 케이스 문서 하나를 실제로 만들어 형식을 검증 (실제 서버 필요 시 절차만 시뮬레이션하고 결과를 기록) — 스크래치패드에 home-screen 기반 샘플 4개 시나리오 작성 중 규격 구멍 3건(셀렉터 전략, feature 필드 기준, 사전조건 충돌 처리) 발견 및 e2e-format.md 보강
+- [x] e2e-format.md 규격대로 임시 `docs/e2e/` 케이스 문서 하나를 실제로 만들어 형식을 검증 (실제 서버 필요 시 절차만 시뮬레이션하고 결과를 기록) — 스크래치패드에 home-screen 기반 샘플 4개 시나리오 작성 중 규격 구멍 3건(셀렉터 전략, feature 필드 기준, 사전조건 충돌 처리) 발견 및 e2e-format.md 보강
 - [x] backend-reviewer/frontend-reviewer/plan-runner 세 에이전트 정의를 상호 참조 관계(체이닝 조건, 파일 경로, 호출 규칙)가 실제로 맞물리는지 교차 검토 — 불일치 2건(환경 실패 판단 문구, backlog 경로 보고 명시성) 발견 및 수정
 - [x] dry run 결과를 정리해 사용자에게 보고
 </content>

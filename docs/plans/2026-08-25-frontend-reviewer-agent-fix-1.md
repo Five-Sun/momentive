@@ -10,7 +10,7 @@ relates_to: 2026-08-25-frontend-reviewer-agent.md
 
 ## 개요
 
-원본 플랜(`plans/2026-08-25-frontend-reviewer-agent.md`) Phase 2 dry-run을 실행하던 중, `ReportFindings` 툴이 frontmatter에 선언돼 있어도 커스텀 서브에이전트 호출 시 실제로는 제공되지 않는 문제를 발견했다. `specs/2026-08-26-frontend-reviewer-agent.md`로 스펙을 수정(대화형 구조화 요약으로 보고 방식 변경)했으므로, 이 fix 플랜에서 에이전트 정의 파일을 그에 맞게 고치고 dry-run으로 최종 확정한다.
+원본 플랜(`docs/plans/2026-08-25-frontend-reviewer-agent.md`) Phase 2 dry-run을 실행하던 중, `ReportFindings` 툴이 frontmatter에 선언돼 있어도 커스텀 서브에이전트 호출 시 실제로는 제공되지 않는 문제를 발견했다. `docs/specs/2026-08-26-frontend-reviewer-agent.md`로 스펙을 수정(대화형 구조화 요약으로 보고 방식 변경)했으므로, 이 fix 플랜에서 에이전트 정의 파일을 그에 맞게 고치고 dry-run으로 최종 확정한다.
 
 ## Phase 1: 에이전트 정의 수정 + 최종 dry-run 확정
 

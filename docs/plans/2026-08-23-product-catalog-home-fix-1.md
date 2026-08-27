@@ -10,9 +10,9 @@ relates_to: 2026-08-23-product-catalog-home.md
 
 ## 개요
 
-원본 플랜(`plans/2026-08-23-product-catalog-home.md`, status: done)은 plan-runner/e2e-tester 체계(`specs/2026-08-26-plan-runner-cycle.md`, `plans/2026-08-26-plan-runner-cycle.md`)가 도입되기 전에 완료되어 `## Phase <N>: E2E 검증` phase가 없다. 오늘 `e2e-tester` 에이전트를 처음 실사용 검증하기 위해, 이미 완료된 이 기능에 대해 dev-browser 기반 E2E 검증 phase를 사후에 추가한다. 원본 plan의 Phase 1~3(백엔드 API, 홈 화면, 상품 상세)은 이미 done이므로 새 코드 phase는 필요 없고, 이 fix plan은 E2E 검증 phase 하나만 담는다.
+원본 플랜(`docs/plans/2026-08-23-product-catalog-home.md`, status: done)은 plan-runner/e2e-tester 체계(`docs/specs/2026-08-26-plan-runner-cycle.md`, `docs/plans/2026-08-26-plan-runner-cycle.md`)가 도입되기 전에 완료되어 `## Phase <N>: E2E 검증` phase가 없다. 오늘 `e2e-tester` 에이전트를 처음 실사용 검증하기 위해, 이미 완료된 이 기능에 대해 dev-browser 기반 E2E 검증 phase를 사후에 추가한다. 원본 plan의 Phase 1~3(백엔드 API, 홈 화면, 상품 상세)은 이미 done이므로 새 코드 phase는 필요 없고, 이 fix plan은 E2E 검증 phase 하나만 담는다.
 
-1차 근거 spec은 `specs/2026-08-18-product-catalog.md`(목록→클릭→상세→404 핵심 흐름의 원본)이며, `specs/2026-08-23-home-screen.md`(그리드/무한스크롤 등 시각·인터랙션 디테일)도 함께 참고한다.
+1차 근거 spec은 `docs/specs/2026-08-18-product-catalog.md`(목록→클릭→상세→404 핵심 흐름의 원본)이며, `docs/specs/2026-08-23-home-screen.md`(그리드/무한스크롤 등 시각·인터랙션 디테일)도 함께 참고한다.
 
 ## Phase 1: E2E 검증
 

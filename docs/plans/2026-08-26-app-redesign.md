@@ -9,9 +9,9 @@ status: done
 
 ## 개요
 
-`specs/2026-08-26-app-redesign.md`를 기반으로, Claude Design 핸드오프(`design_handoff_momentive_app/`, `DesignSync` MCP `get_file`/`list_files`, projectId `f05007c9-8716-43a5-b06f-1982d8a1b595`)를 근거 자료로 삼아 홈·카테고리·검색·상품상세·장바구니·위시리스트·마이 7개 화면을 재구현한다. 플랜 문서 자체에는 핸드오프 파일 내용을 옮겨적지 않는다 — 각 phase를 실행하는 구현 에이전트가 필요한 시점에 `DesignSync get_file`로 직접 읽는다 (핵심 파일: `README.md`, `ui_kits/mobile-app/index.html`, `tokens/*.css`, `components/<category>/<Name>.{jsx,d.ts,prompt.md}`).
+`docs/specs/2026-08-26-app-redesign.md`를 기반으로, Claude Design 핸드오프(`design_handoff_momentive_app/`, `DesignSync` MCP `get_file`/`list_files`, projectId `f05007c9-8716-43a5-b06f-1982d8a1b595`)를 근거 자료로 삼아 홈·카테고리·검색·상품상세·장바구니·위시리스트·마이 7개 화면을 재구현한다. 플랜 문서 자체에는 핸드오프 파일 내용을 옮겨적지 않는다 — 각 phase를 실행하는 구현 에이전트가 필요한 시점에 `DesignSync get_file`로 직접 읽는다 (핵심 파일: `README.md`, `ui_kits/mobile-app/index.html`, `tokens/*.css`, `components/<category>/<Name>.{jsx,d.ts,prompt.md}`).
 
-`.claude/backlog/`를 훑었으나 `feature: app-redesign` 또는 `category: frontend`/`category: backend` 관련 과거 실패 항목은 없었다 (신규 feature이므로 예상된 결과). 따라서 이번 플랜에 반영할 기존 재발 방지 체크리스트는 없고, 대신 이번 실행에서 발견되는 실패는 `.claude/backlog/` 규격에 맞춰 각 phase 담당 reviewer가 새로 기록해야 한다.
+`docs/backlog/`를 훑었으나 `feature: app-redesign` 또는 `category: frontend`/`category: backend` 관련 과거 실패 항목은 없었다 (신규 feature이므로 예상된 결과). 따라서 이번 플랜에 반영할 기존 재발 방지 체크리스트는 없고, 대신 이번 실행에서 발견되는 실패는 `docs/backlog/` 규격에 맞춰 각 phase 담당 reviewer가 새로 기록해야 한다.
 
 Phase 순서는 스펙의 "사용자 시나리오" 순서를 따르되, 화면 간 의존관계를 반영해 다음과 같이 조정했다.
 
@@ -96,7 +96,7 @@ Phase 순서는 스펙의 "사용자 시나리오" 순서를 따르되, 화면 �
 
 ## Phase 6: 마이 (`/mypage`) + 전체 회귀 검증
 
-이 phase가 끝나면, `/mypage`가 완성되고 스펙(`specs/2026-08-26-app-redesign.md`)의 수용 기준 전체가 최종적으로 재검증된 상태가 된다.
+이 phase가 끝나면, `/mypage`가 완성되고 스펙(`docs/specs/2026-08-26-app-redesign.md`)의 수용 기준 전체가 최종적으로 재검증된 상태가 된다.
 
 - [x] `frontend/src/app/(shell)/mypage/page.tsx` 신규: 프로필(하드코딩 아바타 이미지 + 닉네임) — 아바타는 실제 이미지 에셋이 없어 `surface-strong` 배경의 원형 placeholder로 처리
 - [x] 주문/위시/장바구니 카운트 요약 바: 위시·장바구니는 Phase 0 유틸 기준 실카운트, 주문은 0 고정

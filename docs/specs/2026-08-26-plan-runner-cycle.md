@@ -19,7 +19,7 @@ status: confirmed
 
 ### In Scope
 - `e2e-tester` 에이전트 신설: dev-browser(https://github.com/sawyerhood/dev-browser) 스크립트 기반으로 유저 플로우 시나리오를 실행하고 pass/fail을 판정
-- `e2e/YYYY-MM-DD-<feature-slug>.md` 케이스 문서 규격 신설 (`.claude/rules/e2e-format.md`)
+- `docs/e2e/YYYY-MM-DD-<feature-slug>.md` 케이스 문서 규격 신설 (`.claude/rules/e2e-format.md`)
 - `backend-reviewer`/`frontend-reviewer`에 "마지막 코드 phase 통과 시 e2e-tester 체이닝" 조건 추가
 - `plan-runner` 에이전트 신설: plan의 phase를 순회하며 구현 서브에이전트 스폰 → reviewer 호출 → 실패 시 backlog 기반 fix 서브에이전트 재스폰 → 재검증까지 자동 순환
 - phase당 최대 시도 횟수 상한과 초과 시 사용자 에스컬레이션
@@ -39,11 +39,11 @@ status: confirmed
 4. 각 phase마다: 구현 서브에이전트를 스폰해 step을 구현시킨 뒤, step의 파일 경로를 보고 backend-reviewer/frontend-reviewer(필요 시 둘 다)를 호출한다.
 5. reviewer가 pass면 다음 phase로 진행한다.
 6. 마지막 코드 phase의 reviewer가 pass하면, reviewer가 plan의 다음 섹션이 `## Phase <N+1>: E2E 검증`임을 확인하고 e2e-tester를 체이닝 호출한다.
-7. e2e-tester는 로컬 서버 헬스체크 후 spec 기반으로 `e2e/` 케이스 문서를 생성하고 dev-browser로 실행, 결과를 판정한다.
+7. e2e-tester는 로컬 서버 헬스체크 후 spec 기반으로 `docs/e2e/` 케이스 문서를 생성하고 dev-browser로 실행, 결과를 판정한다.
 8. 모든 phase(E2E 포함)가 pass하면 plan-runner가 사용자에게 "전체 통과" 결과를 보고한다.
 
 ### 시나리오 2 — 리뷰 실패 후 자동 수정 (수정 루프)
-1. 시나리오 1의 4번 단계에서 reviewer가 fail을 반환하고 `.claude/backlog/`에 실패 항목을 기록한다.
+1. 시나리오 1의 4번 단계에서 reviewer가 fail을 반환하고 `docs/backlog/`에 실패 항목을 기록한다.
 2. plan-runner는 이 backlog 파일 경로와 spec/plan 파일 경로를 프롬프트에 담아 fix 서브에이전트를 새로 스폰한다.
 3. fix 서브에이전트는 backlog의 "조치" 섹션을 근거로 코드를 수정하고, backlog 파일의 "조치" 섹션에 실제 수정 내용을 덧붙인다.
 4. plan-runner가 같은 phase에 대해 reviewer를 재호출한다.
@@ -76,7 +76,7 @@ status: confirmed
 
 ### 데이터 모델
 
-**`e2e/YYYY-MM-DD-<feature-slug>.md`** (신규 문서 유형, 규격은 `.claude/rules/e2e-format.md`에 별도 정의)
+**`docs/e2e/YYYY-MM-DD-<feature-slug>.md`** (신규 문서 유형, 규격은 `.claude/rules/e2e-format.md`에 별도 정의)
 - frontmatter: `date`, `feature`, `spec`(근거 spec 파일명)
 - 본문: 시나리오별 섹션 — 시나리오 설명 + dev-browser에 전달할 JS 스크립트 코드 블록 + pass/fail 판정 기준
 - 재작업 시 새 날짜로 새 파일 추가, 기존 파일은 보존(병렬 축적, `supersedes` 없음)
@@ -91,10 +91,10 @@ status: confirmed
 ## 수용 기준 (Acceptance Criteria)
 
 - [ ] `.claude/rules/e2e-format.md` 규격 문서가 작성되어 있다
-- [ ] `.claude/agents/e2e-tester.md` 에이전트가 존재하고, spec 기반으로 `e2e/` 케이스 문서를 생성한다
+- [ ] `.claude/agents/e2e-tester.md` 에이전트가 존재하고, spec 기반으로 `docs/e2e/` 케이스 문서를 생성한다
 - [ ] e2e-tester가 로컬 서버 헬스체크(백엔드 `/health`, 프론트 3000 포트)를 수행하고, 서버 미기동 시 실행 없이 안내 후 중단한다
 - [ ] e2e-tester가 dev-browser로 시나리오를 실행하고, assertion 실패 또는 런타임 에러를 모두 실패로 판정한다
-- [ ] e2e-tester가 실패 시 `.claude/backlog/`에 `category: test`로 기록하고, 스크린샷을 `.dev-logs/e2e-failures/`에 저장해 경로를 backlog에 남긴다
+- [ ] e2e-tester가 실패 시 `docs/backlog/`에 `category: test`로 기록하고, 스크린샷을 `.dev-logs/e2e-failures/`에 저장해 경로를 backlog에 남긴다
 - [ ] e2e-tester가 통과한 시나리오 step만 plan 체크박스를 갱신한다
 - [ ] `backend-reviewer`/`frontend-reviewer`가 마지막 코드 phase를 pass 처리할 때, plan의 다음 섹션이 `## Phase <N+1>: E2E 검증`이면 e2e-tester를 체이닝 호출한다
 - [ ] `.claude/agents/plan-runner.md` 에이전트가 존재하고, plan의 phase를 순서대로 순회하며 구현→리뷰→(실패 시 fix)→재검증 루프를 수행한다

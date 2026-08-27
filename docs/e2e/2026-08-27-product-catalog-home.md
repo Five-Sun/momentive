@@ -7,7 +7,7 @@ plan: 2026-08-23-product-catalog-home-fix-1.md
 
 # 상품 목록/상세 조회 (홈 화면) E2E 케이스
 
-`specs/2026-08-18-product-catalog.md`(API/데이터 계약)와 `specs/2026-08-23-home-screen.md`(레이아웃/무한스크롤 디테일)를 근거로 도출한 시나리오다.
+`docs/specs/2026-08-18-product-catalog.md`(API/데이터 계약)와 `docs/specs/2026-08-23-home-screen.md`(레이아웃/무한스크롤 디테일)를 근거로 도출한 시나리오다.
 
 ## 데이터 사전조건 메모
 
