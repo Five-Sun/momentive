@@ -36,7 +36,7 @@ Bash로 `dev-browser --version` (또는 `which dev-browser`)를 실행해 CLI가
 
 Bash로 아래를 확인한다.
 
-- 백엔드: `curl -sf http://localhost:8080/health` (또는 프로젝트에 정의된 헬스 엔드포인트)
+- 백엔드: `curl -sf http://localhost:8081/health` (또는 프로젝트에 정의된 헬스 엔드포인트)
 - 프론트: `curl -sf http://localhost:3000` (응답 존재 여부만 확인)
 
 둘 중 하나라도 실패하면, 케이스를 생성하거나 실행하지 않고 즉시 중단한다. 이건 코드 결함이 아니라 환경 문제이므로 실패로 판정하되 backlog에는 기록하지 않는다. 보고는 반드시 아래 리터럴 문구로 시작한다 — plan-runner 등 호출자가 이 정확한 문구로 "코드 fix 루프를 돌리면 안 되는 환경 문제"임을 판별한다:
