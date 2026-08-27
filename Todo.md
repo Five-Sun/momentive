@@ -54,7 +54,7 @@
   - 검증 중 발견·해결한 이슈 2건: (1) 로컬 개발 DB(`backend_momentive-db` 볼륨)에 flyway 이력상 시드가 성공했다고 나오는데 실제 `product` 테이블이 비어있던 문제 → 볼륨 재생성으로 해결 (원인 불명, 코드 문제 아님). (2) 이 검증 세션(샌드박스)이 Google Fonts(`fonts.gstatic.com`) 요청에 간헐적으로 실패해 홈 500 에러 발생 → `layout.tsx`를 시스템 폰트로 임시 치환해 검증 후 원본으로 완전 원복(`git diff` 없음 확인). 실제 Vercel 배포 환경 코드는 변경 없음
   - Phase 5 구현 중 발견한 실제 버그도 수정 완료: `ProductCard`의 하트 버튼 클릭이 카드 클릭(라우팅)으로 버블링되던 문제 → `e.stopPropagation()` 추가
 - [x] plan `status`를 `done`으로, 스펙(`specs/2026-08-26-app-redesign.md`) 수용 기준 전체 체크 및 `status`를 `implemented`로 갱신 완료
-- [x] `feat/app-redesign` 커밋(Phase 4~6분) 및 푸시, `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/3 (머지 대기)
+- [x] `feat/app-redesign` 커밋(Phase 4~6분) 및 푸시, `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/3, `develop`에 머지 완료
 - [ ] 알려진 한계(참고만, 당장 조치 불필요): 시드 상품 15개 대부분이 의류가 아니라 `category`가 ACCESSORY로 쏠림(KNIT/INNERWEAR 상품 없음) — 실제 의류 상품 추가 전까지 카테고리 필터가 밋밋해 보일 수 있음
 
 ## plan-runner 자동 사이클 (완료)
@@ -74,5 +74,5 @@
 
 ## 다음 기능
 
-- [ ] PR #3(`feat/app-redesign` → `develop`) 리뷰 후 머지 (PR #2는 이미 머지됨 — 이 merge로 Todo.md 충돌 해소)
-- [ ] 위 앱 리디자인 머지 후, 다음 기능은 별도 grillme 필요 (실제 결제/Order, 로그인/Auth 등 — 이번 리디자인에서 범위 밖으로 명시적으로 미룬 도메인들이 우선순위 후보)
+- [x] PR #1(home-screen)/#2(plan-runner-cycle)/#3(app-redesign) 전부 `develop`에 머지 완료, 작업 브랜치 3개(원격/로컬) 삭제 정리
+- [ ] 다음 기능은 별도 grillme 필요 (실제 결제/Order, 로그인/Auth 등 — 앱 리디자인에서 범위 밖으로 명시적으로 미룬 도메인들이 우선순위 후보)
