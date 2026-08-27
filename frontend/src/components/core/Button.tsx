@@ -3,7 +3,9 @@ import type { ReactNode } from "react";
 interface ButtonProps {
   variant?: "primary" | "secondary" | "ghost";
   size?: "md" | "sm";
+  type?: "button" | "submit";
   disabled?: boolean;
+  fullWidth?: boolean;
   icon?: ReactNode;
   children: ReactNode;
   onClick?: () => void;
@@ -23,16 +25,21 @@ const variantClasses = {
 export function Button({
   variant = "primary",
   size = "md",
+  type = "button",
   disabled = false,
+  fullWidth = false,
   icon,
   children,
   onClick,
 }: ButtonProps) {
   return (
     <button
+      type={type}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors disabled:cursor-not-allowed ${sizeClasses[size]} ${variantClasses[variant]}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors disabled:cursor-not-allowed ${
+        fullWidth ? "w-full" : ""
+      } ${sizeClasses[size]} ${variantClasses[variant]}`}
     >
       {icon}
       {children}

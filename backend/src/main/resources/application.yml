@@ -16,3 +16,7 @@ server:
 momentive:
   cors:
     allowed-origins: ${MOMENTIVE_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  jwt:
+    secret: ${MOMENTIVE_JWT_SECRET:local-dev-only-secret-key-please-override-in-prod-32bytes+}
+  cookie:
+    secure: ${MOMENTIVE_COOKIE_SECURE:false}
