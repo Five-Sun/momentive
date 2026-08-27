@@ -1,3 +1,5 @@
+import { Search } from "lucide-react";
+
 interface SearchInputProps {
   value: string;
   onChange?: (value: string) => void;
@@ -11,7 +13,7 @@ export function SearchInput({
 }: SearchInputProps) {
   return (
     <div className="bg-surface-soft border-hairline flex h-12 items-center gap-2 rounded-full border px-[18px]">
-      <span className="text-muted">⌕</span>
+      <Search className="text-muted h-4 w-4" />
       <input
         value={value}
         onChange={(e) => onChange?.(e.target.value)}

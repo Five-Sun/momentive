@@ -1,5 +1,6 @@
 package com.momentive.backend.product.dto;
 
+import com.momentive.backend.product.domain.Category;
 import com.momentive.backend.product.domain.Product;
 
 public record ProductSummaryResponse(
@@ -8,6 +9,7 @@ public record ProductSummaryResponse(
         Integer price,
         Integer discountPrice,
         Boolean soldOut,
+        Category category,
         String thumbnailUrl
 ) {
 
@@ -18,6 +20,7 @@ public record ProductSummaryResponse(
                 product.getPrice(),
                 product.getDiscountPrice(),
                 product.getSoldOut(),
+                product.getCategory(),
                 product.getThumbnailUrl()
         );
     }
