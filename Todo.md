@@ -46,8 +46,11 @@
 - [x] Phase 2: `backend-reviewer`/`frontend-reviewer`에 "마지막 코드 phase 통과 시 e2e-tester 체이닝" 절차(6-C) 추가
 - [x] Phase 3: `.claude/agents/plan-runner.md` 신설 — phase 순회, 구현/fix 서브에이전트 스폰(Agent 도구), phase당 최대 3회 재시도, 상한 초과 시 에스컬레이션
 - [x] Phase 4: dry run 검증 — 문서 상호 정합성 교차검토, e2e-format 규격 준수 샘플 케이스 생성. 5건 불일치 발견·수정(feature 필드 기준 통일, `ENV_FAILURE:` 고정 문구로 서버미기동 판별 통일, backlog 경로 보고 누락, `plan:` frontmatter 채우기 누락, 셀렉터/사전조건 스킵 규칙)
-- [ ] 미검증(환경 제약): 실제 dev-browser CLI 미설치 + `./dev.sh` 미기동 상태라 브라우저 실행 자체는 dry run 범위에서 제외됨. 처음 실사용 시 `npm install -g dev-browser && dev-browser install` 설치 필요하고, 첫 `plan-runner`/`e2e-tester` 실사용 결과로 추가 버그가 나올 수 있음 — 실사용 관찰 필요
-- [ ] `feat/plan-runner-cycle` 브랜치 푸시 및 `develop` 대상 PR 생성 — 아직 미진행
+- [x] `e2e-tester` 실사용 검증 (2026-08-27): `dev-browser` CLI 설치 확인, `./dev.sh`로 로컬 서버 기동. 백엔드 포트 충돌(다른 프로젝트가 8080 점유) 발견 → `backend/application.yml` 포트를 8081로 변경하고 `dev.sh`/`frontend/.env.local(.example)`/`e2e-tester.md`의 8080 참조를 8081로 일괄 수정
+  - [x] 가드레일 경로 확인: E2E phase 없는 plan(`product-catalog-home`)에 대해 정확히 중단하고 안내, plan/spec 미수정 확인
+  - [x] happy path 확인: `plans/2026-08-23-product-catalog-home-fix-1.md`(planner로 신규 작성한 E2E 검증 전용 fix plan)로 실제 dev-browser 시나리오 6개 실행 → 전부 pass, `e2e/2026-08-27-product-catalog-home.md` 생성, plan 체크박스/status 자동 갱신까지 확인
+  - [ ] 미관찰: `plan-runner` 오케스트레이터 자체(phase 순회, fix 서브에이전트 스폰, 재시도 루프)는 아직 실사용 안 됨 — 현재 plan들이 전부 done이라 재시도를 촉발할 미완료 phase가 없음. 다음에 새 phase 작업 시 plan-runner로 직접 돌려서 확인 필요
+- [ ] `feat/plan-runner-cycle` 브랜치 푸시 및 `develop` 대상 PR 생성 — 아직 미진행 (위 fix-1 plan/e2e 케이스 파일도 이번 커밋에 포함)
 
 ## 다음 기능
 
