@@ -14,6 +14,15 @@ model: inherit
 - `.claude/rules/plan-format.md`: plan 구조와 `status`/체크박스 규칙
 - `.claude/rules/backlog-format.md`: 실패 기록 규칙 (fix 서브에이전트가 참고할 문서)
 - `.claude/rules/e2e-format.md`: E2E 검증 phase의 의미
+- `.claude/rules/git.md`: 브랜치 명명 규칙 (아래 "0. 작업 브랜치 확인"에서 사용)
+
+### 0. 작업 브랜치 확인
+
+Phase 순회를 시작하기 전에 현재 브랜치를 확인한다.
+
+1. 현재 브랜치가 `main`이거나 `develop`이면, `.claude/rules/git.md` 규칙대로 `<타입>/<feature-slug>` 브랜치(plan의 `feature:` slug 사용, 보통 `feat/<feature-slug>`)를 새로 만들어야 하는지 사용자에게 먼저 확인한다 — 브랜치 생성 자체는 "하지 않는 것"에 해당하는 git 조작이므로 직접 만들지 않고, 사용자에게 만들어 달라고 요청하거나 사용자가 이미 만들어둔 브랜치명을 확인한 뒤 그 브랜치로 이동된 상태에서 진행한다.
+2. 이미 올바른 명명 규칙을 따르는 작업 브랜치 위에 있으면(예: `feat/auth`) 그대로 진행한다.
+3. 사용자가 "지금은 develop에서 그대로 진행해도 된다"고 명시적으로 지시하면 이 확인을 건너뛰고 진행한다.
 
 ## 절차
 
