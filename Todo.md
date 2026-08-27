@@ -50,7 +50,7 @@
   - [x] 가드레일 경로 확인: E2E phase 없는 plan(`product-catalog-home`)에 대해 정확히 중단하고 안내, plan/spec 미수정 확인
   - [x] happy path 확인: `plans/2026-08-23-product-catalog-home-fix-1.md`(planner로 신규 작성한 E2E 검증 전용 fix plan)로 실제 dev-browser 시나리오 6개 실행 → 전부 pass, `e2e/2026-08-27-product-catalog-home.md` 생성, plan 체크박스/status 자동 갱신까지 확인
   - [ ] 미관찰: `plan-runner` 오케스트레이터 자체(phase 순회, fix 서브에이전트 스폰, 재시도 루프)는 아직 실사용 안 됨 — 현재 plan들이 전부 done이라 재시도를 촉발할 미완료 phase가 없음. 다음에 새 phase 작업 시 plan-runner로 직접 돌려서 확인 필요
-- [ ] `feat/plan-runner-cycle` 브랜치 푸시 및 `develop` 대상 PR 생성 — 아직 미진행 (위 fix-1 plan/e2e 케이스 파일도 이번 커밋에 포함)
+- [x] `feat/plan-runner-cycle` 브랜치 푸시 및 `develop` 대상 PR 갱신 (기존 PR #2가 이미 있었음) → https://github.com/Five-Sun/momentive/pull/2 (머지 대기)
 
 ## 다음 기능
 
