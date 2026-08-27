@@ -72,7 +72,15 @@
   - [ ] 미관찰: `plan-runner` 오케스트레이터 자체(phase 순회, fix 서브에이전트 스폰, 재시도 루프)는 아직 실사용 안 됨 — 현재 plan들이 전부 done이라 재시도를 촉발할 미완료 phase가 없음. 다음에 새 phase 작업 시 plan-runner로 직접 돌려서 확인 필요
 - [x] `feat/plan-runner-cycle` 브랜치 푸시 및 `develop` 대상 PR 갱신 → https://github.com/Five-Sun/momentive/pull/2, 이후 `develop`에 머지 완료
 
+## 백엔드/프론트엔드 컨벤션 정비 (완료)
+
+배경: PR #3(`feat/app-redesign`) 머지 후 다음 후보인 로그인/Auth, 결제/Order 착수 전에, 두 도메인에서 실제로 걸릴 아키텍처 컨벤션을 `/grillme`로 미리 정리 — 정식 기능 spec은 아니고 `backend/CLAUDE.md`/`frontend/CLAUDE.md`의 컨벤션 섹션을 확장하는 세션.
+
+- [x] `/grillme 백엔드 컨벤션` — 인증/인가(JWT+Spring Security, Refresh Token은 Postgres 테이블로 관리·Redis 미도입), 토스페이먼츠 연동(재고 선점 → confirm 호출 → 성공/실패 전이 흐름, `PENDING` 만료 스케줄러, `PaymentGatewayClient` 추상화, confirm 재시도 없음), Write API 검증(Bean Validation ↔ Service 검증 경계, `fieldErrors`), 동시성/락(`@Version` 낙관적 락 + for-loop 2회 재시도, Redis 분산락 미도입) 결정. Controller/Service Lombok `@RequiredArgsConstructor` 전환 규칙도 포함. `backend/CLAUDE.md` 반영 (커밋 `859210b`)
+- [x] `/grillme frontend 컨벤션` — API 에러 처리(공통 `apiFetch` 래퍼 + `ApiError` 타입, `fieldErrors` 유무로 인라인/Toast 구분), 인증 상태 관리(`AuthProvider`를 `(shell)/layout.tsx`에서 SSR 초기화, 401 시 자동 refresh + 1회 재시도), Write 폼/검증(React Hook Form + Zod, `src/components/forms/` 필드 컴포넌트) 결정. 데이터 페칭 전략(TanStack Query 도입 여부)은 방향성만 정하고 현재 패턴 유지로 보류. `frontend/CLAUDE.md` 반영 (커밋 `8e15b64`)
+- [ ] 참고(이번 세션 범위 밖, 다음 Auth/Order feature spec 그릴링에서 다룰 것): 보호된 라우트 패턴(middleware vs 페이지 가드), 실제 가입 방식(이메일 vs 소셜로그인), admin 화면 자체
+
 ## 다음 기능
 
-- [ ] PR #3(`feat/app-redesign` → `develop`) 리뷰 후 머지 (PR #2는 이미 머지됨 — 이 merge로 Todo.md 충돌 해소)
-- [ ] 위 앱 리디자인 머지 후, 다음 기능은 별도 grillme 필요 (실제 결제/Order, 로그인/Auth 등 — 이번 리디자인에서 범위 밖으로 명시적으로 미룬 도메인들이 우선순위 후보)
+- [x] PR #3(`feat/app-redesign` → `develop`) 리뷰 후 머지 완료 (PR #2는 이미 머지됨 — 이 merge로 Todo.md 충돌 해소)
+- [ ] 백엔드/프론트 컨벤션 정비 완료 — 다음은 로그인/Auth 또는 결제/Order 중 하나를 골라 `/grillme`로 기능 spec 작성부터 시작
