@@ -19,7 +19,7 @@ cleanup() {
   echo
   echo "종료 중..."
   # gradlew/npm은 래퍼 프로세스라 자식(JVM/node)까지 정리하려면 포트 기준으로 죽인다
-  lsof -ti:8080,3000 -sTCP:LISTEN 2>/dev/null | xargs -r kill -9
+  lsof -ti:8081,3000 -sTCP:LISTEN 2>/dev/null | xargs -r kill -9
   echo "종료 완료"
 }
 trap cleanup EXIT INT TERM
@@ -30,9 +30,9 @@ echo "[1/3] DB(docker compose) 기동..."
 echo "[2/3] 백엔드(Spring Boot) 기동... (로그: $BACKEND_LOG)"
 (cd "$BACKEND_DIR" && ./gradlew bootRun --console=plain) > "$BACKEND_LOG" 2>&1 &
 
-echo "  백엔드 준비 대기 중 (http://localhost:8080/health)..."
+echo "  백엔드 준비 대기 중 (http://localhost:8081/health)..."
 for i in $(seq 1 60); do
-  if curl -sf http://localhost:8080/health >/dev/null 2>&1; then
+  if curl -sf http://localhost:8081/health >/dev/null 2>&1; then
     echo "  백엔드 준비 완료"
     break
   fi
@@ -65,7 +65,7 @@ done
 cat <<EOF
 
 모멘티브 로컬 개발 서버가 실행 중입니다.
-  - 백엔드: http://localhost:8080  (로그: tail -f $BACKEND_LOG)
+  - 백엔드: http://localhost:8081  (로그: tail -f $BACKEND_LOG)
   - 프론트: http://localhost:3000  (로그: tail -f $FRONTEND_LOG)
 
 Ctrl+C로 종료합니다.
