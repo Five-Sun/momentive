@@ -1,11 +1,11 @@
 # E2E 케이스 작성 규격
 
-`plan`의 마지막 코드 phase가 통과된 뒤, `e2e-tester` 에이전트가 유저 플로우 관점의 통합테스트 시나리오를 기록하는 문서의 규격이다. `specs/`, `plans/`와 명명 관례를 통일하고, 시나리오 설명(사람이 읽는 문서)과 실행 스크립트([dev-browser](https://github.com/sawyerhood/dev-browser)에 넘길 JS)를 한 파일에 함께 담는다.
+`plan`의 마지막 코드 phase가 통과된 뒤, `e2e-tester` 에이전트가 유저 플로우 관점의 통합테스트 시나리오를 기록하는 문서의 규격이다. `docs/specs/`, `docs/plans/`와 명명 관례를 통일하고, 시나리오 설명(사람이 읽는 문서)과 실행 스크립트([dev-browser](https://github.com/sawyerhood/dev-browser)에 넘길 JS)를 한 파일에 함께 담는다.
 
 ## 파일 위치 및 이름
 
 ```
-e2e/YYYY-MM-DD-<feature-slug>.md
+docs/e2e/YYYY-MM-DD-<feature-slug>.md
 ```
 
 - `YYYY-MM-DD`: e2e-tester가 케이스를 생성한 날짜
@@ -26,7 +26,7 @@ plan: <근거 plan 파일명>
 | 필드 | 타입 | 필수 | 설명 |
 |---|---|---|---|
 | `date` | string (`YYYY-MM-DD`) | 필수 | 생성된 날짜, 파일명의 날짜와 동일 |
-| `feature` | string (kebab-case) | 필수 | 파일명의 slug와 동일. **plan의 frontmatter `feature:`를 그대로 쓴다** (plan이 참조하는 spec의 `feature:`와 다를 수 있음 — plan-runner/reviewer가 호출 시 쓰는 `feature-slug`와 일치시켜야 `e2e/*-<feature-slug>.md` 검색이 맞물린다) |
+| `feature` | string (kebab-case) | 필수 | 파일명의 slug와 동일. **plan의 frontmatter `feature:`를 그대로 쓴다** (plan이 참조하는 spec의 `feature:`와 다를 수 있음 — plan-runner/reviewer가 호출 시 쓰는 `feature-slug`와 일치시켜야 `docs/e2e/*-<feature-slug>.md` 검색이 맞물린다) |
 | `spec` | string (파일명) | 필수 | 케이스 도출 근거가 된 spec 파일명 |
 | `plan` | string (파일명) | 필수 | 이 케이스를 요구한 plan 파일명 |
 
@@ -66,7 +66,7 @@ console.log("PASS: 시나리오 N");
 
 - 1차 근거: 대상 spec의 "사용자 시나리오" 섹션 각 단계, "수용 기준(AC)" 각 항목
 - 보조 참고: 실제 구현된 라우트/컴포넌트/API — spec에 없던 예외 케이스(예: 빈 장바구니, 재고 없음)가 코드에 존재하면 시나리오로 추가할 수 있다
-- 이번 plan에서 새로 추가/변경된 시나리오만 대상으로 한다. 기존에 이미 다른 `e2e/*.md`에 있는 시나리오를 다시 반복해서 만들지 않는다.
+- 이번 plan에서 새로 추가/변경된 시나리오만 대상으로 한다. 기존에 이미 다른 `docs/e2e/*.md`에 있는 시나리오를 다시 반복해서 만들지 않는다.
 
 ## 작성 주체 및 시점
 
@@ -74,10 +74,10 @@ console.log("PASS: 시나리오 N");
 
 ## 조회 방법
 
-전체 회귀를 실행할 때는 `e2e/*.md` 전체를 대상으로 하고, 특정 feature의 이력만 볼 때는 다음으로 훑는다.
+전체 회귀를 실행할 때는 `docs/e2e/*.md` 전체를 대상으로 하고, 특정 feature의 이력만 볼 때는 다음으로 훑는다.
 
 ```bash
-ls e2e/*-<feature-slug>.md
+ls docs/e2e/*-<feature-slug>.md
 ```
 
 ## 템플릿

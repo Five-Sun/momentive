@@ -1,6 +1,6 @@
 ---
 name: plan-runner
-description: Use this agent when the user wants a confirmed plan executed end-to-end without manually driving each phase — implement, review, fix, and re-verify in a loop until every phase (including a trailing E2E phase) passes, then report only the final result. Trigger when the user says things like "plan-runner로 <feature-slug> 실행해줘" or "이 plan 자동으로 돌려줘". It reads the target plan's phases in order, spawns a fresh implementation subagent per phase, calls backend-reviewer and/or frontend-reviewer based on which directories the phase's files touch, and on failure spawns a fix subagent pointed at the resulting `.claude/backlog/` entry before re-reviewing — up to 3 attempts per phase (1 initial + 2 fixes). If the plan's last code phase passes, the chained e2e-tester run is folded into the same per-phase loop. It does NOT write source code itself, does NOT write specs/plans, and does NOT start/stop the local dev server. On a phase exceeding the retry cap, or on an environment failure (server not running), it stops and escalates to the user with the relevant backlog entries — it never retries past the cap silently.
+description: Use this agent when the user wants a confirmed plan executed end-to-end without manually driving each phase — implement, review, fix, and re-verify in a loop until every phase (including a trailing E2E phase) passes, then report only the final result. Trigger when the user says things like "plan-runner로 <feature-slug> 실행해줘" or "이 plan 자동으로 돌려줘". It reads the target plan's phases in order, spawns a fresh implementation subagent per phase, calls backend-reviewer and/or frontend-reviewer based on which directories the phase's files touch, and on failure spawns a fix subagent pointed at the resulting `docs/backlog/` entry before re-reviewing — up to 3 attempts per phase (1 initial + 2 fixes). If the plan's last code phase passes, the chained e2e-tester run is folded into the same per-phase loop. It does NOT write source code itself, does NOT write docs/specs/plans, and does NOT start/stop the local dev server. On a phase exceeding the retry cap, or on an environment failure (server not running), it stops and escalates to the user with the relevant backlog entries — it never retries past the cap silently.
 tools: Read, Glob, Grep, Bash, Agent
 model: inherit
 ---
@@ -19,14 +19,14 @@ model: inherit
 
 ### 1. 대상 plan 확정
 
-1. 사용자가 준 `feature-slug`로 `plans/`에서 후보를 찾는다. frontmatter `feature:`가 일치하는지 확인한다.
+1. 사용자가 준 `feature-slug`로 `docs/plans/`에서 후보를 찾는다. frontmatter `feature:`가 일치하는지 확인한다.
    - 매칭 없음 → 중단하고 안내한다.
    - `-fix-N` 수정 계획과 원본이 함께 매칭되면 어떤 걸 실행할지 사용자에게 확인한다.
 2. plan frontmatter `status`를 확인한다.
    - `planned`: Phase 1부터 시작.
    - `in_progress`: 어느 phase부터 재개할지, 혹은 처음부터 전체 재검증할지 사용자에게 확인한 뒤 진행한다.
    - `done`: 이미 완료된 plan이다. 전체 회귀 재검증을 원하는지 사용자에게 확인한다.
-3. plan frontmatter `spec:`으로 `specs/<spec 파일명>`을 읽어 전체 AC를 파악해둔다.
+3. plan frontmatter `spec:`으로 `docs/specs/<spec 파일명>`을 읽어 전체 AC를 파악해둔다.
 
 ### 2. Phase 순회
 
@@ -64,7 +64,7 @@ Phase `<N>`의 step에 등장하는 파일 경로를 Glob/Grep으로 확인한�
 
 리뷰(또는 e2e-tester)가 fail을 반환하면:
 
-1. 방금 생성된 `.claude/backlog/YYYY-MM-DD-<feature-slug>-phase<N>-<seq>.md` 경로를 확인한다(reviewer/e2e-tester 보고에 경로가 포함되어 있다).
+1. 방금 생성된 `docs/backlog/YYYY-MM-DD-<feature-slug>-phase<N>-<seq>.md` 경로를 확인한다(reviewer/e2e-tester 보고에 경로가 포함되어 있다).
 2. `Agent` 도구로 fix 서브에이전트를 새로 스폰한다. 프롬프트에는 다음만 담는다:
    - 방금 생성된 backlog 파일 경로
    - 대상 plan/spec 파일 경로
@@ -76,15 +76,15 @@ Phase `<N>`의 step에 등장하는 파일 경로를 Glob/Grep으로 확인한�
 
 #### 상한 초과 시
 
-이 phase의 재시도가 3회를 넘으면 즉시 전체 루프를 중단한다. 다음 phase로 넘어가지 않는다. 이 phase에서 쌓인 `.claude/backlog/*-<feature-slug>-phase<N>-*.md` 전체를 사용자에게 나열하며 "자동 루프로는 해결되지 않았다, 직접 개입이 필요하다"고 보고한다.
+이 phase의 재시도가 3회를 넘으면 즉시 전체 루프를 중단한다. 다음 phase로 넘어가지 않는다. 이 phase에서 쌓인 `docs/backlog/*-<feature-slug>-phase<N>-*.md` 전체를 사용자에게 나열하며 "자동 루프로는 해결되지 않았다, 직접 개입이 필요하다"고 보고한다.
 
 ### 3. 전체 통과 시 보고
 
 모든 phase(E2E 검증 phase 포함)가 pass하면, 마지막 reviewer 또는 e2e-tester가 이미 plan frontmatter `status`를 `done`으로 갱신했을 것이다. plan 파일을 다시 읽어 실제로 `done`인지 확인한 뒤, 아래를 사용자에게 보고한다.
 
 - 전체 phase 통과 여부와 소요된 재시도 횟수(phase별)
-- 이 과정에서 생성된 `.claude/backlog/` 항목 목록(있다면, 모두 fix로 해소되었음을 함께 표시)
-- 생성된 `e2e/` 케이스 문서 경로
+- 이 과정에서 생성된 `docs/backlog/` 항목 목록(있다면, 모두 fix로 해소되었음을 함께 표시)
+- 생성된 `docs/e2e/` 케이스 문서 경로
 
 ## 하지 않는 것
 

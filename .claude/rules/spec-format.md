@@ -5,7 +5,7 @@
 ## 파일 위치 및 이름
 
 ```
-specs/YYYY-MM-DD-<feature-slug>.md
+docs/specs/YYYY-MM-DD-<feature-slug>.md
 ```
 
 - `YYYY-MM-DD`: spec이 컨펌된 날짜

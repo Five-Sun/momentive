@@ -5,7 +5,7 @@
 ## 파일 위치 및 이름
 
 ```
-.claude/backlog/YYYY-MM-DD-<feature-slug>-phase<N>-<seq>.md
+docs/backlog/YYYY-MM-DD-<feature-slug>-phase<N>-<seq>.md
 ```
 
 - `YYYY-MM-DD`: 검증 실패가 발생한 날짜
@@ -13,7 +13,7 @@
 - `<N>`: 실패한 Phase 번호
 - `<seq>`: 같은 날 같은 feature-slug·같은 Phase에서 검증이 여러 번 실패하면 `01`, `02`... 순서로 증가. 최초 실패도 `01`부터 붙여 항상 일관된 패턴 유지 (나중에 glob/grep으로 다루기 쉽게)
 
-폴더 방식(단일 파일 append가 아님)을 쓰는 이유: `specs/`, `plans/`와 명명 관례를 통일하고, 여러 컴퓨터에서 동시에 작업할 때 단일 파일 append 방식이 유발하는 git 충돌을 피하기 위함이다.
+폴더 방식(단일 파일 append가 아님)을 쓰는 이유: `docs/specs/`, `docs/plans/`와 명명 관례를 통일하고, 여러 컴퓨터에서 동시에 작업할 때 단일 파일 append 방식이 유발하는 git 충돌을 피하기 위함이다.
 
 ## Frontmatter
 
@@ -59,14 +59,14 @@ reviewer 에이전트가 Phase 검증 실패를 감지한 시점에 자동으로
 
 ## 조회 방법
 
-새 Phase를 시작하기 전, planner 또는 구현 에이전트는 `.claude/backlog/`에서 같은 `category` 또는 같은 `feature`의 기존 항목을 먼저 훑어 재발 방지 체크리스트로 참고한다.
+새 Phase를 시작하기 전, planner 또는 구현 에이전트는 `docs/backlog/`에서 같은 `category` 또는 같은 `feature`의 기존 항목을 먼저 훑어 재발 방지 체크리스트로 참고한다.
 
 ```bash
 # 같은 카테고리의 과거 실패 훑기
-grep -l "category: backend" .claude/backlog/*.md
+grep -l "category: backend" docs/backlog/*.md
 
 # 같은 기능의 과거 실패 훑기
-ls .claude/backlog/*-<feature-slug>-phase*.md
+ls docs/backlog/*-<feature-slug>-phase*.md
 ```
 
 ## 템플릿

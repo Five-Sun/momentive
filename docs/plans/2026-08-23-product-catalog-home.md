@@ -9,7 +9,7 @@ status: done
 
 ## 개요
 
-이 플랜은 `specs/2026-08-18-product-catalog.md`(API/데이터 모델/수용 기준)와 `specs/2026-08-23-home-screen.md`(홈 화면의 실제 시각 디자인)를 함께 실행하는 단위다. 두 스펙은 "홈(`/`) = 상품 목록"이라는 동일한 기능 계약을 공유하며, home-screen spec 자체가 product-catalog spec의 API 계약을 그대로 재사용하도록 정의되어 있어 서로 독립적으로 구현할 수 없다. 하나의 plan으로 묶어 phase 경계를 API(백엔드) → 화면(프론트)으로 자연스럽게 나눈다.
+이 플랜은 `docs/specs/2026-08-18-product-catalog.md`(API/데이터 모델/수용 기준)와 `docs/specs/2026-08-23-home-screen.md`(홈 화면의 실제 시각 디자인)를 함께 실행하는 단위다. 두 스펙은 "홈(`/`) = 상품 목록"이라는 동일한 기능 계약을 공유하며, home-screen spec 자체가 product-catalog spec의 API 계약을 그대로 재사용하도록 정의되어 있어 서로 독립적으로 구현할 수 없다. 하나의 plan으로 묶어 phase 경계를 API(백엔드) → 화면(프론트)으로 자연스럽게 나눈다.
 
 Phase는 다음 순서로 진행한다.
 
@@ -17,7 +17,7 @@ Phase는 다음 순서로 진행한다.
 2. **홈 화면(목록+그리드+무한스크롤)**: home-screen spec의 대부분과 product-catalog spec의 목록 관련 수용 기준을 함께 만족시키는 화면. 상품 카드 클릭 시 이동할 상세 페이지는 아직 없어도 되므로(링크만 걸어두고 다음 phase에서 실제 페이지 완성) 목록 화면을 먼저 완결된 마일스톤으로 검증한다.
 3. **상품 상세 페이지**: 목록에서 분리 가능한 별도 라우트이자 별도 화면이므로 마지막 phase로 독립시킨다. 홈 화면의 카드 클릭 동작과 연결해 전체 사용자 시나리오(목록 → 상세)를 완성한다.
 
-같은 feature 또는 category의 과거 backlog 실패 항목은 없음 (`.claude/backlog/` 비어 있음, 2026-08-24 재검토 시점 기준 재확인).
+같은 feature 또는 category의 과거 backlog 실패 항목은 없음 (`docs/backlog/` 비어 있음, 2026-08-24 재검토 시점 기준 재확인).
 
 ### 2026-08-24 재검토 메모
 

@@ -27,5 +27,5 @@ Once the user confirms shared understanding, write it down as a spec:
 
 1. Present a summary of the settled design (the whole tree, decisions and their answers) and ask the user to confirm it before writing anything.
 2. On confirmation, write the spec file following `.claude/rules/spec-format.md` exactly — file path/naming, frontmatter fields, and the five required sections. Read that file fresh each time; don't rely on a remembered copy of the rules.
-3. If this session's feature already has an earlier spec file in `specs/`, set `supersedes` to that file's name in the new file's frontmatter. Never edit or delete the older file.
+3. If this session's feature already has an earlier spec file in `docs/specs/`, set `supersedes` to that file's name in the new file's frontmatter. Never edit or delete the older file.
 4. Tell the user the path of the file you wrote.

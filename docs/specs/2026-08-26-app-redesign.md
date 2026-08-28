@@ -9,13 +9,13 @@ supersedes: 2026-08-23-home-screen.md
 
 ## 목적 (Why)
 
-Claude Design 핸드오프 프로젝트(claude.ai/design 프로젝트 `f05007c9-8716-43a5-b06f-1982d8a1b595`, `design_handoff_momentive_app/`)를 통해 홈·카테고리·검색·상품상세·장바구니·위시리스트·마이 7개 화면 전체와 그에 필요한 컴포넌트·디자인 토큰이 high-fidelity로 완성됐다. 현재 구현은 홈 화면(단순 버전, `specs/2026-08-23-home-screen.md`)과 최소 기능만 있는 상품상세 페이지뿐이고, 나머지 화면은 존재하지 않는다. 이 스펙은 핸드오프 디자인을 근거로 Next.js + Tailwind 프로덕션 코드로 7개 화면을 재구현해, 실사용자가 있는 커머스 앱다운 완성도를 갖추기 위함이다.
+Claude Design 핸드오프 프로젝트(claude.ai/design 프로젝트 `f05007c9-8716-43a5-b06f-1982d8a1b595`, `design_handoff_momentive_app/`)를 통해 홈·카테고리·검색·상품상세·장바구니·위시리스트·마이 7개 화면 전체와 그에 필요한 컴포넌트·디자인 토큰이 high-fidelity로 완성됐다. 현재 구현은 홈 화면(단순 버전, `docs/specs/2026-08-23-home-screen.md`)과 최소 기능만 있는 상품상세 페이지뿐이고, 나머지 화면은 존재하지 않는다. 이 스펙은 핸드오프 디자인을 근거로 Next.js + Tailwind 프로덕션 코드로 7개 화면을 재구현해, 실사용자가 있는 커머스 앱다운 완성도를 갖추기 위함이다.
 
 ## 범위 (Scope)
 
 ### In Scope
 - 7개 화면 신규/재구현: 홈(`/`), 카테고리(`/category`), 검색(`/search`), 상품상세(`/products/[id]`), 장바구니(`/cart`), 위시리스트(`/wishlist`), 마이(`/mypage`)
-- 하단 네비게이션을 5탭(홈/카테고리/검색/위시/마이)으로 전환 — `specs/2026-08-25-app-shell.md`가 만든 4탭(홈/검색/장바구니/마이페이지) 구성을 대체. 480px 프레임 인프라 자체는 `app-shell` spec 그대로 유지, 이 스펙은 그 안의 콘텐츠와 BottomNav 탭 구성만 바꾼다
+- 하단 네비게이션을 5탭(홈/카테고리/검색/위시/마이)으로 전환 — `docs/specs/2026-08-25-app-shell.md`가 만든 4탭(홈/검색/장바구니/마이페이지) 구성을 대체. 480px 프레임 인프라 자체는 `app-shell` spec 그대로 유지, 이 스펙은 그 안의 콘텐츠와 BottomNav 탭 구성만 바꾼다
 - `Product` 백엔드 확장: `category` 필드 추가, `GET /products`에 `sort` 쿼리 파라미터 추가(신상순 기본값 / 낮은 가격순 / 높은 가격순, 인기순은 신상순과 동일하게 동작)
 - 핸드오프 디자인 토큰(`tokens/*.css`) 반영 및 신규 컴포넌트(`FilterSheet`, `ReviewCard`, `ShippingProgress`) 도입
 - 유니코드 글리프 아이콘을 실제 아이콘 세트(예: `lucide-react`)로 교체
@@ -76,7 +76,7 @@ Claude Design 핸드오프 프로젝트(claude.ai/design 프로젝트 `f05007c9-
 
 ### API
 
-**`GET /products`** — 기존 계약(`specs/2026-08-18-product-catalog.md`)에 파라미터 추가
+**`GET /products`** — 기존 계약(`docs/specs/2026-08-18-product-catalog.md`)에 파라미터 추가
 - 신규 쿼리 파라미터: `category`(선택, 문자열 — `OUTER`/`KNIT`/`INNERWEAR`/`ACCESSORY`), `sort`(선택, 기본값 `new` — `new`/`popular`/`price_asc`/`price_desc`. `popular`은 `new`와 동일한 정렬 결과를 반환)
 - 응답 형태는 변경 없음 (기존 페이지네이션 메타데이터 유지)
 

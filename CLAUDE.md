@@ -13,8 +13,8 @@
 - 로그는 `.dev-logs/backend.log`, `.dev-logs/frontend.log`
 
 ## 저장소 구조
-- `specs/` — grillme로 뽑은 기능 스펙 (기능 단위, 프론트+백엔드 통합)
-- `plans/` — 스펙 기반 phase/step 플랜
+- `docs/specs/` — grillme로 뽑은 기능 스펙 (기능 단위, 프론트+백엔드 통합)
+- `docs/plans/` — 스펙 기반 phase/step 플랜
 - `backend/` — Spring Boot. 컨벤션은 `backend/CLAUDE.md` 참고
 - `frontend/` — Next.js. 컨벤션은 `frontend/CLAUDE.md` 참고
 - `.claude/rules/spec-format.md` — 스펙 작성 규격 (필수 준수)
@@ -29,5 +29,5 @@
 3. 스펙의 수용 기준(acceptance criteria)은 체크 가능한 형태로 작성한다
 4. 커밋 메시지와 브랜치명은 `.claude/rules/git.md`를 따른다
 5. 백엔드/프론트 관련 세부 컨벤션은 각 하위 CLAUDE.md를 따른다 — 여기 중복 기재하지 않는다
-6. 작업 시작 전 `specs/`, `plans/`에서 관련 문서를 먼저 찾아 참고한다 — 새 세션에서도 기존 결정/컨텍스트를 이어받기 위함
+6. 작업 시작 전 `docs/specs/`, `docs/plans/`에서 관련 문서를 먼저 찾아 참고한다 — 새 세션에서도 기존 결정/컨텍스트를 이어받기 위함
 7. 문서(스펙/플랜 등) 생성 시 전체를 바로 작성하지 않고, 요약(목적·범위·주요 항목)을 먼저 제시해 컨펌받은 뒤 작성한다 — 토큰 절약 목적

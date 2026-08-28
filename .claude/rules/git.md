@@ -51,10 +51,10 @@ docs: spec-format 규칙 추가
 ```
 
 - `<타입>`: 위 커밋 타입 10종 중 하나를 그대로 접두사로 사용
-- `<feature-slug>`: 해당 작업의 spec 파일(`specs/YYYY-MM-DD-<feature-slug>.md`)과 동일한 slug 사용 — spec, 브랜치, 커밋이 같은 이름으로 추적된다
+- `<feature-slug>`: 해당 작업의 spec 파일(`docs/specs/YYYY-MM-DD-<feature-slug>.md`)과 동일한 slug 사용 — spec, 브랜치, 커밋이 같은 이름으로 추적된다
 - 작업 브랜치는 `develop`에서 분기하고, PR도 `develop`을 대상으로 연다
 
-예: spec이 `specs/2026-08-11-user-signup.md`라면 브랜치는 `feat/user-signup`
+예: spec이 `docs/specs/2026-08-11-user-signup.md`라면 브랜치는 `feat/user-signup`
 
 급한 수정도 별도 hotfix 브랜치 없이 `fix/<slug>`로 만들어 `develop`을 대상으로 PR을 연다.
 
