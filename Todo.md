@@ -2,14 +2,14 @@
 
 집/회사 등 세션이 끊기는 환경에서 작업을 이어가기 위한 진행 상황 기록. 완료되면 체크하고, 다음 세션에서는 이 파일부터 확인한다.
 
-## 앱 전체 재디자인 (완료, PR 머지 대기)
+## 앱 전체 재디자인 (완료)
 
 배경: Claude Design 핸드오프 프로젝트(claude.ai/design `f05007c9-8716-43a5-b06f-1982d8a1b595`, `design_handoff_momentive_app/`)를 근거로 홈/카테고리/검색/상품상세/장바구니/위시리스트/마이 7개 화면 전체를 재구현. `specs/2026-08-26-app-redesign.md`(supersedes `2026-08-23-home-screen.md`), `plans/2026-08-26-app-redesign.md`(status: in_progress). 브랜치 `feat/app-redesign`.
 
 - [x] grillme 세션 (Q1~Q12 결정 — UI 재구현 우선, category/sort만 백엔드 확장, 나머지는 localStorage 목업, 결제/Auth/Review/Coupon 백엔드는 범위 밖)
 - [x] Phase 0: 공통 기반 — 백엔드 category/sort 파라미터, 아이콘 세트(lucide-react) 교체, 디자인 토큰 대조 확인(변경 불필요), BottomNav 5탭 전환, localStorage 유틸(`frontend/src/lib/storage/`)
 - [x] Phase 1: 홈 — 프로모 배너/인기 랭킹/카테고리 칩 필터/최근 본 상품 섹션
-- [x] Phase 2: 카테고리 + 검색 — 자동완성/최근검색어/인기검색어/정렬(`FilterSheet`). 검증 중 correctness 버그 발견·수정(`.claude/backlog/2026-08-26-app-redesign-phase2-01.md`)
+- [x] Phase 2: 카테고리 + 검색 — 자동완성/최근검색어/인기검색어/정렬(`FilterSheet`). 검증 중 correctness 버그 발견·수정(`docs/backlog/2026-08-26-app-redesign-phase2-01.md`)
 - [x] Phase 3: 상품상세 — 사이즈 셀렉터/사이즈가이드·배송안내 아코디언/`ReviewCard`/위시 토글/장바구니 담기/최근 본 상품 기록
 - [x] Phase 0~3 커밋 및 `origin/feat/app-redesign` 푸시 (커밋 `713eaa2`)
 - [x] Phase 4: 장바구니 (`/cart`) — `ShippingProgress` 이식, 수량/삭제/쿠폰 토글/금액 요약, 결제 버튼 무동작 처리(토스트만). `npm run build`/`npm run lint` 통과
@@ -34,7 +34,7 @@
 - [x] `e2e-tester` 실사용 검증 (2026-08-27): `dev-browser` CLI 설치 확인, `./dev.sh`로 로컬 서버 기동. 백엔드 포트 충돌(다른 프로젝트가 8080 점유) 발견 → `backend/application.yml` 포트를 8081로 변경하고 `dev.sh`/`frontend/.env.local(.example)`/`e2e-tester.md`의 8080 참조를 8081로 일괄 수정
   - [x] 가드레일 경로 확인: E2E phase 없는 plan(`product-catalog-home`)에 대해 정확히 중단하고 안내, plan/spec 미수정 확인
   - [x] happy path 확인: `plans/2026-08-23-product-catalog-home-fix-1.md`(planner로 신규 작성한 E2E 검증 전용 fix plan)로 실제 dev-browser 시나리오 6개 실행 → 전부 pass, `e2e/2026-08-27-product-catalog-home.md` 생성, plan 체크박스/status 자동 갱신까지 확인
-  - [ ] 미관찰: `plan-runner` 오케스트레이터 자체(phase 순회, fix 서브에이전트 스폰, 재시도 루프)는 아직 실사용 안 됨 — 현재 plan들이 전부 done이라 재시도를 촉발할 미완료 phase가 없음. 다음에 새 phase 작업 시 plan-runner로 직접 돌려서 확인 필요
+- [x] `plan-runner` 오케스트레이터 실사용 확인 (2026-08-28, `plans/2026-08-27-auth.md` 5-phase 전체 실행): 실행 중 main/develop에서 바로 도는 것을 막는 작업 브랜치 확인 절차가 없다는 간극을 발견해 `.claude/agents/plan-runner.md`에 추가(커밋 `c5922f2`). 5개 phase 전부 backlog 실패 기록 없이 1차 통과, E2E phase까지 체이닝되어 완주 확인
 - [x] `feat/plan-runner-cycle` 브랜치 푸시 및 `develop` 대상 PR 갱신 → https://github.com/Five-Sun/momentive/pull/2, 이후 `develop`에 머지 완료
 
 ## 백엔드/프론트엔드 컨벤션 정비 (완료)
@@ -43,12 +43,25 @@
 
 - [x] `/grillme 백엔드 컨벤션` — 인증/인가(JWT+Spring Security, Refresh Token은 Postgres 테이블로 관리·Redis 미도입), 토스페이먼츠 연동(재고 선점 → confirm 호출 → 성공/실패 전이 흐름, `PENDING` 만료 스케줄러, `PaymentGatewayClient` 추상화, confirm 재시도 없음), Write API 검증(Bean Validation ↔ Service 검증 경계, `fieldErrors`), 동시성/락(`@Version` 낙관적 락 + for-loop 2회 재시도, Redis 분산락 미도입) 결정. Controller/Service Lombok `@RequiredArgsConstructor` 전환 규칙도 포함. `backend/CLAUDE.md` 반영 (커밋 `859210b`)
 - [x] `/grillme frontend 컨벤션` — API 에러 처리(공통 `apiFetch` 래퍼 + `ApiError` 타입, `fieldErrors` 유무로 인라인/Toast 구분), 인증 상태 관리(`AuthProvider`를 `(shell)/layout.tsx`에서 SSR 초기화, 401 시 자동 refresh + 1회 재시도), Write 폼/검증(React Hook Form + Zod, `src/components/forms/` 필드 컴포넌트) 결정. 데이터 페칭 전략(TanStack Query 도입 여부)은 방향성만 정하고 현재 패턴 유지로 보류. `frontend/CLAUDE.md` 반영 (커밋 `8e15b64`)
-- [ ] 참고(이번 세션 범위 밖, 다음 Auth/Order feature spec 그릴링에서 다룰 것): 보호된 라우트 패턴(middleware vs 페이지 가드), 실제 가입 방식(이메일 vs 소셜로그인), admin 화면 자체
+- [x] 참고 항목 해소: 보호된 라우트 패턴(페이지 내 조건부 렌더링 채택, `<RequireAuth>` 공통화는 보호 화면이 마이페이지 하나뿐이라 범위 밖으로 보류), 실제 가입 방식(이메일/비밀번호, 소셜로그인은 별도 spec), admin 화면(role 필드만 존재, 실기능은 범위 밖) — 아래 Auth spec/grillme에서 결정됨
+
+## 로그인/회원가입 (Auth) (완료, PR 머지)
+
+배경: `docs/specs/2026-08-27-auth.md`, `docs/plans/2026-08-27-auth.md`(status: done). 이메일/비밀번호 회원가입·로그인·로그아웃 + JWT(Access 30분/Refresh 14일, rotation) 세션 도입. 브랜치 `feat/auth`.
+
+- [x] Phase 1: 백엔드 통합 — `User`/`RefreshToken` 엔티티, Spring Security, JWT 발급/검증 필터, `/auth/*`(signup·login·logout·refresh·me), `@CurrentUser`, `WebConfig` CORS `allowCredentials(true)`. `AuthService` 단위/통합 테스트 포함
+- [x] Phase 2: 프론트 인증 인프라 — `src/lib/api/auth.ts`, `apiFetch` 401 자동 refresh(동시요청 in-flight 공유), `AuthProvider`, `(shell)/layout.tsx`의 `/me` 선호출
+- [x] Phase 3: `/login`, `/signup` 화면 — React Hook Form + Zod 클라이언트 검증, 서버 `fieldErrors` 인라인 매핑
+- [x] Phase 4: 마이페이지 로그인/비로그인 상태 조건 분기, 로그아웃 버튼, 기존 비로그인 허용 기능(상품조회/장바구니/위시리스트) 회귀 없음 확인
+- [x] Phase 5: E2E 검증 — `docs/e2e/2026-08-27-auth.md` 9개 시나리오 전부 PASS (회원가입/로그인/세션갱신/로그아웃/마이페이지 비로그인·로그인 분기 등), 실패 backlog 없음
+- [x] `feat/auth` 브랜치 푸시 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/5, `develop`에 머지 완료
+- [x] 뒷정리: spec `status`를 `implemented`로 갱신, 수용 기준(AC) 체크박스 13개 전부 체크 완료
 
 ## 다음 기능
 
 - [x] PR #3(`feat/app-redesign` → `develop`) 리뷰 후 머지 완료 (PR #2는 이미 머지됨 — 이 merge로 Todo.md 충돌 해소)
-- [ ] 백엔드/프론트 컨벤션 정비 완료 — 다음은 로그인/Auth 또는 결제/Order 중 하나를 골라 `/grillme`로 기능 spec 작성부터 시작
+- [x] PR #5(`feat/auth` → `develop`) 리뷰 후 머지 완료
+- [ ] 로그인/Auth 완료 — 다음은 결제/Order(토스페이먼츠 연동)를 `/grillme`로 기능 spec 작성부터 시작 (Auth가 선행 조건이었음, `backend/CLAUDE.md`에 이미 정리된 토스페이먼츠 컨벤션 참고)
 
 ## Swagger(API 명세서) 도입
 
