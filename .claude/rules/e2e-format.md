@@ -55,7 +55,7 @@ console.log("PASS: 시나리오 N");
 \`\`\`
 ```
 
-- 스크립트는 dev-browser CLI(`dev-browser --headless <<'EOF' ... EOF`)에 그대로 붙여넣을 수 있는 완결된 형태로 작성한다.
+- 스크립트는 dev-browser CLI(`dev-browser <<'EOF' ... EOF`)에 그대로 붙여넣을 수 있는 완결된 형태로 작성한다. 기본값은 headed 모드(브라우저 창이 화면에 보임) — 사용자가 진행 상황을 육안으로 확인해 수동 테스트/디버깅 부담을 줄이는 것이 이 도구의 목적이기 때문이다.
 - 각 시나리오는 `browser.getPage(name)`에 서로 다른 `name`을 써서 페이지를 분리한다 — 시나리오 간 상태(쿠키, localStorage, 라우팅 히스토리)가 섞이지 않게 하기 위함이다.
 - 판정은 스크립트 스스로 `throw`로 실패를 알린다. dev-browser 프로세스가 에러 없이 끝나고 `console.log`로 `PASS: ...`가 출력되면 성공으로 본다.
 - 실패 시 스크린샷은 `saveScreenshot(buf, name)`으로 저장한다 — dev-browser의 파일 I/O는 `~/.dev-browser/tmp/`로 제한되므로, 저장된 실제 경로는 스크립트 실행 결과(stdout)에서 확인하고 e2e-tester가 이를 읽어 backlog 문서에 인용한다.
