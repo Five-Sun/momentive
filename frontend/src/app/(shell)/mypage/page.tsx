@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Truck, Ticket, Coins, PawPrint, Headset, ChevronRight } from "lucide-react";
 import { getWishlist } from "@/lib/storage/wishlist";
 import { getCartCount } from "@/lib/storage/cart";
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { Button } from "@/components/core/Button";
 
 const MENU_ITEMS = [
   { icon: Truck, label: "배송조회" },
@@ -16,6 +18,7 @@ const MENU_ITEMS = [
 
 export default function MyPage() {
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [wishlistCount, setWishlistCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
 
@@ -26,16 +29,34 @@ export default function MyPage() {
     });
   }, []);
 
+  async function handleLogout() {
+    await logout();
+  }
+
   return (
     <main className="bg-canvas flex min-h-screen flex-col">
       <header className="flex items-center justify-center px-4 py-4">
         <span className="text-title-sm text-ink">마이</span>
       </header>
 
-      <div className="flex items-center gap-3 px-4 py-3">
-        <div className="bg-surface-strong h-14 w-14 flex-shrink-0 rounded-full" />
-        <span className="text-title text-ink">몽이맘님</span>
-      </div>
+      {user ? (
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="bg-surface-strong h-14 w-14 flex-shrink-0 rounded-full" />
+            <span className="text-title text-ink">{user.nickname}님</span>
+          </div>
+          <Button variant="secondary" size="sm" onClick={handleLogout}>
+            로그아웃
+          </Button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between px-4 py-3">
+          <span className="text-title text-ink">로그인이 필요합니다</span>
+          <Button variant="primary" size="sm" onClick={() => router.push("/login")}>
+            로그인
+          </Button>
+        </div>
+      )}
 
       <div className="border-hairline mx-4 flex rounded-md border">
         <button
