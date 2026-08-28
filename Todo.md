@@ -57,11 +57,36 @@
 - [x] `feat/auth` 브랜치 푸시 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/5, `develop`에 머지 완료
 - [x] 뒷정리: spec `status`를 `implemented`로 갱신, 수용 기준(AC) 체크박스 13개 전부 체크 완료
 
+## E2E 케이스 단일 탭 순차 실행 전환 (완료, PR 대기)
+
+배경: e2e-tester 브라우징 테스트 중 탭이 9개(auth 시나리오 개수만큼)까지 쌓이는 문제 발견. 원인은 `e2e-format.md` 규격상 시나리오마다 `browser.getPage(name)`에 다른 name을 써서 탭을 분리했는데, dev-browser가 CLI 호출이 끝나도 브라우저를 유지하는 영속 데몬이라 탭이 자동으로 안 닫혔기 때문. 브랜치 `chore/e2e-single-tab-flow`.
+
+- [x] `.claude/rules/e2e-format.md` 개정 — 파일 하나당 탭 하나(`getPage(feature-slug)` 1회 호출)를 공유하며 시나리오를 순서대로 이어 실행하는 단일 `## 실행 스크립트` 섹션 방식으로 변경. 앞 시나리오 실패 시 뒤 시나리오는 자동 중단(즉시 중단 방식 선택, try/catch로 계속 진행하지 않음). 상태 충돌 시 화면 조작으로 되돌리거나 별도 파일로 분리하는 가이드 추가
+- [x] `.claude/agents/e2e-tester.md` 개정 — 시나리오별 개별 dev-browser 실행 → 파일당 1회 실행으로 변경. 판정에 "미실행"(앞 시나리오 실패로 못 돈 시나리오, fail과 구분·backlog 중복 생성 안 함) 카테고리 추가
+- [x] 기존 `docs/e2e/2026-08-27-auth.md`, `2026-08-27-product-catalog-home.md`는 구 형식 그대로 둠(사용자 요청 — 나중에 필요해지면 새 형식으로 재작성)
+- [x] 커밋(`5be078f`) 및 `chore/e2e-single-tab-flow` 푸시
+- [ ] `develop` 대상 PR 생성 및 머지 — **집에서 이어서 처리**
+
 ## 다음 기능
 
 - [x] PR #3(`feat/app-redesign` → `develop`) 리뷰 후 머지 완료 (PR #2는 이미 머지됨 — 이 merge로 Todo.md 충돌 해소)
 - [x] PR #5(`feat/auth` → `develop`) 리뷰 후 머지 완료
 - [ ] 로그인/Auth 완료 — 다음은 결제/Order(토스페이먼츠 연동)를 `/grillme`로 기능 spec 작성부터 시작 (Auth가 선행 조건이었음, `backend/CLAUDE.md`에 이미 정리된 토스페이먼츠 컨벤션 참고)
+
+## 장바구니→주문→결제(토스페이먼츠) grillme (진행 중, 집에서 이어서)
+
+`/grillme`로 인터뷰 시작했으나 시간 부족으로 Q1 답변 전에 중단. **다음 세션은 이 절부터 이어서 진행** — 아래 조사한 사실과 Q1 질문(미답변)을 재활용하고 처음부터 다시 조사하지 않는다.
+
+사전 조사로 확인한 사실:
+- 장바구니는 `frontend/src/lib/storage/cart.ts`(localStorage)만 있고 백엔드에 Cart 개념 없음. `/cart` 페이지 "결제하기" 버튼은 토스트만 띄우는 무동작 상태
+- `Product` 엔티티(`backend/.../product/domain/Product.java`)에 재고 수량 필드 없음 — `soldOut`(Boolean) 하나뿐. `backend/CLAUDE.md` 결제 연동 컨벤션은 "재고 선점(차감)"과 `@Version` 낙관적 락을 전제하고 있어 정수 재고 필드 추가 여부가 이번 스펙에서 결정돼야 함
+- 상품상세의 "사이즈(S/M/L/XL)" 선택(`ProductDetailView.tsx`의 `SIZES` 상수)은 백엔드에 대응 필드가 전혀 없는 프론트 하드코딩 목업 — 실제 옵션 개념 없이 그냥 문자열로 장바구니에 저장됨
+- `User` 엔티티에 배송지(주소/연락처) 필드 없음. 마이페이지의 "쿠폰함"/"적립금"/"배송조회" 메뉴는 클릭해도 아무 동작 없는 장식용 placeholder
+- 장바구니 화면의 쿠폰 할인(3,000원 고정)/무료배송 기준(50,000원)은 전부 프론트 하드코딩 상수, 백엔드 검증/근거 없음
+
+미답변 Q1 (다음 세션에서 다시 묻고 시작): 장바구니를 백엔드로 옮길지(User에 연결된 Cart 엔티티/API 신설), 아니면 지금처럼 localStorage에 두고 "주문서 작성" 단계에서만 그 내용을 서버로 보내 Order를 생성할지. 추천안은 localStorage 유지(범위를 작게 유지, 비로그인 장바구니 담기 UX 보존) — 사용자가 이 질문에 "clarify" 요청을 했으나 구체적으로 뭘 명확히 하고 싶은지 답하기 전에 세션이 끊김.
+
+이후 예정된 후속 질문(아직 안 물어봄): 재고 필드 추가 여부, 배송지 입력 방식(매번 입력 vs 주소록), 쿠폰/적립금 이번 스펙 포함 여부, 장바구니 전체결제 vs 부분결제, Toss 결제위젯 SDK 방식, 결제 실패 시 재시도 흐름, 마이페이지 주문내역 화면 포함 여부, 환불/취소 범위(아마 범위 밖 추천).
 
 ## Swagger(API 명세서) 도입
 
