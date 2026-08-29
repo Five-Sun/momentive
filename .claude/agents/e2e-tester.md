@@ -61,6 +61,20 @@ EOF
 
 기본값은 headed(화면에 브라우저 창이 보이는) 모드다 — 사용자가 결과를 육안으로 직접 확인하며 수동 테스트/디버깅 부담을 줄이려는 목적이다. 디스플레이가 없는 환경(예: 무인 CI)에서 실행해 dev-browser가 브라우저를 띄우지 못해 실패하면, 이는 코드 결함이 아니므로 2단계와 동일하게 `ENV_FAILURE:`로 시작하는 문구로 보고하고 backlog에는 기록하지 않는다.
 
+**headless 데몬 잔존 확인**: dev-browser는 브라우저 인스턴스를 관리하는 백그라운드 데몬을 두고, `--headless` 없이 실행해도 이미 떠 있는 데몬이 과거에 headless로 기동됐다면 그 인스턴스를 그대로 재사용해 창이 뜨지 않는다(과거 실제 발생 사례). 스크립트 실행 전에 아래로 headless 크롬 프로세스가 남아 있는지 확인하고, 있으면 정리한 뒤 새로 띄운다:
+
+```bash
+ps aux | grep -i "headless_shell\|chrome.*--headless" | grep -v grep
+```
+
+프로세스가 잡히면 다음으로 데몬과 잔존 프로세스를 정리하고 나서 4단계 스크립트를 실행한다:
+
+```bash
+pkill -f "chrome-headless-shell" 2>/dev/null
+pkill -f "dev-browser.*daemon" 2>/dev/null
+rm -f ~/.dev-browser/daemon.pid ~/.dev-browser/daemon.sock ~/.dev-browser/daemon-spawn.lock 2>/dev/null
+```
+
 - stdout에 순서대로 찍히는 `PASS: 시나리오 N` 로그로 어디까지 통과했는지 판단한다.
 - 종료 코드가 0이 아니거나 stderr/stdout에 스크립트가 던진 `Error`가 나타나면, 그 `Error` 메시지에 적힌 시나리오 번호가 실패한 시나리오다. **그 뒤로 이어졌어야 할 시나리오는 스크립트가 중단됐으므로 실행되지 않은 것**이지 실패가 아니다 — `e2e-format.md`의 의도된 동작이다.
 - 종료 코드가 0이면 스크립트에 담긴 모든 시나리오가 pass다.
