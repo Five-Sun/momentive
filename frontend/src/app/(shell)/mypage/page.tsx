@@ -7,6 +7,7 @@ import { getWishlist } from "@/lib/storage/wishlist";
 import { getCartCount } from "@/lib/storage/cart";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { Button } from "@/components/core/Button";
+import { getOrders } from "@/lib/api/orders";
 
 const MENU_ITEMS = [
   { icon: Truck, label: "배송조회" },
@@ -21,6 +22,7 @@ export default function MyPage() {
   const { user, logout } = useAuth();
   const [wishlistCount, setWishlistCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
+  const [orderCount, setOrderCount] = useState(0);
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -28,6 +30,13 @@ export default function MyPage() {
       setCartCount(getCartCount());
     });
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    getOrders()
+      .then((orders) => setOrderCount(orders.length))
+      .catch(() => setOrderCount(0));
+  }, [user]);
 
   async function handleLogout() {
     await logout();
@@ -60,10 +69,10 @@ export default function MyPage() {
 
       <div className="border-hairline mx-4 flex rounded-md border">
         <button
-          onClick={() => {}}
+          onClick={() => router.push("/mypage/orders")}
           className="flex flex-1 flex-col items-center gap-1 py-4"
         >
-          <span className="text-title-sm text-ink">0</span>
+          <span className="text-title-sm text-ink">{orderCount}</span>
           <span className="text-caption text-muted">주문내역</span>
         </button>
         <div className="bg-hairline w-px" />

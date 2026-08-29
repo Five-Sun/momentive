@@ -20,3 +20,6 @@ momentive:
     secret: ${MOMENTIVE_JWT_SECRET:local-dev-only-secret-key-please-override-in-prod-32bytes+}
   cookie:
     secure: ${MOMENTIVE_COOKIE_SECURE:false}
+  toss:
+    base-url: ${MOMENTIVE_TOSS_BASE_URL:https://api.tosspayments.com}
+    secret-key: ${MOMENTIVE_TOSS_SECRET_KEY:test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6}
