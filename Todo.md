@@ -87,11 +87,19 @@
 - [ ] 나머지 기능(다음 항목들) 먼저 마무리한 뒤, 상점 등록 완료 시점에 이 기능으로 돌아와 결제위젯 렌더링~confirm 성공~`PAID` 취소까지 마무리 검증
 - [x] `feat/cart-order-payment` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/7, 리뷰 후속 조치(결제/주문내역 에러 핸들링 보완) 반영 완료, `develop`에 머지 완료
 
-## Swagger(API 명세서) 도입 (완료, PR 대기)
+## 다음 작업 후보 (무동작 UI 정리)
 
-배경: 백엔드 API를 Swagger/OpenAPI로 문서화해 API 명세서로 쓰고 싶음. 확인 결과 현재 `build.gradle` 의존성, `backend/CLAUDE.md` 컨벤션, `backend-reviewer` 체크리스트 어디에도 Swagger 설정이 없음(2026-08-27 확인). `docs/specs/2026-08-30-api-documentation.md`, `docs/plans/2026-08-30-api-documentation.md`(status: done). 브랜치 `feat/api-documentation`.
+배경: "새 화면을 늘리기보다 이미 화면은 있는데 실제 동작이 구현 안 된 부분부터 1차 개발범위로 잡자"는 방향으로 코드베이스 전수 조사(2026-08-30). 조사 결과 전문은 아래 각 항목 참고, 상세 원본은 이 세션의 Explore 조사 결과.
+
+- [ ] **마이페이지 메뉴 5개 정리** — `mypage/page.tsx`의 배송조회/쿠폰함/적립금/반려견 프로필 관리/고객센터 메뉴가 전부 `onClick={() => {}}`로 완전 무동작(Todo.md 앱 재디자인 섹션에도 "메뉴 5개 무동작"으로 이미 기록됨). 백엔드도 대응 도메인이 전혀 없음. 5개를 한 번에 다 구현하기보다 실제로 필요한 것만 골라 범위를 좁히는 정리 작업부터 필요 — 배송조회는 별도 배송추적 연동(택배사 API)이 필요해 무거움, 쿠폰/적립금은 아래 쿠폰 항목과 겹침, 반려견 프로필/고객센터는 이번 재디자인 spec에서 다루지 않은 완전 신규 도메인. `/grillme`로 어디까지 이번에 다룰지부터 확정 필요
+- [ ] **리뷰(조회+작성) 기능** — 상품상세의 `ReviewCard`가 전 상품 공통 `MOCK_REVIEWS`(하드코딩 목업)를 보여주고 있어 실제 구매자에게 오해를 줄 수 있음(실 운영 서비스 리스크). 리뷰 작성 기능 자체가 없고, 별점(`Rating value={4.5}`)도 홈/카테고리/검색/상품상세/위시리스트 전 화면에서 모든 상품에 동일하게 하드코딩되어 있어 리뷰 도입 시 함께 정리 필요. 백엔드에 Review 엔티티/컨트롤러 전무 — 신규 도메인
+- [ ] **쿠폰 시스템** — 장바구니의 쿠폰 토글은 UI/state는 동작하지만 `COUPON_DISCOUNT = 3000` 하드코딩값을 표시만 할 뿐, 실제 보유 쿠폰함/발급/사용 개념이 없음(cart-order-payment spec에서 Out of Scope로 명시). 결제 도메인과 맞물려 있어(할인 금액이 실제 결제 금액에 반영되어야 함) 결제/주문 로직에 손을 대게 될 가능성이 큼
+
+## Swagger(API 명세서) 도입 (완료)
+
+배경: 백엔드 API를 Swagger/OpenAPI로 문서화해 API 명세서로 쓰고 싶음. 확인 결과 현재 `build.gradle` 의존성, `backend/CLAUDE.md` 컨벤션, `backend-reviewer` 체크리스트 어디에도 Swagger 설정이 없음(2026-08-27 확인). `docs/specs/2026-08-30-api-documentation.md`(status: implemented), `docs/plans/2026-08-30-api-documentation.md`(status: done).
 
 - [x] `/grillme`로 요구사항 확정 — 전체 API 문서화(admin 없음), 필수 애노테이션은 `@Operation` summary + DTO `@Schema` + 인증 필요 엔드포인트 `@SecurityRequirement`(에러 응답 `@ApiResponse`는 선택), 운영 환경에서도 Swagger UI 노출(profile 분리 안 함), 그룹 미분리(admin 도메인 생기면 재검토), 컨벤션 문서+`backend-reviewer` 체크리스트 둘 다 반영
 - [x] `plan-runner`로 Phase 1~3 자동 실행 완료 — springdoc-openapi 2.8.9(plan 명시 2.8.17이 Spring Boot 3.4.1과 `PatternParseException` 충돌 일으켜 다운그레이드) 도입, 4개 컨트롤러(Auth/Product/Address/Order) 전체 엔드포인트에 `@Operation`, DTO 17개 전체 필드에 `@Schema`, 인증 필요 엔드포인트에 `@SecurityRequirement` 소급 적용, `backend/CLAUDE.md`/`backend-reviewer.md` 컨벤션 반영
 - [x] 코드 리뷰에서 나온 advisory 수정: `@CurrentUser Long userId` 파라미터가 Swagger 문서에 일반 필수 query parameter로 잘못 노출되던 문제 → 8개 엔드포인트에 `@Parameter(hidden = true)` 추가로 해소
-- [ ] 커밋 후 `develop` 대상 PR 생성
+- [x] `feat/api-documentation` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/8, 리뷰 후속 조치(spec 버전 정정) 반영 완료, `develop`에 머지 완료
