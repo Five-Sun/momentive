@@ -56,6 +56,14 @@ Spring Boot. Railway 배포 (Root Directory: `backend/`, Watch Paths: `backend/*
 - 2회 재시도 후에도 충돌하면 `ErrorCode.STOCK_CONFLICT`로 즉시 실패 응답한다. 무한 재시도하지 않는다.
 - Redis 등 분산 락은 도입하지 않는다(단일 인스턴스 배포 기준). 여러 인스턴스로 수평 확장하게 되면 그 시점에 재검토한다.
 
+### Swagger/OpenAPI (springdoc)
+- 모든 컨트롤러 메서드(엔드포인트)에는 `@Operation(summary = "...")`를 필수로 작성한다.
+- 모든 요청/응답 DTO의 필드에는 `@Schema(description = "...")`를 필수로 작성한다.
+- 인증이 필요한 엔드포인트(또는 컨트롤러 클래스 전체)에는 `@SecurityRequirement`를 필수로 작성한다.
+- 에러 응답(`@ApiResponse`)은 선택 사항이며, 강제하지 않는다.
+- OpenAPI `Info` 메타정보: title "모멘티브 API", version 고정 문자열 `"v1"`, description은 한 줄 또는 생략.
+- 그룹 분리는 하지 않는다(단일 그룹). Admin 전용 도메인이 실제로 생기면 그룹 분리를 재검토한다.
+
 ## 테스트
 - 컨트롤러(MockMvc) 테스트보다 서비스 로직 테스트를 우선한다 — 컨트롤러는 서비스에 위임만 하는 얇은 계층이므로, 서비스 단위/통합 테스트로 커버리지를 확보한다
 - 새 기능 구현 시 컨트롤러 테스트는 원칙적으로 작성하지 않는다. 이미 있는 컨트롤러 테스트가 서비스 테스트로 대체 가능하면 삭제한다
