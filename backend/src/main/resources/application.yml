@@ -22,4 +22,4 @@ momentive:
     secure: ${MOMENTIVE_COOKIE_SECURE:false}
   toss:
     base-url: ${MOMENTIVE_TOSS_BASE_URL:https://api.tosspayments.com}
-    secret-key: ${MOMENTIVE_TOSS_SECRET_KEY:test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6}
+    secret-key: ${MOMENTIVE_TOSS_SECRET_KEY:test_sk_dummy_for_local_dev}

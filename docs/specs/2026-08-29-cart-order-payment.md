@@ -1,7 +1,7 @@
 ---
 date: 2026-08-29
 feature: cart-order-payment
-status: implemented
+status: confirmed
 ---
 
 # 장바구니→주문→결제 (토스페이먼츠)
@@ -156,11 +156,11 @@ status: implemented
 - [x] 새 배송지를 입력해 저장하면 이후 주문에서 선택 가능한 주소록에 추가된다
 - [x] 주문서를 제출하면 재고가 선점(차감)되고 `Order`가 `PENDING`으로 생성된 뒤 Toss 결제위젯이 뜬다
 - [x] 재고가 부족한 상품이 포함되면 `OUT_OF_STOCK` 에러로 주문 생성이 거부되고 재고 차감이 일어나지 않는다
-- [x] 결제 성공 시 `Order`가 `PAID`로 전환되고 주문 완료 화면이 보인다 (백엔드 `PaymentService` 테스트로 검증 — 브라우저 E2E는 Toss 샌드박스 실카드 결제가 필요해 스킵, `docs/e2e/2026-08-29-cart-order-payment.md` 시나리오 7)
+- [ ] 결제 성공 시 `Order`가 `PAID`로 전환되고 주문 완료 화면이 보인다 — 백엔드 `PaymentService` 테스트(fake `PaymentGatewayClient`)로 confirm 성공 로직은 검증됨. **실제 Toss 결제위젯 연동은 미검증**: Toss 개발자센터에서 상점(스토어) 등록이 안 된 상태라 클라이언트 키가 결제위젯 API(`/v1/payment-widget/widget-groups/keys`)에서 401로 거부되어 결제수단 UI 자체가 렌더링되지 않음(시크릿 키는 `/v1/payments/confirm` 인증은 정상 통과 확인됨 — 상점 미등록이 원인으로 추정). 상점 등록(사업자 정보 필요, 보류 중) 후 재검증 필요 — `docs/e2e/2026-08-29-cart-order-payment.md` 시나리오 7
 - [x] 결제 실패(또는 사용자 이탈) 시 `Order`가 `FAILED`로 전환되고 재고가 복원되며, 같은 주문으로 재결제할 방법이 없다
 - [x] `PENDING` 상태로 일정 시간 방치된 주문은 스케줄러에 의해 `FAILED`로 전환되고 재고가 복원된다
 - [x] 마이페이지 주문내역 목록에서 상태/금액/일시가 보이고, 상세로 진입하면 상품구성/배송지/상태를 볼 수 있다
-- [x] `PAID` 상태의 주문만 취소 버튼이 보이고, 취소하면 `CANCELLED`로 전환되며 재고가 복원된다 (백엔드 `PaymentService` 테스트로 검증 — 브라우저 E2E는 위와 동일한 사유로 스킵)
+- [ ] `PAID` 상태의 주문만 취소 버튼이 보이고, 취소하면 `CANCELLED`로 전환되며 재고가 복원된다 — 백엔드 `PaymentService` 테스트로 로직은 검증됨. 브라우저 E2E는 위 항목과 동일한 사유(상점 미등록)로 `PAID` 상태 도달 자체가 불가해 스킵
 - [x] `FAILED`/`CANCELLED` 상태의 주문에는 취소 버튼이 보이지 않는다
 - [x] 타인의 주문을 `orderId`로 직접 조회/취소 시도하면 `FORBIDDEN`으로 거부된다
 - [x] 동시에 같은 상품에 대해 여러 주문이 재고 선점을 시도하면 낙관적 락으로 하나만 성공하고 나머지는 `OUT_OF_STOCK`으로 처리된다

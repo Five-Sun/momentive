@@ -73,20 +73,19 @@
 - [x] PR #5(`feat/auth` → `develop`) 리뷰 후 머지 완료
 - [x] 로그인/Auth 완료 — 다음은 결제/Order(토스페이먼츠 연동)를 `/grillme`로 기능 spec 작성부터 시작 (Auth가 선행 조건이었음, `backend/CLAUDE.md`에 이미 정리된 토스페이먼츠 컨벤션 참고)
 
-## 장바구니→주문→결제(토스페이먼츠) (플랜 확정, 구현 대기)
+## 장바구니→주문→결제(토스페이먼츠) (구현 완료, 실결제 연동만 보류 — PR 대기)
 
-배경: `docs/specs/2026-08-29-cart-order-payment.md`(status: confirmed), `docs/plans/2026-08-29-cart-order-payment.md`(status: planned). grillme 세션(Q1~Q20) 완료 후 6-phase 플랜 작성 완료.
+배경: `docs/specs/2026-08-29-cart-order-payment.md`(status: confirmed — 실결제 미검증으로 되돌림), `docs/plans/2026-08-29-cart-order-payment.md`(status: in_progress). `feat/cart-order-payment` 브랜치, `plan-runner`로 Phase 1~6 자동 실행 완료.
 
 - [x] grillme 세션 — 장바구니 localStorage 유지, 재고 수량 필드 도입, 사이즈는 문자열만 저장, 배송지는 다중 주소록(기본배송지 플래그, 최초 주문 시 입력), 부분결제 지원(장바구니 체크박스), 배송비 없음, Toss 결제위젯 SDK, 재고는 주문 생성 시 선점, Order 상태 4종(PENDING/PAID/FAILED/CANCELLED), 결제 실패 시 재시도 없이 새 주문, PAID 상태에서만 취소 가능(재고 복원), 마이페이지 주문내역 목록+상세 포함 결정. 쿠폰/적립금/배송비 정책/부분환불/배송추적/Cart 백엔드 이전/상품옵션 관리는 범위 밖으로 명시
 - [x] spec 작성 완료 — `docs/specs/2026-08-29-cart-order-payment.md`
 - [x] planner로 phase/step 플랜 작성 완료 — `docs/plans/2026-08-29-cart-order-payment.md`
-  - Phase 1: 백엔드 재고·주문·배송지 도메인 골격 (`Product.stock`+`@Version`, `Address` CRUD, `Order`/`OrderItem`, `POST/GET /orders`)
-  - Phase 2: 백엔드 Toss 결제 연동 + 취소 + 만료 스케줄러 (`PaymentGatewayClient`/`TossPaymentGatewayClient`, confirm/cancel, `@Scheduled`)
-  - Phase 3: 프론트 장바구니 선택 UI (체크박스/전체선택, 배송비 로직 제거)
-  - Phase 4: 프론트 체크아웃 + Toss 결제위젯 + 완료/실패 화면
-  - Phase 5: 프론트 마이페이지 주문내역 + 취소 + 회귀 확인
-  - Phase 6: E2E 검증 (`e2e-tester` 체이닝)
-- [ ] 작업 브랜치 생성(`feat/cart-order-payment`) 후 구현 착수 — `plan-runner`로 자동 실행하거나 phase별 수동 진행, 다음 세션 시작점
+- [x] `plan-runner`로 Phase 1~6 자동 실행 완료 (백엔드 재고/주문/배송지 골격, Toss confirm/cancel/만료 스케줄러, 프론트 장바구니 선택/체크아웃/결제위젯/마이페이지 주문내역, E2E 검증). 구현 중 발견·수정된 이슈: 낙관적 락 재시도 off-by-one(`docs/backlog/2026-08-29-cart-order-payment-phase1-01.md`), 쿠폰 placeholder가 실결제 금액에 반영되던 버그(phase3-01), `GlobalBottomNav`가 체크아웃/주문상세 CTA를 가리던 문제(phase6-01)
+- [x] 체크아웃 화면 버그 발견·수정: 저장된 배송지 선택 시(신규 입력 폼 미노출) `useForm`이 항상 `zodResolver`로 검증을 시도해 "결제하기" 클릭이 무반응이던 문제 — `resolver`를 `showNewAddressForm`일 때만 적용하도록 수정 (`frontend/src/app/(shell)/checkout/page.tsx`)
+- [ ] **Toss 결제위젯 실연동 미완성** — 클라이언트 키가 결제위젯 API(`widget-groups/keys`)에서 401. 원인은 Toss 개발자센터에서 계정 가입만 하고 상점(스토어) 등록(사업자 정보 필요)을 하지 않은 것으로 추정. 사업자 등록 확인 후(별도 진행) 재검증 필요 — 상세 `docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`
+- [x] `e2e-tester`가 확인 가능한 범위(장바구니 선택, 체크아웃 진입/배송지, 주문 생성, 결제 실패/만료 화면 전환, 주문내역 조회, FAILED/CANCELLED 취소버튼 미노출)는 전부 PASS — `docs/e2e/2026-08-29-cart-order-payment.md`
+- [ ] 나머지 기능(다음 항목들) 먼저 마무리한 뒤, 상점 등록 완료 시점에 이 기능으로 돌아와 결제위젯 렌더링~confirm 성공~`PAID` 취소까지 마무리 검증
+- [ ] 지금까지 진행된 내용(구현 전체 + 버그 수정)으로 커밋 후 `develop` 대상 PR 생성
 
 ## Swagger(API 명세서) 도입
 

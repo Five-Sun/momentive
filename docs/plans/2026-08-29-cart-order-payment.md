@@ -2,7 +2,7 @@
 date: 2026-08-29
 feature: cart-order-payment
 spec: 2026-08-29-cart-order-payment.md
-status: done
+status: in_progress
 ---
 
 # 장바구니→주문→결제 (토스페이먼츠) 플랜
@@ -75,7 +75,7 @@ Auth 플랜(`docs/plans/2026-08-27-auth.md`)과 마찬가지로 백엔드 API �
 - [x] 주문 실패 화면: confirm 실패 또는 사용자 결제창 이탈 시 실패 안내 + "장바구니로 돌아가기"(→ `/cart`) 링크. 같은 주문으로 재결제 진입 경로를 만들지 않음(라우팅 계약 확인 대상).
 - [x] 에러 처리: `POST /orders`의 `OUT_OF_STOCK`/`VALIDATION_FAILED`/`PRODUCT_NOT_FOUND`는 `ApiError.errorCode` 분기해 사용자에게 적절히 안내(재고 부족 항목 표시 등), `fieldErrors` 있으면 인라인.
 - [x] 검증(자동): `npm run build`, `npm run lint` 통과.
-- [x] 검증(수동, 브라우저, 토스 샌드박스): 체크아웃 진입 시 기본배송지 자동 선택/미보유 시 입력 폼 즉시 노출, 결제위젯 렌더링, 샌드박스 결제 성공/실패 각 시나리오에서 화면 전환 확인. (`docs/e2e/2026-08-29-cart-order-payment.md` 시나리오 2/4/5 PASS로 확인 — 실카드 결제가 필요한 confirm 성공 경로는 시나리오 7로 별도 스킵)
+- [ ] 검증(수동, 브라우저, 토스 샌드박스): 체크아웃 진입 시 기본배송지 자동 선택/미보유 시 입력 폼 즉시 노출, 실패 화면 전환은 확인됨(`docs/e2e/2026-08-29-cart-order-payment.md` 시나리오 2/4/5 PASS). **결제위젯 렌더링~confirm 성공 경로는 미검증** — Toss 상점(스토어) 미등록으로 클라이언트 키가 결제위젯 API에서 401, 결제수단 UI 자체가 뜨지 않음. 상점 등록 후 재검증 필요(시나리오 7)
 
 ## Phase 5: 프론트 마이페이지 주문내역 + 취소 + 회귀
 
@@ -87,7 +87,7 @@ Auth 플랜(`docs/plans/2026-08-27-auth.md`)과 마찬가지로 백엔드 API �
 - [x] 마이페이지(`src/app/(shell)/mypage/page.tsx`)에 주문내역 진입 링크 추가(기존 메뉴 리스트 패턴 유지, 최소 변경).
 - [x] 회귀 확인: 비로그인/로그인 상태에서 상품 목록/상세 조회, 장바구니 담기(`src/lib/storage/cart.ts`), 위시리스트 토글이 이번 변경으로 깨지지 않았는지 코드 경로상 확인. `/cart`의 기존 쿠폰 placeholder UI가 Phase 3 변경 이후에도 정상 렌더링되는지 포함.
 - [x] 검증(자동): `npm run build`, `npm run lint`, 백엔드 `./gradlew test` 통과(Phase 1~5 통합 상태 재확인).
-- [x] 검증(수동, 브라우저): 결제 성공 후 마이페이지 주문내역에서 해당 주문 확인 → 상세 진입 → 취소 → 상태/버튼 노출 갱신 확인. `FAILED`/`CANCELLED` 주문 상세에서 취소 버튼 미노출 확인. (`docs/e2e/2026-08-29-cart-order-payment.md` 시나리오 5/6 PASS — `FAILED` 상태 취소 버튼 미노출 확인. `PAID` 상태 취소는 시나리오 7로 별도 스킵, 실카드 결제 필요)
+- [ ] 검증(수동, 브라우저): `FAILED`/`CANCELLED` 주문 상세에서 취소 버튼 미노출 확인됨(`docs/e2e/2026-08-29-cart-order-payment.md` 시나리오 5/6 PASS). **`PAID` 상태 도달·취소 플로우는 미검증** — Phase 4와 동일 사유(상점 미등록으로 결제위젯 진입 불가). 상점 등록 후 시나리오 7로 재검증 필요
 
 ## Phase 6: E2E 검증
 
