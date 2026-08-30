@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/health", "/auth/signup", "/auth/login", "/auth/logout", "/auth/refresh").permitAll()
                         .requestMatchers("/products/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, authCookieProvider),
                         UsernamePasswordAuthenticationFilter.class);

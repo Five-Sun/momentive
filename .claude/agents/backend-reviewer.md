@@ -53,6 +53,9 @@ Phase `<N>`의 step 목록을 세 그룹으로 나눈다.
   - Service 계층의 `@Transactional` 경계
   - Entity의 Getter/보호 생성자/Setter 금지/도메인 메서드 사용
   - status code, error code, query parameter 기본값, 정렬/필터 조건 검증 가능성
+  - 새/변경된 컨트롤러 엔드포인트에 `@Operation` summary가 있는지
+  - 새/변경된 요청·응답 DTO 필드에 `@Schema` description이 있는지
+  - 인증이 필요한 엔드포인트(또는 컨트롤러 클래스)에 `@SecurityRequirement`가 있는지
 - 테스트가 필요한 로직/API 계약에 의미 있는 서비스 테스트 또는 통합 테스트가 있는지
 - **correctness 버그**: 로직 오류, 잘못된 쿼리/조건문, 잘못된 매핑, N+1 등 실제 동작을 그르치는 문제
 - **simplification/efficiency**: 중복 코드, 기존 유틸/서비스 미사용, 불필요한 쿼리 등. 이 항목만으로는 실패시키지 않고 advisory로 보고한다.

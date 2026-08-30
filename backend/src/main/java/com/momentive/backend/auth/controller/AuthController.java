@@ -8,6 +8,10 @@ import com.momentive.backend.auth.security.AuthCookieProvider;
 import com.momentive.backend.auth.security.CurrentUser;
 import com.momentive.backend.auth.security.JwtTokenProvider;
 import com.momentive.backend.auth.service.AuthService;
+import com.momentive.backend.common.config.OpenApiConfig;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -29,6 +33,7 @@ public class AuthController {
     private final AuthCookieProvider authCookieProvider;
     private final JwtTokenProvider jwtTokenProvider;
 
+    @Operation(summary = "회원가입")
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse signup(@Valid @RequestBody SignupRequest request, HttpServletResponse response) {
@@ -37,6 +42,7 @@ public class AuthController {
         return result.user();
     }
 
+    @Operation(summary = "로그인")
     @PostMapping("/login")
     public UserResponse login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         AuthResult result = authService.login(request);
@@ -44,6 +50,7 @@ public class AuthController {
         return result.user();
     }
 
+    @Operation(summary = "로그아웃")
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(HttpServletRequest request, HttpServletResponse response) {
@@ -51,6 +58,7 @@ public class AuthController {
         authCookieProvider.expireAuthCookies(response);
     }
 
+    @Operation(summary = "토큰 재발급")
     @PostMapping("/refresh")
     public UserResponse refresh(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = authCookieProvider.getRefreshToken(request).orElse(null);
@@ -59,8 +67,10 @@ public class AuthController {
         return result.user();
     }
 
+    @Operation(summary = "내 정보 조회")
+    @SecurityRequirement(name = OpenApiConfig.ACCESS_TOKEN_SECURITY_SCHEME)
     @GetMapping("/me")
-    public UserResponse me(@CurrentUser Long userId) {
+    public UserResponse me(@Parameter(hidden = true) @CurrentUser Long userId) {
         return authService.me(userId);
     }
 

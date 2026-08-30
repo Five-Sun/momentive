@@ -5,6 +5,7 @@ import com.momentive.backend.product.dto.ProductDetailResponse;
 import com.momentive.backend.product.dto.ProductListResponse;
 import com.momentive.backend.product.service.ProductService;
 import com.momentive.backend.product.service.ProductSort;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,6 +20,7 @@ public class ProductController {
         this.productService = productService;
     }
 
+    @Operation(summary = "상품 목록 조회")
     @GetMapping("/products")
     public ProductListResponse getProducts(
             @RequestParam(defaultValue = "0") int page,
@@ -29,6 +31,7 @@ public class ProductController {
         return productService.getProducts(page, size, category, ProductSort.from(sort));
     }
 
+    @Operation(summary = "상품 상세 조회")
     @GetMapping("/products/{id}")
     public ProductDetailResponse getProduct(@PathVariable Long id) {
         return productService.getProduct(id);

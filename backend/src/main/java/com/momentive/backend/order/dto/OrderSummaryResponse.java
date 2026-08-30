@@ -2,14 +2,15 @@ package com.momentive.backend.order.dto;
 
 import com.momentive.backend.order.domain.Order;
 import com.momentive.backend.order.domain.OrderStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
 public record OrderSummaryResponse(
-        Long orderId,
-        OrderStatus status,
-        Integer totalAmount,
-        LocalDateTime createdAt,
-        String itemsSummary
+        @Schema(description = "주문 ID") Long orderId,
+        @Schema(description = "주문 상태") OrderStatus status,
+        @Schema(description = "총 결제 금액") Integer totalAmount,
+        @Schema(description = "주문 생성 일시") LocalDateTime createdAt,
+        @Schema(description = "주문 상품 요약 텍스트") String itemsSummary
 ) {
 
     public static OrderSummaryResponse from(Order order) {
