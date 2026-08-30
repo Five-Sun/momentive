@@ -1,7 +1,7 @@
 ---
 date: 2026-08-30
 feature: api-documentation
-status: confirmed
+status: implemented
 ---
 
 # Swagger(OpenAPI) API 문서화
@@ -15,7 +15,7 @@ status: confirmed
 ## 범위 (Scope)
 
 ### In Scope
-- springdoc-openapi 의존성 도입 및 기본 설정 (`springdoc-openapi-starter-webmvc-ui:2.8.17`)
+- springdoc-openapi 의존성 도입 및 기본 설정 (`springdoc-openapi-starter-webmvc-ui:2.8.17` — 실제 구현 시 2.8.9로 조정됨, 하단 AC 참고)
 - 기존 API 전체(Auth/Product/Address/Order, 총 4개 컨트롤러)에 Swagger 애노테이션 소급 적용
 - `backend/CLAUDE.md`에 "컨트롤러/DTO 작성 시 Swagger 애노테이션 필수" 컨벤션 추가
 - `backend-reviewer.md` 체크리스트에 Swagger 애노테이션 검증 항목 추가 — 이후 새로 추가되는 API도 리뷰 단계에서 누락이 자동으로 걸러지게 함
@@ -68,12 +68,12 @@ Swagger가 노출하는 신규 경로 (springdoc 기본값, 커스텀 없음):
 
 ## 수용 기준 (Acceptance Criteria)
 
-- [ ] `build.gradle`에 `springdoc-openapi-starter-webmvc-ui:2.8.17` 의존성이 추가되고 빌드가 통과한다
-- [ ] `SecurityConfig`의 permitAll 목록에 `/swagger-ui/**`, `/v3/api-docs/**`가 추가되어 인증 없이 접근 가능하다
-- [ ] `/swagger-ui/index.html` 접속 시 Auth/Product/Address/Order 4개 도메인의 전체 엔드포인트가 단일 그룹으로 노출된다
-- [ ] 모든 엔드포인트에 `@Operation` summary가 작성되어 Swagger UI에 한 줄 설명으로 표시된다
-- [ ] 모든 요청/응답 DTO 필드에 `@Schema` description이 작성되어 Swagger UI에 필드 설명으로 표시된다
-- [ ] 인증이 필요한 엔드포인트(Address 전체, Order 전체, `/auth/me`)는 Swagger UI에서 자물쇠 아이콘으로 구분되고, 인증이 필요 없는 엔드포인트(Product 전체, `/auth/signup`·`/auth/login`·`/auth/logout`·`/auth/refresh`)는 표시되지 않는다
-- [ ] Swagger UI 상단에 title "모멘티브 API", version "v1"이 표시된다
-- [ ] `backend/CLAUDE.md`에 위 "컨벤션" 섹션 내용이 반영된다
-- [ ] `backend-reviewer.md` 체크리스트에 Swagger 애노테이션(`@Operation`/`@Schema`/`@SecurityRequirement`) 누락 여부를 검증하는 항목이 추가된다
+- [x] `build.gradle.kts`에 springdoc-openapi 의존성이 추가되고 빌드가 통과한다 — 계획한 `2.8.17`은 Spring Boot 3.4.1과 `PatternParseException`을 일으키는 알려진 회귀(springdoc-openapi#3210, 2.8.15+에서 발생)라 `2.8.9`로 조정해 적용(`docs/plans/2026-08-30-api-documentation.md` Phase 1 참고)
+- [x] `SecurityConfig`의 permitAll 목록에 `/swagger-ui/**`, `/v3/api-docs/**`가 추가되어 인증 없이 접근 가능하다
+- [x] `/swagger-ui/index.html` 접속 시 Auth/Product/Address/Order 4개 도메인의 전체 엔드포인트가 단일 그룹으로 노출된다
+- [x] 모든 엔드포인트에 `@Operation` summary가 작성되어 Swagger UI에 한 줄 설명으로 표시된다
+- [x] 모든 요청/응답 DTO 필드에 `@Schema` description이 작성되어 Swagger UI에 필드 설명으로 표시된다
+- [x] 인증이 필요한 엔드포인트(Address 전체, Order 전체, `/auth/me`)는 Swagger UI에서 자물쇠 아이콘으로 구분되고, 인증이 필요 없는 엔드포인트(Product 전체, `/auth/signup`·`/auth/login`·`/auth/logout`·`/auth/refresh`)는 표시되지 않는다
+- [x] Swagger UI 상단에 title "모멘티브 API", version "v1"이 표시된다
+- [x] `backend/CLAUDE.md`에 위 "컨벤션" 섹션 내용이 반영된다
+- [x] `backend-reviewer.md` 체크리스트에 Swagger 애노테이션(`@Operation`/`@Schema`/`@SecurityRequirement`) 누락 여부를 검증하는 항목이 추가된다
