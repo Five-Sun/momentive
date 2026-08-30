@@ -5,10 +5,25 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { loadPaymentWidget, type PaymentWidgetInstance } from "@tosspayments/payment-widget-sdk";
 import { getOrder, type OrderResponse } from "@/lib/api/orders";
 import { ApiError } from "@/lib/api/client";
+import { Toast } from "@/components/feedback/Toast";
 
 const TOSS_CLIENT_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY ?? "";
 const PAYMENT_METHODS_SELECTOR = "#toss-payment-methods";
 const AGREEMENT_SELECTOR = "#toss-agreement";
+
+interface TossSdkError {
+  code: string;
+  message: string;
+}
+
+function isTossSdkError(err: unknown): err is TossSdkError {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    typeof (err as { code: unknown }).code === "string"
+  );
+}
 
 function PaymentWidgetContent() {
   const router = useRouter();
@@ -17,7 +32,13 @@ function PaymentWidgetContent() {
 
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const widgetRef = useRef<PaymentWidgetInstance | null>(null);
+
+  function showToast(message: string) {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(null), 1800);
+  }
 
   useEffect(() => {
     if (!orderId) {
@@ -47,12 +68,17 @@ function PaymentWidgetContent() {
 
     let cancelled = false;
 
-    loadPaymentWidget(TOSS_CLIENT_KEY, "ANONYMOUS").then((widget) => {
-      if (cancelled) return;
-      widgetRef.current = widget;
-      widget.renderPaymentMethods(PAYMENT_METHODS_SELECTOR, order.totalAmount);
-      widget.renderAgreement(AGREEMENT_SELECTOR);
-    });
+    loadPaymentWidget(TOSS_CLIENT_KEY, "ANONYMOUS")
+      .then((widget) => {
+        if (cancelled) return;
+        widgetRef.current = widget;
+        widget.renderPaymentMethods(PAYMENT_METHODS_SELECTOR, order.totalAmount);
+        widget.renderAgreement(AGREEMENT_SELECTOR);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setErrorMessage("결제위젯을 불러오지 못했어요. 잠시 후 다시 시도해주세요");
+      });
 
     return () => {
       cancelled = true;
@@ -73,9 +99,17 @@ function PaymentWidgetContent() {
         successUrl: `${origin}/checkout/success?orderId=${order.orderId}`,
         failUrl: `${origin}/checkout/fail?orderId=${order.orderId}`,
       });
-    } catch {
-      // 사용자가 결제창을 닫거나 이탈한 경우 Toss SDK가 reject한다.
-      // 별도 처리 없이 결제위젯 화면에 남겨 재시도할 수 있게 한다.
+    } catch (err) {
+      const code = isTossSdkError(err) ? err.code : null;
+      if (code === "USER_CANCEL") {
+        // 사용자가 결제창을 직접 닫은 경우: 결제위젯 화면에 그대로 남겨 재시도하게 한다.
+        return;
+      }
+      showToast(
+        code === "NETWORK_ERROR"
+          ? "네트워크 오류로 결제를 진행하지 못했어요. 다시 시도해주세요"
+          : "결제를 진행하지 못했어요. 다시 시도해주세요",
+      );
     }
   }
 
@@ -88,7 +122,7 @@ function PaymentWidgetContent() {
   }
 
   return (
-    <div className="bg-canvas flex min-h-screen flex-col">
+    <div className="bg-canvas relative flex min-h-screen flex-col">
       <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center justify-center px-4 border-b">
         <span className="text-title-sm text-ink">결제</span>
       </div>
@@ -108,6 +142,8 @@ function PaymentWidgetContent() {
           {order ? `${order.totalAmount.toLocaleString("ko-KR")}원 결제하기` : "불러오는 중..."}
         </button>
       </div>
+
+      {toastMessage && <Toast message={toastMessage} visible={!!toastMessage} />}
     </div>
   );
 }

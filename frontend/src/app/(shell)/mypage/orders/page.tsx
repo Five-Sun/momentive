@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/core/Badge";
+import { Toast } from "@/components/feedback/Toast";
 import { getOrders, type OrderStatus, type OrderSummaryResponse } from "@/lib/api/orders";
 
 function formatWon(amount: number) {
@@ -39,10 +40,17 @@ export default function MyOrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<OrderSummaryResponse[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     getOrders()
       .then(setOrders)
+      .catch(() => {
+        setLoadFailed(true);
+        setToastMessage("주문내역을 불러오지 못했어요");
+        setTimeout(() => setToastMessage(null), 1800);
+      })
       .finally(() => setLoaded(true));
   }, []);
 
@@ -58,7 +66,9 @@ export default function MyOrdersPage() {
 
       {loaded && orders.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-20">
-          <span className="text-body text-muted">주문내역이 없어요</span>
+          <span className="text-body text-muted">
+            {loadFailed ? "주문내역을 불러오지 못했어요" : "주문내역이 없어요"}
+          </span>
         </div>
       ) : (
         <div className="flex flex-col gap-3 p-4">
@@ -78,6 +88,8 @@ export default function MyOrdersPage() {
           ))}
         </div>
       )}
+
+      {toastMessage && <Toast message={toastMessage} visible={!!toastMessage} />}
     </div>
   );
 }
