@@ -85,13 +85,13 @@
 - [ ] **Toss 결제위젯 실연동 미완성** — 클라이언트 키가 결제위젯 API(`widget-groups/keys`)에서 401. 원인은 Toss 개발자센터에서 계정 가입만 하고 상점(스토어) 등록(사업자 정보 필요)을 하지 않은 것으로 추정. 사업자 등록 확인 후(별도 진행) 재검증 필요 — 상세 `docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`
 - [x] `e2e-tester`가 확인 가능한 범위(장바구니 선택, 체크아웃 진입/배송지, 주문 생성, 결제 실패/만료 화면 전환, 주문내역 조회, FAILED/CANCELLED 취소버튼 미노출)는 전부 PASS — `docs/e2e/2026-08-29-cart-order-payment.md`
 - [ ] 나머지 기능(다음 항목들) 먼저 마무리한 뒤, 상점 등록 완료 시점에 이 기능으로 돌아와 결제위젯 렌더링~confirm 성공~`PAID` 취소까지 마무리 검증
-- [ ] 지금까지 진행된 내용(구현 전체 + 버그 수정)으로 커밋 후 `develop` 대상 PR 생성
+- [x] `feat/cart-order-payment` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/7, 리뷰 후속 조치(결제/주문내역 에러 핸들링 보완) 반영 완료, `develop`에 머지 완료
 
-## Swagger(API 명세서) 도입
+## Swagger(API 명세서) 도입 (완료, PR 대기)
 
-배경: 백엔드 API를 Swagger/OpenAPI로 문서화해 API 명세서로 쓰고 싶음. 확인 결과 현재 `build.gradle` 의존성, `backend/CLAUDE.md` 컨벤션, `backend-reviewer` 체크리스트 어디에도 Swagger 설정이 없음(2026-08-27 확인).
+배경: 백엔드 API를 Swagger/OpenAPI로 문서화해 API 명세서로 쓰고 싶음. 확인 결과 현재 `build.gradle` 의존성, `backend/CLAUDE.md` 컨벤션, `backend-reviewer` 체크리스트 어디에도 Swagger 설정이 없음(2026-08-27 확인). `docs/specs/2026-08-30-api-documentation.md`, `docs/plans/2026-08-30-api-documentation.md`(status: done). 브랜치 `feat/api-documentation`.
 
-- [ ] `/grillme`로 요구사항 확정 — 문서화 범위(전체 API vs 일부), 인증 필요 엔드포인트 노출 여부, 그룹 분리 여부 등
-- [ ] `build.gradle`에 springdoc-openapi 의존성 추가 + OpenAPI 설정
-- [ ] `backend/CLAUDE.md`에 컨트롤러/DTO 문서화 애노테이션(`@Operation`, `@Schema` 등) 컨벤션 추가
-- [ ] `backend-reviewer.md` 체크리스트에 Swagger 애노테이션 검증 항목 추가
+- [x] `/grillme`로 요구사항 확정 — 전체 API 문서화(admin 없음), 필수 애노테이션은 `@Operation` summary + DTO `@Schema` + 인증 필요 엔드포인트 `@SecurityRequirement`(에러 응답 `@ApiResponse`는 선택), 운영 환경에서도 Swagger UI 노출(profile 분리 안 함), 그룹 미분리(admin 도메인 생기면 재검토), 컨벤션 문서+`backend-reviewer` 체크리스트 둘 다 반영
+- [x] `plan-runner`로 Phase 1~3 자동 실행 완료 — springdoc-openapi 2.8.9(plan 명시 2.8.17이 Spring Boot 3.4.1과 `PatternParseException` 충돌 일으켜 다운그레이드) 도입, 4개 컨트롤러(Auth/Product/Address/Order) 전체 엔드포인트에 `@Operation`, DTO 17개 전체 필드에 `@Schema`, 인증 필요 엔드포인트에 `@SecurityRequirement` 소급 적용, `backend/CLAUDE.md`/`backend-reviewer.md` 컨벤션 반영
+- [x] 코드 리뷰에서 나온 advisory 수정: `@CurrentUser Long userId` 파라미터가 Swagger 문서에 일반 필수 query parameter로 잘못 노출되던 문제 → 8개 엔드포인트에 `@Parameter(hidden = true)` 추가로 해소
+- [ ] 커밋 후 `develop` 대상 PR 생성
