@@ -43,7 +43,7 @@ export default function CheckoutPage() {
     setError,
     formState: { errors },
   } = useForm<AddressFormValues>({
-    resolver: zodResolver(addressSchema),
+    resolver: showNewAddressForm ? zodResolver(addressSchema) : undefined,
   });
 
   useEffect(() => {
