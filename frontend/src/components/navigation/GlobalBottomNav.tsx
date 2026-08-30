@@ -12,9 +12,21 @@ const TABS = [
   { key: "mypage", icon: <User className="h-5 w-5" />, label: "마이", href: "/mypage" },
 ] as const;
 
+// 자체 fixed bottom CTA 바를 가진 화면들. 전역 하단 네비게이션과 겹쳐 CTA를 가리므로
+// 이 경로들에서는 렌더링하지 않는다. (docs/backlog/2026-08-29-cart-order-payment-phase6-01.md 참고)
+const HIDDEN_PREFIXES = ["/checkout", "/mypage/orders/"] as const;
+
+function isHidden(pathname: string) {
+  return HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
 export function GlobalBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
+
+  if (isHidden(pathname)) {
+    return null;
+  }
 
   const activeTab = TABS.find((tab) => tab.href === pathname);
 

@@ -57,7 +57,7 @@
 - [x] `feat/auth` 브랜치 푸시 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/5, `develop`에 머지 완료
 - [x] 뒷정리: spec `status`를 `implemented`로 갱신, 수용 기준(AC) 체크박스 13개 전부 체크 완료
 
-## E2E 케이스 단일 탭 순차 실행 전환 (완료, PR 대기)
+## E2E 케이스 단일 탭 순차 실행 전환 (완료)
 
 배경: e2e-tester 브라우징 테스트 중 탭이 9개(auth 시나리오 개수만큼)까지 쌓이는 문제 발견. 원인은 `e2e-format.md` 규격상 시나리오마다 `browser.getPage(name)`에 다른 name을 써서 탭을 분리했는데, dev-browser가 CLI 호출이 끝나도 브라우저를 유지하는 영속 데몬이라 탭이 자동으로 안 닫혔기 때문. 브랜치 `chore/e2e-single-tab-flow`.
 
@@ -65,28 +65,27 @@
 - [x] `.claude/agents/e2e-tester.md` 개정 — 시나리오별 개별 dev-browser 실행 → 파일당 1회 실행으로 변경. 판정에 "미실행"(앞 시나리오 실패로 못 돈 시나리오, fail과 구분·backlog 중복 생성 안 함) 카테고리 추가
 - [x] 기존 `docs/e2e/2026-08-27-auth.md`, `2026-08-27-product-catalog-home.md`는 구 형식 그대로 둠(사용자 요청 — 나중에 필요해지면 새 형식으로 재작성)
 - [x] 커밋(`5be078f`) 및 `chore/e2e-single-tab-flow` 푸시
-- [ ] `develop` 대상 PR 생성 및 머지 — **집에서 이어서 처리**
+- [x] `develop` 대상 PR 생성 및 머지 → https://github.com/Five-Sun/momentive/pull/6, `develop`에 머지 완료
 
 ## 다음 기능
 
 - [x] PR #3(`feat/app-redesign` → `develop`) 리뷰 후 머지 완료 (PR #2는 이미 머지됨 — 이 merge로 Todo.md 충돌 해소)
 - [x] PR #5(`feat/auth` → `develop`) 리뷰 후 머지 완료
-- [ ] 로그인/Auth 완료 — 다음은 결제/Order(토스페이먼츠 연동)를 `/grillme`로 기능 spec 작성부터 시작 (Auth가 선행 조건이었음, `backend/CLAUDE.md`에 이미 정리된 토스페이먼츠 컨벤션 참고)
+- [x] 로그인/Auth 완료 — 다음은 결제/Order(토스페이먼츠 연동)를 `/grillme`로 기능 spec 작성부터 시작 (Auth가 선행 조건이었음, `backend/CLAUDE.md`에 이미 정리된 토스페이먼츠 컨벤션 참고)
 
-## 장바구니→주문→결제(토스페이먼츠) grillme (진행 중, 집에서 이어서)
+## 장바구니→주문→결제(토스페이먼츠) (구현 완료, 실결제 연동만 보류 — PR 대기)
 
-`/grillme`로 인터뷰 시작했으나 시간 부족으로 Q1 답변 전에 중단. **다음 세션은 이 절부터 이어서 진행** — 아래 조사한 사실과 Q1 질문(미답변)을 재활용하고 처음부터 다시 조사하지 않는다.
+배경: `docs/specs/2026-08-29-cart-order-payment.md`(status: confirmed — 실결제 미검증으로 되돌림), `docs/plans/2026-08-29-cart-order-payment.md`(status: in_progress). `feat/cart-order-payment` 브랜치, `plan-runner`로 Phase 1~6 자동 실행 완료.
 
-사전 조사로 확인한 사실:
-- 장바구니는 `frontend/src/lib/storage/cart.ts`(localStorage)만 있고 백엔드에 Cart 개념 없음. `/cart` 페이지 "결제하기" 버튼은 토스트만 띄우는 무동작 상태
-- `Product` 엔티티(`backend/.../product/domain/Product.java`)에 재고 수량 필드 없음 — `soldOut`(Boolean) 하나뿐. `backend/CLAUDE.md` 결제 연동 컨벤션은 "재고 선점(차감)"과 `@Version` 낙관적 락을 전제하고 있어 정수 재고 필드 추가 여부가 이번 스펙에서 결정돼야 함
-- 상품상세의 "사이즈(S/M/L/XL)" 선택(`ProductDetailView.tsx`의 `SIZES` 상수)은 백엔드에 대응 필드가 전혀 없는 프론트 하드코딩 목업 — 실제 옵션 개념 없이 그냥 문자열로 장바구니에 저장됨
-- `User` 엔티티에 배송지(주소/연락처) 필드 없음. 마이페이지의 "쿠폰함"/"적립금"/"배송조회" 메뉴는 클릭해도 아무 동작 없는 장식용 placeholder
-- 장바구니 화면의 쿠폰 할인(3,000원 고정)/무료배송 기준(50,000원)은 전부 프론트 하드코딩 상수, 백엔드 검증/근거 없음
-
-미답변 Q1 (다음 세션에서 다시 묻고 시작): 장바구니를 백엔드로 옮길지(User에 연결된 Cart 엔티티/API 신설), 아니면 지금처럼 localStorage에 두고 "주문서 작성" 단계에서만 그 내용을 서버로 보내 Order를 생성할지. 추천안은 localStorage 유지(범위를 작게 유지, 비로그인 장바구니 담기 UX 보존) — 사용자가 이 질문에 "clarify" 요청을 했으나 구체적으로 뭘 명확히 하고 싶은지 답하기 전에 세션이 끊김.
-
-이후 예정된 후속 질문(아직 안 물어봄): 재고 필드 추가 여부, 배송지 입력 방식(매번 입력 vs 주소록), 쿠폰/적립금 이번 스펙 포함 여부, 장바구니 전체결제 vs 부분결제, Toss 결제위젯 SDK 방식, 결제 실패 시 재시도 흐름, 마이페이지 주문내역 화면 포함 여부, 환불/취소 범위(아마 범위 밖 추천).
+- [x] grillme 세션 — 장바구니 localStorage 유지, 재고 수량 필드 도입, 사이즈는 문자열만 저장, 배송지는 다중 주소록(기본배송지 플래그, 최초 주문 시 입력), 부분결제 지원(장바구니 체크박스), 배송비 없음, Toss 결제위젯 SDK, 재고는 주문 생성 시 선점, Order 상태 4종(PENDING/PAID/FAILED/CANCELLED), 결제 실패 시 재시도 없이 새 주문, PAID 상태에서만 취소 가능(재고 복원), 마이페이지 주문내역 목록+상세 포함 결정. 쿠폰/적립금/배송비 정책/부분환불/배송추적/Cart 백엔드 이전/상품옵션 관리는 범위 밖으로 명시
+- [x] spec 작성 완료 — `docs/specs/2026-08-29-cart-order-payment.md`
+- [x] planner로 phase/step 플랜 작성 완료 — `docs/plans/2026-08-29-cart-order-payment.md`
+- [x] `plan-runner`로 Phase 1~6 자동 실행 완료 (백엔드 재고/주문/배송지 골격, Toss confirm/cancel/만료 스케줄러, 프론트 장바구니 선택/체크아웃/결제위젯/마이페이지 주문내역, E2E 검증). 구현 중 발견·수정된 이슈: 낙관적 락 재시도 off-by-one(`docs/backlog/2026-08-29-cart-order-payment-phase1-01.md`), 쿠폰 placeholder가 실결제 금액에 반영되던 버그(phase3-01), `GlobalBottomNav`가 체크아웃/주문상세 CTA를 가리던 문제(phase6-01)
+- [x] 체크아웃 화면 버그 발견·수정: 저장된 배송지 선택 시(신규 입력 폼 미노출) `useForm`이 항상 `zodResolver`로 검증을 시도해 "결제하기" 클릭이 무반응이던 문제 — `resolver`를 `showNewAddressForm`일 때만 적용하도록 수정 (`frontend/src/app/(shell)/checkout/page.tsx`)
+- [ ] **Toss 결제위젯 실연동 미완성** — 클라이언트 키가 결제위젯 API(`widget-groups/keys`)에서 401. 원인은 Toss 개발자센터에서 계정 가입만 하고 상점(스토어) 등록(사업자 정보 필요)을 하지 않은 것으로 추정. 사업자 등록 확인 후(별도 진행) 재검증 필요 — 상세 `docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`
+- [x] `e2e-tester`가 확인 가능한 범위(장바구니 선택, 체크아웃 진입/배송지, 주문 생성, 결제 실패/만료 화면 전환, 주문내역 조회, FAILED/CANCELLED 취소버튼 미노출)는 전부 PASS — `docs/e2e/2026-08-29-cart-order-payment.md`
+- [ ] 나머지 기능(다음 항목들) 먼저 마무리한 뒤, 상점 등록 완료 시점에 이 기능으로 돌아와 결제위젯 렌더링~confirm 성공~`PAID` 취소까지 마무리 검증
+- [ ] 지금까지 진행된 내용(구현 전체 + 버그 수정)으로 커밋 후 `develop` 대상 PR 생성
 
 ## Swagger(API 명세서) 도입
 

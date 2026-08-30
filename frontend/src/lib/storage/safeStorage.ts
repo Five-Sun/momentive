@@ -16,3 +16,22 @@ export function writeJSON<T>(key: string, value: T): void {
     // localStorage 사용 불가(프라이빗 모드 등) 시 조용히 무시
   }
 }
+
+export function readSessionJSON<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function writeSessionJSON<T>(key: string, value: T): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // sessionStorage 사용 불가(프라이빗 모드 등) 시 조용히 무시
+  }
+}
