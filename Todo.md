@@ -96,14 +96,14 @@
 - [x] 코드 리뷰에서 나온 advisory 수정: `@CurrentUser Long userId` 파라미터가 Swagger 문서에 일반 필수 query parameter로 잘못 노출되던 문제 → 8개 엔드포인트에 `@Parameter(hidden = true)` 추가로 해소
 - [x] `feat/api-documentation` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/8, 리뷰 후속 조치(spec 버전 정정) 반영 완료, `develop`에 머지 완료
 
-## 다음 작업 후보 정리 (완료, PR 대기)
+## 다음 작업 후보 정리 (완료)
 
 배경: "화면은 있는데 실제 동작이 구현 안 된 부분부터 1차 개발범위로 잡자"는 방향으로 코드베이스 전수 조사(2026-08-30). 결과를 Todo.md에 정리. 브랜치 `docs/todo-next-candidates`.
 
 - [x] 조사 결과 3건을 다음 작업 후보로 정리 — 마이페이지 메뉴 5개(완전 무동작, 백엔드 도메인 없음), 리뷰(조회+작성, 전 상품 공통 하드코딩 목업), 쿠폰 시스템(UI/state만 있고 실제 쿠폰함 없음)
-- [x] 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/9 (아직 머지 대기 — 병합 시 아래 "상품 리뷰" 섹션과 함께 반영됨)
+- [x] 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/9, `develop`에 머지 완료
 
-## 상품 리뷰 (조회 + 작성) (완료, PR 대기)
+## 상품 리뷰 (조회 + 작성) (완료, PR 머지)
 
 배경: 위 "다음 작업 후보" 조사에서 가장 우선순위 높게 선택된 항목. 상품상세의 `ReviewCard`가 전 상품 공통 `MOCK_REVIEWS`(하드코딩 목업)를 보여주고, 별점(`Rating value={4.5}`)도 5개 화면 전부에서 모든 상품에 동일하게 하드코딩되어 있던 문제를 해소. `docs/specs/2026-08-30-product-review.md`(status: implemented), `docs/plans/2026-08-30-product-review.md`(status: done). 브랜치 `feat/product-review`.
 
@@ -114,4 +114,10 @@
 - [x] E2E 검증 — `docs/e2e/2026-08-30-product-review.md` 시나리오 1~6(로그인+빈 상태, 리뷰 작성, 수정, 마이페이지 진입점, 목록 평점 반영, 삭제 후 재작성) 전부 PASS
 - [x] `./gradlew build`/`test`(43/43), `npm run build`/`lint` 최종 재확인 통과
 - [x] spec AC 12개 전부 체크, status를 `implemented`로 갱신
-- [ ] 커밋 및 `develop` 대상 PR 생성 (다음 세션 시작점 — PR #9와 머지 순서 조율 필요, 둘 다 develop 대상)
+- [x] 로컬 dev DB가 테스트 실행으로 초기화되어(별도 테스트 DB 없이 dev DB를 공유/wipe하는 정책) 무효화된 E2E 시딩값(상품 279→61, 주문 158→1)을 재시딩 후 갱신, "더보기" 페이지네이션·닉네임 비마스킹·카테고리/검색/위시리스트 평점 표시 등 나머지 AC 항목도 `docs/e2e/2026-08-31-product-review.md`로 추가 검증 — spec AC 11개 전부 실제 재확인 완료
+- [x] `feat/product-review` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/10, `develop`에 머지 완료
+
+## 다음 작업 후보
+
+- [ ] 마이페이지 메뉴 5개 정리 (배송조회/쿠폰함/적립금/반려견 프로필 관리/고객센터, 전부 무동작) 또는 쿠폰 시스템 중 하나를 다음 `/grillme` 대상으로 선정 필요 — 마이페이지 메뉴는 화면별로 독립적이라 스코프를 좁히기 쉬운 반면, 쿠폰은 결제 금액 계산 로직까지 손대야 해서 범위가 더 큼
+- [ ] Toss 결제위젯 실연동은 상점(스토어) 등록 완료 후 재검증 필요 (`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`) — 사용자 측 외부 조치 대기 중
