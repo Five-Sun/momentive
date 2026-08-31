@@ -117,7 +117,21 @@
 - [x] 로컬 dev DB가 테스트 실행으로 초기화되어(별도 테스트 DB 없이 dev DB를 공유/wipe하는 정책) 무효화된 E2E 시딩값(상품 279→61, 주문 158→1)을 재시딩 후 갱신, "더보기" 페이지네이션·닉네임 비마스킹·카테고리/검색/위시리스트 평점 표시 등 나머지 AC 항목도 `docs/e2e/2026-08-31-product-review.md`로 추가 검증 — spec AC 11개 전부 실제 재확인 완료
 - [x] `feat/product-review` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/10, `develop`에 머지 완료
 
+## 마이페이지 메뉴 정리 (반려견 프로필 관리 + 고객센터) (완료, PR 머지)
+
+배경: 마이페이지 메뉴 5개(배송조회/쿠폰함/적립금/반려견 프로필 관리/고객센터) 중 다른 진행 중 작업과 겹치지 않는 두 항목만 우선 정리. `docs/specs/2026-08-31-mypage-menu-cleanup.md`(status: implemented), `docs/plans/2026-08-31-mypage-menu-cleanup.md`(status: done). 브랜치 `feat/mypage-menu-cleanup`.
+
+- [x] grillme 세션 — 반려견 프로필 관리+고객센터만 이번 범위(배송조회는 배송 상태 개념 자체가 없어 무거움, 쿠폰/적립금은 별도 쿠폰 시스템 항목과 겹침), 반려견은 사용자당 여러 마리(User 1:N)/필드(이름 필수+품종·생일·성별·몸무게 선택)/사진 없이 기본 아이콘(이미지 업로드 인프라 부재, 리뷰 이미지와 동일 사유)/전체 CRUD/다른 도메인과 연동 없는 독립 화면, 고객센터는 백엔드 없는 정적 FAQ+인스타그램(`@momentive_official`) 연락처 결정
+  - 세션 중 발견: FAQ 배송비 문항 작성 과정에서 사용자가 실제 네이버 스마트스토어 배송비 정책(3,400원/7만원 이상 무료/제주·도서산간 +4,000원) 스크린샷을 제시 — `cart-order-payment`가 이미 "배송비 없음"으로 구현·배포된 것과 불일치함을 확인. 결제 로직 수정은 이번 grillme 범위 밖으로 분리하고 별도 후보로 아래에 기록(FAQ 문구는 실제 정책 그대로 반영)
+- [x] spec 작성 완료 — `docs/specs/2026-08-31-mypage-menu-cleanup.md`
+- [x] planner로 phase/step 플랜 작성 완료 — `docs/plans/2026-08-31-mypage-menu-cleanup.md` (Phase 1: 백엔드 Pet 도메인 CRUD / Phase 2: 프론트 `/mypage/pets` / Phase 3: 프론트 `/mypage/support`+메뉴 연결 / Phase 4: E2E 검증)
+- [x] `plan-runner`로 Phase 1~4 자동 실행, 전 phase 1차 통과(backlog 실패 기록 없음). Phase 4 E2E에서 환경 문제 발견: 백엔드에 devtools가 없어 `./dev.sh`가 최초 기동한 `bootRun` 프로세스가 Phase 1의 Pet 코드 변경을 반영하지 못한 채 떠 있던 상태 → 사용자가 `./dev.sh` 재기동 후 재개해 해결. 재발 방지로 `.claude/agents/e2e-tester.md`에 "backend/ 파일을 다루는 plan이면 검증 전 백엔드 프로세스를 스스로 재기동" 절차 추가(별도 커밋)
+- [x] E2E 검증 — `docs/e2e/2026-08-31-mypage-menu-cleanup.md` 시나리오 1~8 전부 PASS, 이후 FAQ 4개 항목 전부 노출 여부까지 추가로 직접 재확인
+- [x] spec AC 11개 전부 체크, status를 `implemented`로 갱신
+- [x] `feat/mypage-menu-cleanup` 커밋(기능 구현 + e2e-tester 개선 2개 커밋) 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/11, `develop`에 머지 완료
+
 ## 다음 작업 후보
 
-- [ ] 마이페이지 메뉴 5개 정리 (배송조회/쿠폰함/적립금/반려견 프로필 관리/고객센터, 전부 무동작) 또는 쿠폰 시스템 중 하나를 다음 `/grillme` 대상으로 선정 필요 — 마이페이지 메뉴는 화면별로 독립적이라 스코프를 좁히기 쉬운 반면, 쿠폰은 결제 금액 계산 로직까지 손대야 해서 범위가 더 큼
+- [ ] 쿠폰 시스템 — 마이페이지 남은 메뉴(쿠폰함/적립금)와 겹치는 항목, 결제 금액 계산 로직까지 손대야 해서 범위가 큼. 다음 `/grillme` 후보
+- [ ] **배송비 정책 불일치** — momentive 웹사이트(`cart-order-payment`)는 "배송비 없음(상품가만 결제)"으로 구현됐지만, 실제 사업자 배송비 정책(네이버 스마트스토어 기준)은 3,400원(7만원 이상 무료배송, 제주·도서산간 +4,000원)이다. `docs/specs/2026-08-31-mypage-menu-cleanup.md`의 고객센터 FAQ는 실제 정책을 반영했으나 결제 로직은 아직 안 고쳐진 상태 — 별도 spec으로 체크아웃 금액 계산에 배송비를 반영해야 함. 결제가 아직 샌드박스 단계라 실 고객 영향은 없음
 - [ ] Toss 결제위젯 실연동은 상점(스토어) 등록 완료 후 재검증 필요 (`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`) — 사용자 측 외부 조치 대기 중
