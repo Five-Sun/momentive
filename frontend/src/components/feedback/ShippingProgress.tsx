@@ -6,7 +6,7 @@ interface ShippingProgressProps {
 
 export function ShippingProgress({ remaining, formatAmount }: ShippingProgressProps) {
   const done = remaining <= 0;
-  const pct = done ? 100 : Math.max(6, 100 - Math.min(100, (remaining / 50000) * 100));
+  const pct = done ? 100 : Math.max(6, 100 - Math.min(100, (remaining / 70000) * 100));
 
   return (
     <div className="bg-surface-soft flex flex-col gap-2 rounded-sm p-3.5">

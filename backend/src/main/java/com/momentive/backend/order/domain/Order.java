@@ -43,6 +43,9 @@ public class Order {
     @Column(nullable = false)
     private Integer totalAmount;
 
+    @Column(nullable = false)
+    private Integer shippingFee;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "address_id", nullable = false)
     private Address address;
@@ -62,6 +65,7 @@ public class Order {
         this.user = user;
         this.address = address;
         this.totalAmount = totalAmount;
+        this.shippingFee = 0;
         this.status = OrderStatus.PENDING;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -76,10 +80,16 @@ public class Order {
     }
 
     /**
-     * 주문 생성 중 항목별 재고 차감이 끝난 뒤 실제 합계 금액을 확정한다.
+     * 주문 생성 중 항목별 재고 차감이 끝난 뒤 상품금액과 배송비를 확정하고,
+     * 총 결제금액(totalAmount)을 그 합으로 계산해 저장한다.
      */
-    public void confirmTotalAmount(int totalAmount) {
-        this.totalAmount = totalAmount;
+    public void confirmAmounts(int itemsSubtotal, int shippingFee) {
+        this.shippingFee = shippingFee;
+        this.totalAmount = itemsSubtotal + shippingFee;
+    }
+
+    public int getItemsSubtotal() {
+        return totalAmount - shippingFee;
     }
 
     public boolean isOwnedBy(Long userId) {

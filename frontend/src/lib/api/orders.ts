@@ -26,6 +26,8 @@ export interface OrderCreateRequest {
 export interface OrderResponse {
   orderId: number;
   status: OrderStatus;
+  itemsSubtotal: number;
+  shippingFee: number;
   totalAmount: number;
   items: OrderItemResponse[];
   address: AddressResponse;

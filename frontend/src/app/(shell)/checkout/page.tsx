@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronLeft } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/core/Button";
@@ -14,6 +14,7 @@ import { getCheckoutSelection } from "@/lib/storage/checkoutSelection";
 import { getAddresses, type AddressResponse } from "@/lib/api/addresses";
 import { createOrder, type OrderItemRequest } from "@/lib/api/orders";
 import { ApiError } from "@/lib/api/client";
+import { calculateShippingFee } from "@/lib/shipping";
 
 const addressSchema = z.object({
   recipient: z.string().min(1, "받는 사람을 입력해주세요"),
@@ -41,10 +42,12 @@ export default function CheckoutPage() {
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors },
   } = useForm<AddressFormValues>({
     resolver: showNewAddressForm ? zodResolver(addressSchema) : undefined,
   });
+  const newAddressZipcode = useWatch({ control, name: "zipcode" });
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -74,10 +77,21 @@ export default function CheckoutPage() {
       .finally(() => setAddressesLoaded(true));
   }, []);
 
-  const totalAmount = useMemo(
+  const itemsSubtotal = useMemo(
     () => selectedItems.reduce((sum, item) => sum + item.unitPrice * item.qty, 0),
     [selectedItems],
   );
+
+  const selectedZipcode = showNewAddressForm
+    ? newAddressZipcode
+    : (addresses.find((a) => a.id === selectedAddressId)?.zipcode ?? null);
+
+  const shippingFee = useMemo(
+    () => calculateShippingFee(itemsSubtotal, selectedZipcode),
+    [itemsSubtotal, selectedZipcode],
+  );
+
+  const totalAmount = itemsSubtotal + shippingFee;
 
   function showToast(message: string) {
     setToastMessage(message);
@@ -229,6 +243,14 @@ export default function CheckoutPage() {
         </section>
 
         <section className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-body-sm text-body">상품금액</span>
+            <span className="text-body-sm text-ink">{formatWon(itemsSubtotal)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-body-sm text-body">배송비</span>
+            <span className="text-body-sm text-ink">{shippingFee === 0 ? "무료" : formatWon(shippingFee)}</span>
+          </div>
           <div className="flex items-center justify-between">
             <span className="text-title-sm text-ink">총 결제금액</span>
             <span className="text-price text-ink">{formatWon(totalAmount)}</span>

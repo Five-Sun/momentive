@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Minus, Plus, X } from "lucide-react";
 import { Button } from "@/components/core/Button";
+import { ShippingProgress } from "@/components/feedback/ShippingProgress";
 import {
   type CartItem,
   getCart,
@@ -13,6 +14,7 @@ import {
 import { setCheckoutSelection } from "@/lib/storage/checkoutSelection";
 
 const COUPON_DISCOUNT = 3000;
+const FREE_SHIPPING_THRESHOLD = 70000;
 
 function formatWon(amount: number) {
   return `${amount.toLocaleString("ko-KR")}원`;
@@ -79,6 +81,7 @@ export default function CartPage() {
   // "할인금액" 표시 줄에서만 사용하는 정보성 값이며, 총 결제금액(total) 계산에는 포함하지 않는다.
   const discount = couponApplied && selectedItems.length > 0 ? COUPON_DISCOUNT : 0;
   const total = subtotal;
+  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const allSelected = items.length > 0 && selectedKeys.size === items.length;
 
   return (
@@ -170,6 +173,10 @@ export default function CartPage() {
                 </div>
               );
             })}
+          </div>
+
+          <div className="px-4">
+            <ShippingProgress remaining={remaining} formatAmount={formatWon} />
           </div>
 
           <div className="px-4 pt-4">
