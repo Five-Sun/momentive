@@ -12,6 +12,8 @@ export interface ProductSummary {
   soldOut: boolean;
   category: Category;
   thumbnailUrl: string | null;
+  averageRating: number | null;
+  reviewCount: number;
 }
 
 export interface ProductListResponse {
@@ -37,6 +39,8 @@ export interface ProductDetail {
   soldOut: boolean;
   category: Category;
   images: ProductImage[];
+  averageRating: number | null;
+  reviewCount: number;
 }
 
 export interface GetProductsOptions {

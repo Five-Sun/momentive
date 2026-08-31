@@ -13,7 +13,9 @@ public record ProductDetailResponse(
         @Schema(description = "할인가") Integer discountPrice,
         @Schema(description = "품절 여부") Boolean soldOut,
         @Schema(description = "카테고리") Category category,
-        @Schema(description = "상품 이미지 목록") List<ProductImageResponse> images
+        @Schema(description = "상품 이미지 목록") List<ProductImageResponse> images,
+        @Schema(description = "평균 평점(리뷰 없으면 null)") Double averageRating,
+        @Schema(description = "리뷰 개수") Integer reviewCount
 ) {
 
     public static ProductDetailResponse from(Product product) {
@@ -25,7 +27,9 @@ public record ProductDetailResponse(
                 product.getDiscountPrice(),
                 product.getSoldOut(),
                 product.getCategory(),
-                product.getImages().stream().map(ProductImageResponse::from).toList()
+                product.getImages().stream().map(ProductImageResponse::from).toList(),
+                product.getAverageRating(),
+                product.getReviewCount()
         );
     }
 }

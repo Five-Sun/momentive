@@ -18,7 +18,10 @@ public enum ErrorCode {
     PAYMENT_CONFIRM_FAILED(HttpStatus.PAYMENT_REQUIRED, "결제 승인에 실패했습니다."),
     ORDER_NOT_PENDING(HttpStatus.CONFLICT, "이미 처리된 주문입니다."),
     ORDER_NOT_CANCELLABLE(HttpStatus.CONFLICT, "취소할 수 없는 주문 상태입니다."),
-    PAYMENT_AMOUNT_MISMATCH(HttpStatus.PAYMENT_REQUIRED, "결제 금액이 일치하지 않습니다.");
+    PAYMENT_AMOUNT_MISMATCH(HttpStatus.PAYMENT_REQUIRED, "결제 금액이 일치하지 않습니다."),
+    PURCHASE_NOT_VERIFIED(HttpStatus.FORBIDDEN, "구매 이력이 확인된 사용자만 리뷰를 작성할 수 있습니다."),
+    REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 이 상품에 작성한 리뷰가 있습니다."),
+    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "리뷰를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;
