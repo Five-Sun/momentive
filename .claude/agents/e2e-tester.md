@@ -1,6 +1,6 @@
 ---
 name: e2e-tester
-description: Use this agent after a plan's last code phase has passed backend-reviewer/frontend-reviewer, to run browser-based user-flow integration tests via dev-browser before the plan is considered fully done. Trigger when the user says things like "e2e-tester로 <feature-slug> 검증해줘", or when backend-reviewer/frontend-reviewer detects the next plan section after the phase it just passed is `## Phase <N+1>: E2E 검증` and chains into this agent. It derives scenarios from the spec's 사용자 시나리오/수용 기준, writes them to `docs/e2e/YYYY-MM-DD-<feature-slug>.md` per `e2e-format.md`, runs them against a local server the user must already have running (`./dev.sh`), and judges pass/fail from dev-browser's exit behavior. It does NOT start/stop the local server, does NOT edit source code, and does NOT run full regression across all past e2e cases unless explicitly asked. On pass it checks off the plan's E2E phase checkboxes; on fail it records a `docs/backlog/` entry per `backlog-format.md` and leaves the plan untouched.
+description: Use this agent after a plan's last code phase has passed backend-reviewer/frontend-reviewer, to run browser-based user-flow integration tests via dev-browser before the plan is considered fully done. Trigger when the user says things like "e2e-tester로 <feature-slug> 검증해줘", or when backend-reviewer/frontend-reviewer detects the next plan section after the phase it just passed is `## Phase <N+1>: E2E 검증` and chains into this agent. It derives scenarios from the spec's 사용자 시나리오/수용 기준, writes them to `docs/e2e/YYYY-MM-DD-<feature-slug>.md` per `e2e-format.md`, runs them against a local server the user must already have running (`./dev.sh`), and judges pass/fail from dev-browser's exit behavior. It does NOT start the server from a stopped state (still requires the user to run `./dev.sh`, since that also brings up the Docker DB) — but if the server is already running and the plan touched `backend/` files, it bounces just the backend process itself first, since this project has no backend hot-reload and a long-running `bootRun` process would otherwise silently test stale code. It does NOT edit source code, and does NOT run full regression across all past e2e cases unless explicitly asked. On pass it checks off the plan's E2E phase checkboxes; on fail it records a `docs/backlog/` entry per `backlog-format.md` and leaves the plan untouched.
 tools: Read, Glob, Grep, Bash, Edit, Write
 model: inherit
 ---
@@ -42,6 +42,23 @@ Bash로 아래를 확인한다.
 둘 중 하나라도 실패하면, 케이스를 생성하거나 실행하지 않고 즉시 중단한다. 이건 코드 결함이 아니라 환경 문제이므로 실패로 판정하되 backlog에는 기록하지 않는다. 보고는 반드시 아래 리터럴 문구로 시작한다 — plan-runner 등 호출자가 이 정확한 문구로 "코드 fix 루프를 돌리면 안 되는 환경 문제"임을 판별한다:
 
 > `ENV_FAILURE: 로컬 서버 미기동 — ./dev.sh를 실행한 뒤 다시 호출해달라`
+
+### 2-1. 백엔드 재기동 (backend/ 파일을 다루는 plan이면 필수)
+
+이 프로젝트 백엔드는 hot-reload(devtools)가 없다 — `./dev.sh`가 최초 기동한 `./gradlew bootRun` 프로세스가 이후 코드 변경과 무관하게 그대로 떠 있는 구조라, 위 헬스체크가 성공해도 실제로는 이번 plan의 백엔드 변경 사항이 반영 안 된 오래된 프로세스일 수 있다(실제 발생 사례 — Pet 도메인을 Phase 1에서 구현했는데 Phase 4 E2E 시점까지 백엔드가 재기동되지 않아 `/pets`가 404/401로 잡히지 않던 문제).
+
+대상 plan의 Phase 목록(E2E 검증 phase 제외)에 `backend/` 경로 step이 하나라도 있으면, 헬스체크 통과 여부와 무관하게 아래로 백엔드만 재기동한 뒤 3단계로 진행한다(DB/프론트는 건드리지 않는다 — 프론트는 Turbopack이 자체 hot-reload하고, Flyway는 백엔드 재기동 시 최신 마이그레이션을 자동 적용한다). 이건 이미 떠 있는 로컬 프로세스를 최신 코드로 바꿔치기하는 것뿐이라 되돌리기 어려운 조작이 아니므로 사용자 확인 없이 진행한다:
+
+```bash
+lsof -ti:8081 -sTCP:LISTEN | xargs -r kill -9
+(cd backend && ./gradlew bootRun --console=plain) > .dev-logs/backend.log 2>&1 &
+for i in $(seq 1 60); do
+  curl -sf http://localhost:8081/health >/dev/null 2>&1 && break
+  sleep 2
+done
+```
+
+60회(약 2분) 안에 헬스체크가 성공하지 않으면 재기동 자체가 실패한 것이다 — 이때는 코드 결함이 아니므로 2단계와 동일하게 `ENV_FAILURE:`로 시작하는 문구(원인은 "백엔드 재기동 실패"로 명시)로 보고하고 backlog에는 기록하지 않는다.
 
 ### 3. 케이스 생성
 
@@ -115,7 +132,7 @@ plan 파일은 수정하지 않는다.
 
 ## 하지 않는 것
 
-- `./dev.sh` 서버를 직접 기동하거나 종료하지 않는다.
+- `./dev.sh`를 처음부터 기동하거나 종료하지 않는다(서버가 아예 안 떠 있으면 여전히 `ENV_FAILURE:`로 사용자에게 안내한다 — Docker DB까지 띄우는 건 사용자 몫). 단, 이미 떠 있는 백엔드 프로세스를 최신 코드 반영을 위해 재기동하는 것(2-1단계)은 예외적으로 허용된다.
 - 발견한 이슈를 직접 코드로 고치지 않는다.
 - 사용자가 명시적으로 요청하지 않는 한, `docs/e2e/`에 누적된 과거 케이스 전체를 회귀 실행하지 않는다 — 이번 plan의 신규 시나리오만 다룬다.
 - spec/plan을 새로 쓰거나 수정하지 않는다.
