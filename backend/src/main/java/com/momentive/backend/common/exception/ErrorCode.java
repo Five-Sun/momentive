@@ -21,7 +21,8 @@ public enum ErrorCode {
     PAYMENT_AMOUNT_MISMATCH(HttpStatus.PAYMENT_REQUIRED, "결제 금액이 일치하지 않습니다."),
     PURCHASE_NOT_VERIFIED(HttpStatus.FORBIDDEN, "구매 이력이 확인된 사용자만 리뷰를 작성할 수 있습니다."),
     REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 이 상품에 작성한 리뷰가 있습니다."),
-    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "리뷰를 찾을 수 없습니다.");
+    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "리뷰를 찾을 수 없습니다."),
+    PET_NOT_FOUND(HttpStatus.NOT_FOUND, "반려견을 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;
