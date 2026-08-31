@@ -2,7 +2,7 @@
 date: 2026-08-31
 feature: shipping-fee-policy
 spec: 2026-08-31-shipping-fee-policy.md
-status: in_progress
+status: done
 ---
 
 # 배송비 정책 반영 플랜
@@ -35,7 +35,7 @@ status: in_progress
 - [x] `frontend/src/app/(shell)/mypage/orders/[orderId]/page.tsx` — 기존 "총 결제금액" 1줄을 동일하게 3줄로 확장하되, 이미 확정된 서버 응답(`OrderResponse.itemsSubtotal`/`shippingFee`/`totalAmount`)을 그대로 표시(클라이언트 재계산 없음)
 - [x] 정적 확인 — `frontend/src/app/(shell)/checkout/payment/page.tsx`의 결제위젯 렌더링과 `backend/.../OrderPaymentTransactionSupport.assertPendingAndOwned`의 confirm 금액 검증이 이미 `order.totalAmount`(Phase 1에서 배송비가 반영된 값)를 그대로 참조하는 구조인지 코드로 재확인 — 수정 불필요, 리뷰 시 결제 계약이 깨지지 않았음을 확인하는 체크박스
 - [x] 검증(자동): `npm run build`, `npm run lint` 통과
-- [ ] 검증(수동, 브라우저): 체크아웃에서 배송지를 제주 ↔ 비제주로 바꿔가며 배송비/총액이 즉시 갱신되는지, 마이페이지 주문상세에서 3줄 breakdown이 정확히 표시되는지 확인
+- [x] 검증(수동, 브라우저): 체크아웃에서 배송지를 제주 ↔ 비제주로 바꿔가며 배송비/총액이 즉시 갱신되는지, 마이페이지 주문상세에서 3줄 breakdown이 정확히 표시되는지 확인 — `e2e-tester`가 dev-browser로 대체 검증(`docs/e2e/2026-08-31-shipping-fee-policy.md` 시나리오 3·4), 2026-08-31 PASS
 
 ## Phase 3: 프론트 — 장바구니 무료배송 진행 안내(ShippingProgress) 연결
 
@@ -44,8 +44,8 @@ status: in_progress
 - [x] `frontend/src/components/feedback/ShippingProgress.tsx`의 하드코딩된 기준금액 `50000`을 `70000`으로 갱신
 - [x] `frontend/src/app/(shell)/cart/page.tsx`에 지금까지 어디서도 import되지 않던 `ShippingProgress`를 상품 목록과 금액 요약 사이에 배치. `remaining = Math.max(0, 70000 - selectedSubtotal)`을 계산해 전달(`selectedSubtotal`은 체크박스로 선택된 상품 기준, 기존 `subtotal` 변수 재사용)
 - [x] 검증(자동): `npm run build`, `npm run lint` 통과
-- [ ] 검증(수동, 브라우저): 장바구니에서 상품 선택/해제로 선택 금액이 70,000원 기준을 넘나들 때 안내 문구와 진행바가 올바르게 전환되는지 확인
+- [x] 검증(수동, 브라우저): 장바구니에서 상품 선택/해제로 선택 금액이 70,000원 기준을 넘나들 때 안내 문구와 진행바가 올바르게 전환되는지 확인 — `e2e-tester`가 dev-browser로 대체 검증(`docs/e2e/2026-08-31-shipping-fee-policy.md` 시나리오 1·5), 2026-08-31 PASS
 
 ## Phase 4: E2E 검증
 
-- [ ] `e2e-tester`가 spec의 사용자 시나리오 1~4, 수용 기준(AC) 9개를 근거로 `docs/e2e/YYYY-MM-DD-shipping-fee-policy.md` 케이스를 도출해 실행 — 장바구니 무료배송 안내 전환, 체크아웃 배송지 전환에 따른 배송비 재계산, 주문 생성 후 마이페이지 주문상세 breakdown 확인 포함. Toss 결제위젯 confirm 성공 경로는 상점(스토어) 미등록으로 자동화 검증이 불가능하므로(`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`와 동일 제약) 해당 범위는 사전조건 미충족으로 스킵 처리하고 나머지 시나리오만 검증
+- [x] `e2e-tester`가 spec의 사용자 시나리오 1~4, 수용 기준(AC) 9개를 근거로 `docs/e2e/YYYY-MM-DD-shipping-fee-policy.md` 케이스를 도출해 실행 — 장바구니 무료배송 안내 전환, 체크아웃 배송지 전환에 따른 배송비 재계산, 주문 생성 후 마이페이지 주문상세 breakdown 확인 포함. Toss 결제위젯 confirm 성공 경로는 상점(스토어) 미등록으로 자동화 검증이 불가능하므로(`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`와 동일 제약) 해당 범위는 사전조건 미충족으로 스킵 처리하고 나머지 시나리오만 검증. 시나리오 1·2는 2026-08-31 1차 실행에서 PASS, 시나리오 3은 1차 실행 시 로컬 DB 상품 데이터 없음으로 스킵됐다가 DB 재시딩 후 2차 실행에서 PASS

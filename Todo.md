@@ -130,17 +130,19 @@
 - [x] spec AC 11개 전부 체크, status를 `implemented`로 갱신
 - [x] `feat/mypage-menu-cleanup` 커밋(기능 구현 + e2e-tester 개선 2개 커밋) 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/11, `develop`에 머지 완료
 
-## 배송비 정책 반영 (진행 중)
+## 배송비 정책 반영 (완료, PR 대기)
 
-배경: 실제 사업자 배송비 정책(네이버 스마트스토어 기준: 기본 3,400원 / 상품금액 7만원 이상 무료배송 / 제주 우편번호(63000~63644)면 상품금액과 무관하게 4,000원 항상 추가)이 `cart-order-payment`의 "배송비 없음" 구현과 불일치하던 문제(`mypage-menu-cleanup`의 고객센터 FAQ grillme 세션 중 발견)를 해소. `docs/specs/2026-08-31-shipping-fee-policy.md`(status: confirmed), `docs/plans/2026-08-31-shipping-fee-policy.md`(status: in_progress). `cart-order-payment`는 건드리지 않고 독립 spec으로 분리(Toss 위젯 실연동 이슈와 별개로 추적). 브랜치 `feat/shipping-fee-policy`.
+배경: 실제 사업자 배송비 정책(네이버 스마트스토어 기준: 기본 3,400원 / 상품금액 7만원 이상 무료배송 / 제주 우편번호(63000~63644)면 상품금액과 무관하게 4,000원 항상 추가)이 `cart-order-payment`의 "배송비 없음" 구현과 불일치하던 문제(`mypage-menu-cleanup`의 고객센터 FAQ grillme 세션 중 발견)를 해소. `docs/specs/2026-08-31-shipping-fee-policy.md`(status: implemented), `docs/plans/2026-08-31-shipping-fee-policy.md`(status: done). `cart-order-payment`는 건드리지 않고 독립 spec으로 분리(Toss 위젯 실연동 이슈와 별개로 추적). 브랜치 `feat/shipping-fee-policy`.
 
 - [x] grillme 세션(Q1~Q7) — 제주만 우편번호 자동 판정(그 외 도서산간은 범위 밖, Todo 후속 후보로 분리), 무료배송 임계값은 상품금액(items subtotal) 기준, 제주 할증은 무료배송 조건과 무관하게 항상 별도 부과, 체크아웃/마이페이지 주문상세/장바구니 3화면 모두 반영(장바구니는 기존에 미연결 상태였던 `ShippingProgress` 컴포넌트 재활용, 기준금액 70,000원 갱신), 장바구니 진행바는 선택된 상품 기준, 우편번호 형식 검증은 범위 밖(별도 후속 후보로 분리) 결정
 - [x] spec 작성 완료 — `docs/specs/2026-08-31-shipping-fee-policy.md`
 - [x] planner 호출 시도 — coordinator를 통한 relay 승인이라는 이유로 planner가 파일 작성을 거부(기존 "subagent 승인은 직접 확인이어야 함" 패턴과 동일하게 재확인됨) → 직접 plan 파일 작성 — `docs/plans/2026-08-31-shipping-fee-policy.md` (Phase 1: 백엔드 계산 로직+`Order`/`OrderResponse` 확장+마이그레이션 / Phase 2: 프론트 체크아웃+주문상세 breakdown / Phase 3: 프론트 장바구니 `ShippingProgress` 연결 / Phase 4: E2E 검증)
 - [x] `plan-runner`로 Phase 1~3 자동 실행, 전부 1차 통과(재시도 0회, backlog 실패 기록 없음)
-- [ ] Phase 4 E2E 검증 — 시나리오 1(장바구니 무료배송 안내)·시나리오 2(체크아웃 배송지 전환 시 배송비 재계산)는 PASS. 시나리오 3(주문 생성 후 마이페이지 주문상세 breakdown 확인)은 로컬 dev DB `product` 테이블이 비어있어(flyway 이력상 시드 마이그레이션은 `success`로 기록돼 있으나 실제 데이터 없음 — 기존 "Local DB branch drift" 패턴과 동일) 스킵. `docs/e2e/2026-08-31-shipping-fee-policy.md`에 기록
-- [ ] DB 재시딩 시도 중(`docker compose -f backend/docker-compose.yml down -v` 후 `./dev.sh` 재기동) 이전 백엔드 프로세스가 완전히 종료되지 않고 8081 포트를 점유한 채 남아있어 새 프로세스가 포트 충돌로 기동 실패 — 재시딩 여부 확인 전 세션 중단. 다음 세션에서 좀비 프로세스 종료 후 재기동 → Phase 4 시나리오 3 재검증부터 이어가야 함
-- [ ] Toss 결제위젯 confirm 성공 경로는 상점 미등록 제약으로 이번에도 스킵 대상(`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`와 동일) — Phase 4 완료 조건에서 제외
+- [x] Phase 4 E2E 검증 — 시나리오 1(장바구니 무료배송 안내)·시나리오 2(체크아웃 배송지 전환 시 배송비 재계산) PASS. 시나리오 3(주문 생성 후 마이페이지 주문상세 breakdown 확인)은 1차 시도 시 로컬 dev DB `product` 테이블이 비어있어 스킵됐으나(flyway 이력상 시드 마이그레이션은 `success`로 기록돼 있으나 실제 데이터 없음 — 기존 "Local DB branch drift" 패턴과 동일), 이전 세션에서 8081 포트를 물고 남아있던 좀비 백엔드 프로세스(22시간 넘게 방치)를 종료하고 `docker compose down -v` → `./dev.sh` 재기동으로 DB 재시딩 후 재검증해 PASS
+- [x] Phase 2·3의 "검증(수동, 브라우저)" 항목도 사용자 요청으로 e2e-tester가 대체 검증 — 시나리오 4(체크아웃 신규 배송지 제주↔비제주 왕복 전환 시 배송비 즉시 재계산: 비제주 3,400원 → 제주 경계값 63644 7,400원 → 비제주 복귀 3,400원), 시나리오 5(장바구니 선택 금액 70,000원 기준 왕복 전환 시 안내/진행바 전환) 추가 PASS. `docs/e2e/2026-08-31-shipping-fee-policy.md`에 시나리오 1~5 전부 기록
+- [x] Toss 결제위젯 confirm 성공 경로는 상점 미등록 제약으로 이번에도 스킵 대상(`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`와 동일) — 위젯 렌더링 금액은 시나리오 3에서 확인, confirm 검증 로직은 기존 `order.totalAmount` 단일 소스 구조 재확인으로 대체
+- [x] plan 전 phase 완료로 `status`를 `done`으로 갱신, spec AC 9개 전부 체크 및 `status`를 `implemented`로 갱신
+- [ ] `feat/shipping-fee-policy` 커밋 및 `develop` 대상 PR 생성 예정
 
 ## 다음 작업 후보
 
