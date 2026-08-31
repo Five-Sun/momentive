@@ -9,16 +9,17 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { Button } from "@/components/core/Button";
 import { getOrders } from "@/lib/api/orders";
 
-const MENU_ITEMS = [
-  { icon: Truck, label: "배송조회" },
-  { icon: Ticket, label: "쿠폰함" },
-  { icon: Coins, label: "적립금" },
-  { icon: PawPrint, label: "반려견 프로필 관리" },
-  { icon: Headset, label: "고객센터" },
-];
-
 export default function MyPage() {
   const router = useRouter();
+
+  const MENU_ITEMS = [
+    { icon: Truck, label: "배송조회", onClick: () => {} },
+    { icon: Ticket, label: "쿠폰함", onClick: () => {} },
+    { icon: Coins, label: "적립금", onClick: () => {} },
+    { icon: PawPrint, label: "반려견 프로필 관리", onClick: () => router.push("/mypage/pets") },
+    { icon: Headset, label: "고객센터", onClick: () => router.push("/mypage/support") },
+  ];
+
   const { user, logout } = useAuth();
   const [wishlistCount, setWishlistCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
@@ -94,10 +95,10 @@ export default function MyPage() {
       </div>
 
       <div className="mt-4 flex flex-col px-4 pb-20">
-        {MENU_ITEMS.map(({ icon: Icon, label }) => (
+        {MENU_ITEMS.map(({ icon: Icon, label, onClick }) => (
           <button
             key={label}
-            onClick={() => {}}
+            onClick={onClick}
             className="border-hairline flex h-14 items-center justify-between border-b"
           >
             <div className="flex items-center gap-3">
