@@ -77,5 +77,9 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     return undefined as T;
   }
 
-  return res.json() as Promise<T>;
+  // 200이어도 바디가 비어있을 수 있다(예: nullable 응답을 명시적 JSON null 대신 빈 바디로
+  // 내려주는 경우). res.json()은 빈 문자열을 파싱하지 못해 SyntaxError를 던지므로,
+  // 텍스트로 먼저 읽어 비어있으면 undefined로, 아니면 JSON.parse로 안전하게 처리한다.
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }

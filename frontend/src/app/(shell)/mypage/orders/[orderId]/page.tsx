@@ -6,7 +6,14 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/core/Button";
 import { Badge } from "@/components/core/Badge";
 import { Toast } from "@/components/feedback/Toast";
+import { ReviewForm, type ReviewFormValues } from "@/components/commerce/ReviewForm";
 import { cancelOrder, getOrder, type OrderResponse, type OrderStatus } from "@/lib/api/orders";
+import {
+  createReview,
+  getMyReview,
+  updateReview,
+  type MyReview,
+} from "@/lib/api/reviews";
 import { ApiError } from "@/lib/api/client";
 
 function formatWon(amount: number) {
@@ -48,6 +55,10 @@ export default function OrderDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const [myReviews, setMyReviews] = useState<Record<number, MyReview | null>>({});
+  const [openReviewProductId, setOpenReviewProductId] = useState<number | null>(null);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
   const loadOrder = useCallback(() => {
     getOrder(orderId)
       .then(setOrder)
@@ -58,9 +69,44 @@ export default function OrderDetailPage() {
     loadOrder();
   }, [loadOrder]);
 
+  useEffect(() => {
+    if (!order || order.status !== "PAID") return;
+    const productIds = [...new Set(order.items.map((item) => item.productId))];
+    productIds.forEach((productId) => {
+      getMyReview(productId)
+        .then((review) => setMyReviews((prev) => ({ ...prev, [productId]: review })))
+        .catch(() => setMyReviews((prev) => ({ ...prev, [productId]: null })));
+    });
+  }, [order]);
+
   function showToast(message: string) {
     setToastMessage(message);
     setTimeout(() => setToastMessage(null), 1800);
+  }
+
+  async function handleReviewSubmit(productId: number, values: ReviewFormValues) {
+    setReviewSubmitting(true);
+    try {
+      const existing = myReviews[productId];
+      if (existing) {
+        const updated = await updateReview(productId, existing.reviewId, values);
+        setMyReviews((prev) => ({
+          ...prev,
+          [productId]: { reviewId: updated.reviewId, rating: updated.rating, text: updated.text },
+        }));
+        showToast("리뷰를 수정했어요");
+      } else {
+        const created = await createReview(productId, values);
+        setMyReviews((prev) => ({
+          ...prev,
+          [productId]: { reviewId: created.reviewId, rating: created.rating, text: created.text },
+        }));
+        showToast("리뷰를 등록했어요");
+      }
+      setOpenReviewProductId(null);
+    } finally {
+      setReviewSubmitting(false);
+    }
   }
 
   async function handleCancel() {
@@ -131,21 +177,69 @@ export default function OrderDetailPage() {
         <section className="flex flex-col gap-3">
           <span className="text-title-sm text-ink">주문 상품 ({order.items.length}개)</span>
           <div className="flex flex-col gap-2">
-            {order.items.map((item, idx) => (
-              <div
-                key={`${item.productId}-${idx}`}
-                className="border-hairline bg-surface-card flex gap-3 rounded-md border p-3"
-              >
-                <div className="bg-surface-strong h-16 w-16 flex-shrink-0 rounded-sm" />
-                <div className="flex flex-1 flex-col gap-1">
-                  <span className="text-body-sm text-ink">{item.productName}</span>
-                  <span className="text-caption text-muted">
-                    {item.size ? `사이즈 ${item.size} · ` : ""}수량 {item.quantity}개
-                  </span>
-                  <span className="text-body-sm text-ink">{formatWon(item.unitPrice * item.quantity)}</span>
+            {order.items.map((item, idx) => {
+              const myReview = myReviews[item.productId];
+              const reviewChecked = item.productId in myReviews;
+              const isReviewOpen = openReviewProductId === item.productId;
+              return (
+                <div
+                  key={`${item.productId}-${idx}`}
+                  className="border-hairline bg-surface-card flex flex-col gap-3 rounded-md border p-3"
+                >
+                  <div className="flex gap-3">
+                    <div className="bg-surface-strong h-16 w-16 flex-shrink-0 rounded-sm" />
+                    <div className="flex flex-1 flex-col gap-1">
+                      <span className="text-body-sm text-ink">{item.productName}</span>
+                      <span className="text-caption text-muted">
+                        {item.size ? `사이즈 ${item.size} · ` : ""}수량 {item.quantity}개
+                      </span>
+                      <span className="text-body-sm text-ink">
+                        {formatWon(item.unitPrice * item.quantity)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {order.status === "PAID" && reviewChecked && (
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() =>
+                          setOpenReviewProductId(isReviewOpen ? null : item.productId)
+                        }
+                        className="text-caption text-brand-pink-active self-start underline"
+                      >
+                        {isReviewOpen ? "취소" : myReview ? "리뷰 수정" : "리뷰 쓰기"}
+                      </button>
+
+                      {isReviewOpen && (
+                        <ReviewForm
+                          initialValues={
+                            myReview ? { rating: myReview.rating, text: myReview.text } : undefined
+                          }
+                          submitting={reviewSubmitting}
+                          onCancel={() => setOpenReviewProductId(null)}
+                          onSubmit={(values) => handleReviewSubmit(item.productId, values)}
+                          onApiError={(err, setFieldError) => {
+                            if (err.errorCode === "VALIDATION_FAILED" && err.fieldErrors) {
+                              for (const [field, message] of Object.entries(err.fieldErrors)) {
+                                if (field === "rating" || field === "text") {
+                                  setFieldError(field, message);
+                                }
+                              }
+                              return;
+                            }
+                            if (err.errorCode === "REVIEW_ALREADY_EXISTS") {
+                              showToast("이미 작성한 리뷰가 있어요");
+                              return;
+                            }
+                            showToast(err.message || "리뷰 저장에 실패했어요. 잠시 후 다시 시도해주세요");
+                          }}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 

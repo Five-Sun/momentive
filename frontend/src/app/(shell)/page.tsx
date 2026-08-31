@@ -92,6 +92,8 @@ export default function Home() {
           soldOut: product.soldOut,
           category: product.category,
           thumbnailUrl: product.images[0]?.url ?? null,
+          averageRating: product.averageRating,
+          reviewCount: product.reviewCount,
         }))
       );
     });

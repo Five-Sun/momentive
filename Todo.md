@@ -87,14 +87,6 @@
 - [ ] 나머지 기능(다음 항목들) 먼저 마무리한 뒤, 상점 등록 완료 시점에 이 기능으로 돌아와 결제위젯 렌더링~confirm 성공~`PAID` 취소까지 마무리 검증
 - [x] `feat/cart-order-payment` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/7, 리뷰 후속 조치(결제/주문내역 에러 핸들링 보완) 반영 완료, `develop`에 머지 완료
 
-## 다음 작업 후보 (무동작 UI 정리)
-
-배경: "새 화면을 늘리기보다 이미 화면은 있는데 실제 동작이 구현 안 된 부분부터 1차 개발범위로 잡자"는 방향으로 코드베이스 전수 조사(2026-08-30). 조사 결과 전문은 아래 각 항목 참고, 상세 원본은 이 세션의 Explore 조사 결과.
-
-- [ ] **마이페이지 메뉴 5개 정리** — `mypage/page.tsx`의 배송조회/쿠폰함/적립금/반려견 프로필 관리/고객센터 메뉴가 전부 `onClick={() => {}}`로 완전 무동작(Todo.md 앱 재디자인 섹션에도 "메뉴 5개 무동작"으로 이미 기록됨). 백엔드도 대응 도메인이 전혀 없음. 5개를 한 번에 다 구현하기보다 실제로 필요한 것만 골라 범위를 좁히는 정리 작업부터 필요 — 배송조회는 별도 배송추적 연동(택배사 API)이 필요해 무거움, 쿠폰/적립금은 아래 쿠폰 항목과 겹침, 반려견 프로필/고객센터는 이번 재디자인 spec에서 다루지 않은 완전 신규 도메인. `/grillme`로 어디까지 이번에 다룰지부터 확정 필요
-- [ ] **리뷰(조회+작성) 기능** — 상품상세의 `ReviewCard`가 전 상품 공통 `MOCK_REVIEWS`(하드코딩 목업)를 보여주고 있어 실제 구매자에게 오해를 줄 수 있음(실 운영 서비스 리스크). 리뷰 작성 기능 자체가 없고, 별점(`Rating value={4.5}`)도 홈/카테고리/검색/상품상세/위시리스트 전 화면에서 모든 상품에 동일하게 하드코딩되어 있어 리뷰 도입 시 함께 정리 필요. 백엔드에 Review 엔티티/컨트롤러 전무 — 신규 도메인
-- [ ] **쿠폰 시스템** — 장바구니의 쿠폰 토글은 UI/state는 동작하지만 `COUPON_DISCOUNT = 3000` 하드코딩값을 표시만 할 뿐, 실제 보유 쿠폰함/발급/사용 개념이 없음(cart-order-payment spec에서 Out of Scope로 명시). 결제 도메인과 맞물려 있어(할인 금액이 실제 결제 금액에 반영되어야 함) 결제/주문 로직에 손을 대게 될 가능성이 큼
-
 ## Swagger(API 명세서) 도입 (완료)
 
 배경: 백엔드 API를 Swagger/OpenAPI로 문서화해 API 명세서로 쓰고 싶음. 확인 결과 현재 `build.gradle` 의존성, `backend/CLAUDE.md` 컨벤션, `backend-reviewer` 체크리스트 어디에도 Swagger 설정이 없음(2026-08-27 확인). `docs/specs/2026-08-30-api-documentation.md`(status: implemented), `docs/plans/2026-08-30-api-documentation.md`(status: done).
@@ -103,3 +95,29 @@
 - [x] `plan-runner`로 Phase 1~3 자동 실행 완료 — springdoc-openapi 2.8.9(plan 명시 2.8.17이 Spring Boot 3.4.1과 `PatternParseException` 충돌 일으켜 다운그레이드) 도입, 4개 컨트롤러(Auth/Product/Address/Order) 전체 엔드포인트에 `@Operation`, DTO 17개 전체 필드에 `@Schema`, 인증 필요 엔드포인트에 `@SecurityRequirement` 소급 적용, `backend/CLAUDE.md`/`backend-reviewer.md` 컨벤션 반영
 - [x] 코드 리뷰에서 나온 advisory 수정: `@CurrentUser Long userId` 파라미터가 Swagger 문서에 일반 필수 query parameter로 잘못 노출되던 문제 → 8개 엔드포인트에 `@Parameter(hidden = true)` 추가로 해소
 - [x] `feat/api-documentation` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/8, 리뷰 후속 조치(spec 버전 정정) 반영 완료, `develop`에 머지 완료
+
+## 다음 작업 후보 정리 (완료)
+
+배경: "화면은 있는데 실제 동작이 구현 안 된 부분부터 1차 개발범위로 잡자"는 방향으로 코드베이스 전수 조사(2026-08-30). 결과를 Todo.md에 정리. 브랜치 `docs/todo-next-candidates`.
+
+- [x] 조사 결과 3건을 다음 작업 후보로 정리 — 마이페이지 메뉴 5개(완전 무동작, 백엔드 도메인 없음), 리뷰(조회+작성, 전 상품 공통 하드코딩 목업), 쿠폰 시스템(UI/state만 있고 실제 쿠폰함 없음)
+- [x] 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/9, `develop`에 머지 완료
+
+## 상품 리뷰 (조회 + 작성) (완료, PR 머지)
+
+배경: 위 "다음 작업 후보" 조사에서 가장 우선순위 높게 선택된 항목. 상품상세의 `ReviewCard`가 전 상품 공통 `MOCK_REVIEWS`(하드코딩 목업)를 보여주고, 별점(`Rating value={4.5}`)도 5개 화면 전부에서 모든 상품에 동일하게 하드코딩되어 있던 문제를 해소. `docs/specs/2026-08-30-product-review.md`(status: implemented), `docs/plans/2026-08-30-product-review.md`(status: done). 브랜치 `feat/product-review`.
+
+- [x] grillme 세션(Q1~Q16) — 구매 확인(verified purchase) 기반 작성 제한, 이미지 첨부는 범위 밖(텍스트+별점만), 홈/카테고리/검색/상품상세/위시리스트 5개 화면 평점 전부 실제 집계값으로 교체, 작성자 본인 수정/삭제 허용, 사용자당 상품 1개 제한(삭제 후 재작성 허용), 작성 진입점은 상품상세+마이페이지 주문내역 상세 둘 다, 별점(1~5 정수)·텍스트(10~500자) 둘 다 필수, 목록은 최신순+더보기, 평점 집계는 쓰기 시점 동기 갱신, 이미 리뷰 쓴 상품은 버튼이 바로 수정 폼으로 전환, 신고/모더레이션은 범위 밖, 작성자는 `User.nickname` 그대로 노출 결정
+- [x] spec 작성 완료 — `docs/specs/2026-08-30-product-review.md`
+- [x] planner로 phase/step 플랜 작성 완료 — `docs/plans/2026-08-30-product-review.md` (Phase 1: 백엔드 Review 도메인+Product 평점 집계 / Phase 2: 프론트 상품상세 조회+작성/수정/삭제 / Phase 3: 마이페이지 진입점+목록형 화면 평점 교체 / Phase 4: E2E 검증)
+- [x] `plan-runner`로 Phase 1~4 자동 실행 완료. 구현 중 발견·수정된 실제 코드 결함: `GET /products/{id}/reviews/me`가 "리뷰 없음"을 `200 + 빈 바디`로 응답해 프론트 `apiFetch`가 JSON 파싱 에러를 던지고, 이게 "구매 미확인"으로 잘못 처리되어 정상 구매자도 리뷰 작성 버튼이 안 뜨던 문제(`docs/backlog/2026-08-31-product-review-phase4-01.md`) — 백엔드는 `ResponseEntity`로 명시적 JSON `null` 응답하도록, 프론트 `apiFetch`는 빈 바디를 `204`와 동일하게 안전 처리하도록, `ProductDetailView`는 예상 못한 에러를 조용히 폴백하지 않고 로깅+안내하도록 3곳 함께 수정
+- [x] E2E 검증 — `docs/e2e/2026-08-30-product-review.md` 시나리오 1~6(로그인+빈 상태, 리뷰 작성, 수정, 마이페이지 진입점, 목록 평점 반영, 삭제 후 재작성) 전부 PASS
+- [x] `./gradlew build`/`test`(43/43), `npm run build`/`lint` 최종 재확인 통과
+- [x] spec AC 12개 전부 체크, status를 `implemented`로 갱신
+- [x] 로컬 dev DB가 테스트 실행으로 초기화되어(별도 테스트 DB 없이 dev DB를 공유/wipe하는 정책) 무효화된 E2E 시딩값(상품 279→61, 주문 158→1)을 재시딩 후 갱신, "더보기" 페이지네이션·닉네임 비마스킹·카테고리/검색/위시리스트 평점 표시 등 나머지 AC 항목도 `docs/e2e/2026-08-31-product-review.md`로 추가 검증 — spec AC 11개 전부 실제 재확인 완료
+- [x] `feat/product-review` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/10, `develop`에 머지 완료
+
+## 다음 작업 후보
+
+- [ ] 마이페이지 메뉴 5개 정리 (배송조회/쿠폰함/적립금/반려견 프로필 관리/고객센터, 전부 무동작) 또는 쿠폰 시스템 중 하나를 다음 `/grillme` 대상으로 선정 필요 — 마이페이지 메뉴는 화면별로 독립적이라 스코프를 좁히기 쉬운 반면, 쿠폰은 결제 금액 계산 로직까지 손대야 해서 범위가 더 큼
+- [ ] Toss 결제위젯 실연동은 상점(스토어) 등록 완료 후 재검증 필요 (`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`) — 사용자 측 외부 조치 대기 중

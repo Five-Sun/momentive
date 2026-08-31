@@ -11,7 +11,9 @@ public record ProductSummaryResponse(
         @Schema(description = "할인가") Integer discountPrice,
         @Schema(description = "품절 여부") Boolean soldOut,
         @Schema(description = "카테고리") Category category,
-        @Schema(description = "썸네일 이미지 URL") String thumbnailUrl
+        @Schema(description = "썸네일 이미지 URL") String thumbnailUrl,
+        @Schema(description = "평균 평점(리뷰 없으면 null)") Double averageRating,
+        @Schema(description = "리뷰 개수") Integer reviewCount
 ) {
 
     public static ProductSummaryResponse from(Product product) {
@@ -22,7 +24,9 @@ public record ProductSummaryResponse(
                 product.getDiscountPrice(),
                 product.getSoldOut(),
                 product.getCategory(),
-                product.getThumbnailUrl()
+                product.getThumbnailUrl(),
+                product.getAverageRating(),
+                product.getReviewCount()
         );
     }
 }

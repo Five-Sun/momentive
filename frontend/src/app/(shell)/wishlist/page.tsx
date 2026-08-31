@@ -78,7 +78,11 @@ export default function WishlistPage() {
                   badge={badge}
                   favorited={true}
                   onToggleFavorite={() => handleToggle(product.id)}
-                  rating={<Rating value={4.5} />}
+                  rating={
+                    product.averageRating != null ? (
+                      <Rating value={product.averageRating} count={product.reviewCount} />
+                    ) : undefined
+                  }
                 />
               </div>
             );

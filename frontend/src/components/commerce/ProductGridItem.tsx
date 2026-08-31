@@ -53,7 +53,11 @@ export function ProductGridItem({ product }: ProductGridItemProps) {
         originalPrice={hasDiscount ? formatWon(product.price) : undefined}
         badge={badge}
         favorited={false}
-        rating={<Rating value={4.5} />}
+        rating={
+          product.averageRating != null ? (
+            <Rating value={product.averageRating} count={product.reviewCount} />
+          ) : undefined
+        }
       />
     </Link>
   );

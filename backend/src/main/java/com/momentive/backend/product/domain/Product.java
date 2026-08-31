@@ -56,6 +56,11 @@ public class Product {
     @Version
     private Long version;
 
+    private Double averageRating;
+
+    @Column(nullable = false)
+    private Integer reviewCount = 0;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("displayOrder asc")
     private List<ProductImage> images = new ArrayList<>();
@@ -96,5 +101,13 @@ public class Product {
 
     public void restoreStock(int quantity) {
         this.stock += quantity;
+    }
+
+    /**
+     * 리뷰 작성/수정/삭제 시점에 평점 집계를 동기로 재계산해 반영한다.
+     */
+    public void updateRatingSummary(Double averageRating, Integer reviewCount) {
+        this.averageRating = averageRating;
+        this.reviewCount = reviewCount;
     }
 }
