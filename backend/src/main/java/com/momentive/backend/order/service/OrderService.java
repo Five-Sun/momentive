@@ -10,6 +10,7 @@ import com.momentive.backend.common.exception.CustomException;
 import com.momentive.backend.common.exception.ErrorCode;
 import com.momentive.backend.order.domain.Order;
 import com.momentive.backend.order.domain.OrderItem;
+import com.momentive.backend.order.domain.ShippingFeePolicy;
 import com.momentive.backend.order.dto.OrderCreateRequest;
 import com.momentive.backend.order.dto.OrderItemRequest;
 import com.momentive.backend.order.dto.OrderResponse;
@@ -51,15 +52,16 @@ public class OrderService {
         assertAllInStock(request.items());
 
         Order order = Order.createPending(user, address, 0);
-        int totalAmount = 0;
+        int itemsSubtotal = 0;
         for (OrderItemRequest itemRequest : request.items()) {
             Product product = deductStockWithRetry(itemRequest.productId(), itemRequest.quantity());
             int unitPrice = product.getDiscountPrice() != null ? product.getDiscountPrice() : product.getPrice();
             OrderItem item = OrderItem.create(order, product, itemRequest.quantity(), itemRequest.size(), unitPrice);
             order.addItem(item);
-            totalAmount += item.getSubtotal();
+            itemsSubtotal += item.getSubtotal();
         }
-        order.confirmTotalAmount(totalAmount);
+        int shippingFee = ShippingFeePolicy.calculate(itemsSubtotal, address.getZipcode());
+        order.confirmAmounts(itemsSubtotal, shippingFee);
 
         orderRepository.save(order);
         return OrderResponse.from(order);

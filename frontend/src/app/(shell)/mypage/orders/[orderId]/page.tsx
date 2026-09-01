@@ -256,6 +256,16 @@ export default function OrderDetailPage() {
 
         <section className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
+            <span className="text-body-sm text-body">상품금액</span>
+            <span className="text-body-sm text-ink">{formatWon(order.itemsSubtotal)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-body-sm text-body">배송비</span>
+            <span className="text-body-sm text-ink">
+              {order.shippingFee === 0 ? "무료" : formatWon(order.shippingFee)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
             <span className="text-title-sm text-ink">총 결제금액</span>
             <span className="text-price text-ink">{formatWon(order.totalAmount)}</span>
           </div>

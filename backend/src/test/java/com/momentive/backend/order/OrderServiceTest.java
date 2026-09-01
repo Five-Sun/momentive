@@ -96,12 +96,52 @@ class OrderServiceTest {
         OrderResponse response = orderService.createOrder(user.getId(), request);
 
         assertThat(response.status()).isEqualTo(OrderStatus.PENDING);
-        assertThat(response.totalAmount()).isEqualTo(20000);
+        assertThat(response.itemsSubtotal()).isEqualTo(20000);
+        assertThat(response.shippingFee()).isEqualTo(3400);
+        assertThat(response.totalAmount()).isEqualTo(23400);
         assertThat(response.items()).hasSize(1);
         assertThat(response.address().isDefault()).isTrue();
 
         Product reloaded = productRepository.findById(product.getId()).orElseThrow();
         assertThat(reloaded.getStock()).isEqualTo(3);
+    }
+
+    @Test
+    void createOrder_applies_free_shipping_when_items_subtotal_meets_threshold() {
+        User user = createUser("order-freeship@momentive.com");
+        Product product = createProduct("사료", 70000, 5);
+
+        OrderCreateRequest request = new OrderCreateRequest(
+                List.of(new OrderItemRequest(product.getId(), 1, null)),
+                null,
+                newAddressRequest()
+        );
+
+        OrderResponse response = orderService.createOrder(user.getId(), request);
+
+        assertThat(response.itemsSubtotal()).isEqualTo(70000);
+        assertThat(response.shippingFee()).isEqualTo(0);
+        assertThat(response.totalAmount()).isEqualTo(70000);
+    }
+
+    @Test
+    void createOrder_applies_jeju_surcharge_regardless_of_items_subtotal() {
+        User user = createUser("order-jeju@momentive.com");
+        Product product = createProduct("사료", 70000, 5);
+
+        AddressRequest jejuAddress =
+                new AddressRequest("몽이", "010-1111-2222", "63000", "제주시", "101호", true);
+        OrderCreateRequest request = new OrderCreateRequest(
+                List.of(new OrderItemRequest(product.getId(), 1, null)),
+                null,
+                jejuAddress
+        );
+
+        OrderResponse response = orderService.createOrder(user.getId(), request);
+
+        assertThat(response.itemsSubtotal()).isEqualTo(70000);
+        assertThat(response.shippingFee()).isEqualTo(4000);
+        assertThat(response.totalAmount()).isEqualTo(74000);
     }
 
     @Test

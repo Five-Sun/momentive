@@ -10,6 +10,8 @@ import java.util.List;
 public record OrderResponse(
         @Schema(description = "주문 ID") Long orderId,
         @Schema(description = "주문 상태") OrderStatus status,
+        @Schema(description = "상품 금액 합계(배송비 제외)") Integer itemsSubtotal,
+        @Schema(description = "배송비") Integer shippingFee,
         @Schema(description = "총 결제 금액") Integer totalAmount,
         @Schema(description = "주문 상품 목록") List<OrderItemResponse> items,
         @Schema(description = "배송지") AddressResponse address,
@@ -20,6 +22,8 @@ public record OrderResponse(
         return new OrderResponse(
                 order.getId(),
                 order.getStatus(),
+                order.getItemsSubtotal(),
+                order.getShippingFee(),
                 order.getTotalAmount(),
                 order.getItems().stream().map(OrderItemResponse::from).toList(),
                 AddressResponse.from(order.getAddress()),
