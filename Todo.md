@@ -142,7 +142,7 @@
 - [x] Phase 2·3의 "검증(수동, 브라우저)" 항목도 사용자 요청으로 e2e-tester가 대체 검증 — 시나리오 4(체크아웃 신규 배송지 제주↔비제주 왕복 전환 시 배송비 즉시 재계산: 비제주 3,400원 → 제주 경계값 63644 7,400원 → 비제주 복귀 3,400원), 시나리오 5(장바구니 선택 금액 70,000원 기준 왕복 전환 시 안내/진행바 전환) 추가 PASS. `docs/e2e/2026-08-31-shipping-fee-policy.md`에 시나리오 1~5 전부 기록
 - [x] Toss 결제위젯 confirm 성공 경로는 상점 미등록 제약으로 이번에도 스킵 대상(`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`와 동일) — 위젯 렌더링 금액은 시나리오 3에서 확인, confirm 검증 로직은 기존 `order.totalAmount` 단일 소스 구조 재확인으로 대체
 - [x] plan 전 phase 완료로 `status`를 `done`으로 갱신, spec AC 9개 전부 체크 및 `status`를 `implemented`로 갱신
-- [ ] `feat/shipping-fee-policy` 커밋 및 `develop` 대상 PR 생성 예정
+- [x] `feat/shipping-fee-policy` 커밋 및 `develop` 대상 PR 생성 완료 → https://github.com/Five-Sun/momentive/pull/13
 
 ## 다음 작업 후보
 
