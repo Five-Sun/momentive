@@ -144,8 +144,21 @@
 - [x] plan 전 phase 완료로 `status`를 `done`으로 갱신, spec AC 9개 전부 체크 및 `status`를 `implemented`로 갱신
 - [x] `feat/shipping-fee-policy` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/13, `develop`에 머지 완료 (커밋 `f506d69`)
 
+## 쿠폰 시스템 (spec/plan 완료, 구현 대기 — 환경 블로커로 중단)
+
+배경: 마이페이지 "쿠폰함"이 `onClick: () => {}` 무동작이고, 장바구니 쿠폰 토글은 `COUPON_DISCOUNT = 3000` 하드코딩으로 표시만 바뀌고 실제 결제금액에 미반영(실 고객에게 노출된 거짓 UI). 백엔드에 coupon 도메인 전무. `docs/specs/2026-09-01-coupon-system.md`(status: confirmed), `docs/plans/2026-09-01-coupon-system.md`(status: planned). 브랜치 `feat/coupon-system`.
+
+- [x] grillme 세션(Q1~Q17) — 적립금/배송조회/무료배송쿠폰/관리자 발급 API/회원가입 자동지급/상품·카테고리 한정/선착순 소진/쿠폰 중복사용은 전부 범위 밖. 발급은 **쿠폰 코드 입력 하나로 고정**(정의는 flyway 시드), 정액+정률(상한 필수) 2종, 조건은 유효기간·최소주문금액·1인1회, 한 주문 1장, 무료배송 임계값은 **할인 전** 금액 기준, 할인액은 `min(할인액, itemsSubtotal)`로 제한, 쿠폰은 주문 생성(PENDING) 시 선점하고 실패·만료·PAID취소 3경로에서 복원, `Coupon`/`UserCoupon` 2테이블, 체크아웃에서 선택(장바구니 토글 제거), 할인 계산은 배송비와 동일하게 프론트 미러링 결정
+- [x] spec 작성 완료 — `docs/specs/2026-09-01-coupon-system.md` (AC 20개)
+- [x] plan 작성 완료 — `docs/plans/2026-09-01-coupon-system.md` (Phase 1: 백엔드 쿠폰 도메인 / Phase 2: 백엔드 주문 연동 / Phase 3: 프론트 쿠폰함 / Phase 4: 프론트 결제 흐름 / Phase 5: E2E). Phase 1·2를 나눈 이유는 `Order.getItemsSubtotal()` 역산 제거 + 기존 주문 백필이 **이미 배포된 데이터에 영향을 주는 유일한 위험 구간**이라 격리한 것
+- [ ] **`plan-runner` 실행 불가 — 이 머신에 JDK 21이 없음**. `backend/build.gradle.kts:10-14`가 `JavaLanguageVersion.of(21)`을 요구하는데 설치된 JDK는 `~/.jdks/graalvm-jdk-17.0.12` 하나뿐이고 Gradle 툴체인 자동 다운로드도 미설정. `./dev.sh`가 `[2/3] 백엔드 기동`에서 실패(exit 127). Phase 1·2의 `./gradlew build`/`test`, 백엔드 기동, Phase 5 E2E가 전부 막힘
+  - 해소 후보: (a) `settings.gradle.kts`에 foojay-resolver-convention 플러그인 추가해 Gradle이 JDK 21을 자동 다운로드 — 집/회사 여러 머신을 오가는 환경이라 저장소 레벨 해결이 재발을 막음 (b) `winget install EclipseAdoptium.Temurin.21.JDK`로 직접 설치 (c) JDK 21이 있는 머신에서 구현 진행
+  - 참고: 이 세션 시작 시 작업 트리에 있던 Gradle wrapper 미커밋 드리프트(9.3.0→9.7.1)는 이 문제를 손보던 흔적일 가능성이 있으나, 원인이 Gradle 버전이 아니라 **Java 툴체인**이라 wrapper를 올려도 해결되지 않음. 되돌려서 커밋된 9.3.0 상태 유지
+  - 참고: `./dev.sh`가 DB 볼륨(`backend_momentive-db`)을 새로 생성했으므로, 다음에 백엔드가 처음 뜰 때 flyway 시드가 다시 들어감
+
 ## 다음 작업 후보
 
-- [ ] 쿠폰 시스템 — 마이페이지 남은 메뉴(쿠폰함/적립금)와 겹치는 항목, 결제 금액 계산 로직까지 손대야 해서 범위가 큼. 다음 `/grillme` 후보
+- [ ] 쿠폰 시스템 구현 — spec/plan은 위 섹션에서 완료. JDK 21 문제 해소 후 `plan-runner`로 Phase 1~5 실행하면 됨
+- [ ] **관리자 상품 관리 부재** — 상품 등록/수정/재고조정 API도 화면도 전혀 없고(`ProductController`는 `GET` 2개뿐), 상품 데이터는 `V2__seed_product.sql`의 15개 시드가 전부. `User.role`에 `ADMIN` enum은 있으나 부여 경로도 검사 지점도 0건인 미사용 스캐폴딩. **실 운영 중인데 신상품 등록·재입고에 매번 마이그레이션 작성 + 재배포가 필요한 상태**(2026-09-01 조사). 쿠폰도 같은 제약을 감수하고 시드 방식으로 가기로 했으므로, 이 항목이 해소되면 쿠폰 발급도 함께 편해짐
 - [ ] Toss 결제위젯 실연동은 상점(스토어) 등록 완료 후 재검증 필요 (`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`) — 사용자 측 외부 조치 대기 중
 - [ ] **우편번호 형식 검증 부재** — `AddressRequest.zipcode`가 `@NotBlank`만 있고 형식 검증이 전혀 없는 자유 텍스트(2026-08-31 배송비 정책 grillme 세션 중 발견). 배송비 spec에서는 제주 판정 시 숫자 파싱 실패/범위 밖이면 안전하게 "제주 아님"으로만 처리하고 정식 형식 검증(5자리 숫자 등)은 범위 밖으로 분리했음 — 기존에 저장된 배송지 데이터 하위호환까지 고려해야 해서 별도 작업으로 남김
