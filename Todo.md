@@ -130,7 +130,7 @@
 - [x] spec AC 11개 전부 체크, status를 `implemented`로 갱신
 - [x] `feat/mypage-menu-cleanup` 커밋(기능 구현 + e2e-tester 개선 2개 커밋) 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/11, `develop`에 머지 완료
 
-## 배송비 정책 반영 (완료, PR 대기)
+## 배송비 정책 반영 (완료, PR 머지)
 
 배경: 실제 사업자 배송비 정책(네이버 스마트스토어 기준: 기본 3,400원 / 상품금액 7만원 이상 무료배송 / 제주 우편번호(63000~63644)면 상품금액과 무관하게 4,000원 항상 추가)이 `cart-order-payment`의 "배송비 없음" 구현과 불일치하던 문제(`mypage-menu-cleanup`의 고객센터 FAQ grillme 세션 중 발견)를 해소. `docs/specs/2026-08-31-shipping-fee-policy.md`(status: implemented), `docs/plans/2026-08-31-shipping-fee-policy.md`(status: done). `cart-order-payment`는 건드리지 않고 독립 spec으로 분리(Toss 위젯 실연동 이슈와 별개로 추적). 브랜치 `feat/shipping-fee-policy`.
 
@@ -142,7 +142,7 @@
 - [x] Phase 2·3의 "검증(수동, 브라우저)" 항목도 사용자 요청으로 e2e-tester가 대체 검증 — 시나리오 4(체크아웃 신규 배송지 제주↔비제주 왕복 전환 시 배송비 즉시 재계산: 비제주 3,400원 → 제주 경계값 63644 7,400원 → 비제주 복귀 3,400원), 시나리오 5(장바구니 선택 금액 70,000원 기준 왕복 전환 시 안내/진행바 전환) 추가 PASS. `docs/e2e/2026-08-31-shipping-fee-policy.md`에 시나리오 1~5 전부 기록
 - [x] Toss 결제위젯 confirm 성공 경로는 상점 미등록 제약으로 이번에도 스킵 대상(`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`와 동일) — 위젯 렌더링 금액은 시나리오 3에서 확인, confirm 검증 로직은 기존 `order.totalAmount` 단일 소스 구조 재확인으로 대체
 - [x] plan 전 phase 완료로 `status`를 `done`으로 갱신, spec AC 9개 전부 체크 및 `status`를 `implemented`로 갱신
-- [x] `feat/shipping-fee-policy` 커밋 및 `develop` 대상 PR 생성 완료 → https://github.com/Five-Sun/momentive/pull/13
+- [x] `feat/shipping-fee-policy` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/13, `develop`에 머지 완료 (커밋 `f506d69`)
 
 ## 다음 작업 후보
 
