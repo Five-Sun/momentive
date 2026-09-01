@@ -107,7 +107,7 @@ class PaymentServiceTest {
 
     private OrderResponse createPendingOrder(User user, Product product, int quantity) {
         return orderService.createOrder(user.getId(), new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), quantity, null)), null, newAddressRequest()));
+                List.of(new OrderItemRequest(product.getId(), quantity, null)), null, newAddressRequest(), null));
     }
 
     @Test

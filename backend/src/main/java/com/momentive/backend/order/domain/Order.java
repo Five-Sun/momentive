@@ -2,6 +2,7 @@ package com.momentive.backend.order.domain;
 
 import com.momentive.backend.address.domain.Address;
 import com.momentive.backend.auth.domain.User;
+import com.momentive.backend.coupon.domain.UserCoupon;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -46,6 +47,16 @@ public class Order {
     @Column(nullable = false)
     private Integer shippingFee;
 
+    @Column(nullable = false)
+    private Integer itemsSubtotal;
+
+    @Column(nullable = false)
+    private Integer discountAmount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_coupon_id")
+    private UserCoupon userCoupon;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "address_id", nullable = false)
     private Address address;
@@ -66,6 +77,8 @@ public class Order {
         this.address = address;
         this.totalAmount = totalAmount;
         this.shippingFee = 0;
+        this.itemsSubtotal = 0;
+        this.discountAmount = 0;
         this.status = OrderStatus.PENDING;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -79,17 +92,19 @@ public class Order {
         items.add(item);
     }
 
-    /**
-     * 주문 생성 중 항목별 재고 차감이 끝난 뒤 상품금액과 배송비를 확정하고,
-     * 총 결제금액(totalAmount)을 그 합으로 계산해 저장한다.
-     */
-    public void confirmAmounts(int itemsSubtotal, int shippingFee) {
-        this.shippingFee = shippingFee;
-        this.totalAmount = itemsSubtotal + shippingFee;
+    public void applyCoupon(UserCoupon userCoupon) {
+        this.userCoupon = userCoupon;
     }
 
-    public int getItemsSubtotal() {
-        return totalAmount - shippingFee;
+    /**
+     * 주문 생성 중 항목별 재고 차감이 끝난 뒤 상품금액·할인액·배송비를 확정하고,
+     * 총 결제금액(totalAmount)을 {@code itemsSubtotal - discountAmount + shippingFee}로 계산해 저장한다.
+     */
+    public void confirmAmounts(int itemsSubtotal, int discountAmount, int shippingFee) {
+        this.itemsSubtotal = itemsSubtotal;
+        this.discountAmount = discountAmount;
+        this.shippingFee = shippingFee;
+        this.totalAmount = itemsSubtotal - discountAmount + shippingFee;
     }
 
     public boolean isOwnedBy(Long userId) {

@@ -13,8 +13,10 @@ import { getCart, type CartItem } from "@/lib/storage/cart";
 import { getCheckoutSelection } from "@/lib/storage/checkoutSelection";
 import { getAddresses, type AddressResponse } from "@/lib/api/addresses";
 import { createOrder, type OrderItemRequest } from "@/lib/api/orders";
+import { fetchMyCoupons, type UserCouponResponse } from "@/lib/api/coupon";
 import { ApiError } from "@/lib/api/client";
 import { calculateShippingFee } from "@/lib/shipping";
+import { calculateCouponDiscount } from "@/lib/coupon";
 
 const addressSchema = z.object({
   recipient: z.string().min(1, "받는 사람을 입력해주세요"),
@@ -28,6 +30,10 @@ function formatWon(amount: number) {
   return `${amount.toLocaleString("ko-KR")}원`;
 }
 
+function isExpired(coupon: UserCouponResponse) {
+  return new Date(coupon.expiresAt).getTime() < Date.now();
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const [selectedItems, setSelectedItems] = useState<CartItem[]>([]);
@@ -37,6 +43,8 @@ export default function CheckoutPage() {
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [coupons, setCoupons] = useState<UserCouponResponse[]>([]);
+  const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null);
 
   const {
     register,
@@ -77,6 +85,12 @@ export default function CheckoutPage() {
       .finally(() => setAddressesLoaded(true));
   }, []);
 
+  useEffect(() => {
+    fetchMyCoupons()
+      .then((list) => setCoupons(list.filter((c) => c.status === "AVAILABLE" && !isExpired(c))))
+      .catch(() => setCoupons([]));
+  }, []);
+
   const itemsSubtotal = useMemo(
     () => selectedItems.reduce((sum, item) => sum + item.unitPrice * item.qty, 0),
     [selectedItems],
@@ -91,7 +105,12 @@ export default function CheckoutPage() {
     [itemsSubtotal, selectedZipcode],
   );
 
-  const totalAmount = itemsSubtotal + shippingFee;
+  const selectedCoupon = coupons.find((c) => c.id === selectedCouponId) ?? null;
+  const couponEligible = selectedCoupon !== null && itemsSubtotal >= selectedCoupon.minOrderAmount;
+  const discountAmount =
+    selectedCoupon && couponEligible ? calculateCouponDiscount(selectedCoupon, itemsSubtotal) : 0;
+
+  const totalAmount = itemsSubtotal - discountAmount + shippingFee;
 
   function showToast(message: string) {
     setToastMessage(message);
@@ -108,9 +127,11 @@ export default function CheckoutPage() {
         size: item.size || null,
       }));
 
+      const userCouponId = selectedCoupon && couponEligible ? selectedCoupon.id : undefined;
+
       const request =
         !showNewAddressForm && selectedAddressId !== null
-          ? { items, addressId: selectedAddressId }
+          ? { items, addressId: selectedAddressId, userCouponId }
           : {
               items,
               address: {
@@ -121,6 +142,7 @@ export default function CheckoutPage() {
                 address2: values.address2,
                 isDefault: true,
               },
+              userCouponId,
             };
 
       const order = await createOrder(request);
@@ -242,11 +264,56 @@ export default function CheckoutPage() {
           </div>
         </section>
 
+        {coupons.length > 0 && (
+          <section className="flex flex-col gap-3">
+            <span className="text-title-sm text-ink">쿠폰</span>
+            <div className="flex flex-col gap-2">
+              {coupons.map((coupon) => {
+                const eligible = itemsSubtotal >= coupon.minOrderAmount;
+                const checked = selectedCouponId === coupon.id;
+                return (
+                  <button
+                    type="button"
+                    key={coupon.id}
+                    disabled={!eligible}
+                    onClick={() => setSelectedCouponId(checked ? null : coupon.id)}
+                    className={`flex items-start gap-3 rounded-md border p-3 text-left ${
+                      checked ? "border-brand-pink" : "border-hairline"
+                    } ${eligible ? "" : "opacity-50"}`}
+                  >
+                    <span
+                      className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] ${
+                        checked ? "bg-brand-pink border-brand-pink" : "border-hairline bg-surface-card"
+                      }`}
+                    >
+                      {checked && <Check className="h-3.5 w-3.5 text-on-brand" strokeWidth={3} />}
+                    </span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-body-sm text-ink font-semibold">{coupon.couponName}</span>
+                      {!eligible && (
+                        <span className="text-caption text-muted">
+                          {formatWon(coupon.minOrderAmount)} 이상 구매 시 사용 가능
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         <section className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <span className="text-body-sm text-body">상품금액</span>
             <span className="text-body-sm text-ink">{formatWon(itemsSubtotal)}</span>
           </div>
+          {discountAmount > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="text-body-sm text-body">쿠폰 할인</span>
+              <span className="text-body-sm text-ink">-{formatWon(discountAmount)}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <span className="text-body-sm text-body">배송비</span>
             <span className="text-body-sm text-ink">{shippingFee === 0 ? "무료" : formatWon(shippingFee)}</span>

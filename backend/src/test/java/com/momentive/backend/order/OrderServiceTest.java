@@ -90,7 +90,8 @@ class OrderServiceTest {
         OrderCreateRequest request = new OrderCreateRequest(
                 List.of(new OrderItemRequest(product.getId(), 2, "M")),
                 null,
-                newAddressRequest()
+                newAddressRequest(),
+                null
         );
 
         OrderResponse response = orderService.createOrder(user.getId(), request);
@@ -114,7 +115,8 @@ class OrderServiceTest {
         OrderCreateRequest request = new OrderCreateRequest(
                 List.of(new OrderItemRequest(product.getId(), 1, null)),
                 null,
-                newAddressRequest()
+                newAddressRequest(),
+                null
         );
 
         OrderResponse response = orderService.createOrder(user.getId(), request);
@@ -134,7 +136,8 @@ class OrderServiceTest {
         OrderCreateRequest request = new OrderCreateRequest(
                 List.of(new OrderItemRequest(product.getId(), 1, null)),
                 null,
-                jejuAddress
+                jejuAddress,
+                null
         );
 
         OrderResponse response = orderService.createOrder(user.getId(), request);
@@ -152,7 +155,8 @@ class OrderServiceTest {
         OrderCreateRequest request = new OrderCreateRequest(
                 List.of(new OrderItemRequest(product.getId(), 2, null)),
                 null,
-                newAddressRequest()
+                newAddressRequest(),
+                null
         );
 
         assertThatThrownBy(() -> orderService.createOrder(user.getId(), request))
@@ -170,12 +174,12 @@ class OrderServiceTest {
         User user = createUser("order3@momentive.com");
         Product product = createProduct("사료", 10000, 5);
         Long addressId = orderService.createOrder(user.getId(), new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest()
+                List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest(), null
         )).address().id();
 
         Product product2 = createProduct("간식", 5000, 5);
         OrderResponse response = orderService.createOrder(user.getId(), new OrderCreateRequest(
-                List.of(new OrderItemRequest(product2.getId(), 1, null)), addressId, null
+                List.of(new OrderItemRequest(product2.getId(), 1, null)), addressId, null, null
         ));
 
         assertThat(response.address().id()).isEqualTo(addressId);
@@ -187,7 +191,7 @@ class OrderServiceTest {
         Product product = createProduct("사료", 10000, 5);
 
         OrderCreateRequest request = new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 1, null)), null, null
+                List.of(new OrderItemRequest(product.getId(), 1, null)), null, null, null
         );
 
         assertThatThrownBy(() -> orderService.createOrder(user.getId(), request))
@@ -203,7 +207,7 @@ class OrderServiceTest {
         Product product = createProduct("사료", 10000, 5);
 
         OrderResponse order = orderService.createOrder(owner.getId(), new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest()
+                List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest(), null
         ));
 
         assertThatThrownBy(() -> orderService.getOrder(other.getId(), order.orderId()))
@@ -240,7 +244,7 @@ class OrderServiceTest {
                 readyLatch.countDown();
                 startLatch.await();
                 orderService.createOrder(userA.getId(), new OrderCreateRequest(
-                        List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest()));
+                        List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest(), null));
                 successCount.incrementAndGet();
             } catch (CustomException e) {
                 failureCount.incrementAndGet();
@@ -255,7 +259,7 @@ class OrderServiceTest {
                 readyLatch.countDown();
                 startLatch.await();
                 orderService.createOrder(userB.getId(), new OrderCreateRequest(
-                        List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest()));
+                        List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest(), null));
                 successCount.incrementAndGet();
             } catch (CustomException e) {
                 failureCount.incrementAndGet();

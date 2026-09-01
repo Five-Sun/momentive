@@ -2,6 +2,7 @@ package com.momentive.backend.payment.service;
 
 import com.momentive.backend.common.exception.CustomException;
 import com.momentive.backend.common.exception.ErrorCode;
+import com.momentive.backend.coupon.domain.UserCoupon;
 import com.momentive.backend.order.domain.Order;
 import com.momentive.backend.order.domain.OrderItem;
 import com.momentive.backend.order.repository.OrderRepository;
@@ -59,6 +60,7 @@ class OrderPaymentTransactionSupport {
         }
         order.markAsFailed();
         restoreStockWithRetry(order);
+        restoreCouponIfUsed(order);
     }
 
     @Transactional
@@ -69,7 +71,19 @@ class OrderPaymentTransactionSupport {
         }
         order.markAsCancelled();
         restoreStockWithRetry(order);
+        restoreCouponIfUsed(order);
         return order;
+    }
+
+    /**
+     * 결제 실패/PENDING 만료/PAID 취소 3개 경로 공통으로, 주문에 적용된 쿠폰이 있으면 사용 가능 상태로 복원한다.
+     * 복원 시점에 이미 유효기간이 지났다면 만료된 쿠폰으로 남을 뿐 별도 처리는 하지 않는다(spec 예외 케이스).
+     */
+    private void restoreCouponIfUsed(Order order) {
+        UserCoupon userCoupon = order.getUserCoupon();
+        if (userCoupon != null) {
+            userCoupon.restore();
+        }
     }
 
     private void restoreStockWithRetry(Order order) {

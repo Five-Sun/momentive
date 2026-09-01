@@ -144,21 +144,59 @@
 - [x] plan 전 phase 완료로 `status`를 `done`으로 갱신, spec AC 9개 전부 체크 및 `status`를 `implemented`로 갱신
 - [x] `feat/shipping-fee-policy` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/13, `develop`에 머지 완료 (커밋 `f506d69`)
 
-## 쿠폰 시스템 (spec/plan 완료, 구현 대기 — 환경 블로커로 중단)
+## 쿠폰 시스템 (완료, PR 대기)
 
-배경: 마이페이지 "쿠폰함"이 `onClick: () => {}` 무동작이고, 장바구니 쿠폰 토글은 `COUPON_DISCOUNT = 3000` 하드코딩으로 표시만 바뀌고 실제 결제금액에 미반영(실 고객에게 노출된 거짓 UI). 백엔드에 coupon 도메인 전무. `docs/specs/2026-09-01-coupon-system.md`(status: confirmed), `docs/plans/2026-09-01-coupon-system.md`(status: planned). 브랜치 `feat/coupon-system`.
+배경: 마이페이지 "쿠폰함"이 `onClick: () => {}` 무동작이고, 장바구니 쿠폰 토글은 `COUPON_DISCOUNT = 3000` 하드코딩으로 표시만 바뀌고 실제 결제금액에 미반영(실 고객에게 노출된 거짓 UI). 백엔드에 coupon 도메인 전무였음. `docs/specs/2026-09-01-coupon-system.md`(status: confirmed, AC 9/20 E2E 검증), `docs/plans/2026-09-01-coupon-system.md`(status: done). 브랜치 `feat/coupon-system`.
 
 - [x] grillme 세션(Q1~Q17) — 적립금/배송조회/무료배송쿠폰/관리자 발급 API/회원가입 자동지급/상품·카테고리 한정/선착순 소진/쿠폰 중복사용은 전부 범위 밖. 발급은 **쿠폰 코드 입력 하나로 고정**(정의는 flyway 시드), 정액+정률(상한 필수) 2종, 조건은 유효기간·최소주문금액·1인1회, 한 주문 1장, 무료배송 임계값은 **할인 전** 금액 기준, 할인액은 `min(할인액, itemsSubtotal)`로 제한, 쿠폰은 주문 생성(PENDING) 시 선점하고 실패·만료·PAID취소 3경로에서 복원, `Coupon`/`UserCoupon` 2테이블, 체크아웃에서 선택(장바구니 토글 제거), 할인 계산은 배송비와 동일하게 프론트 미러링 결정
 - [x] spec 작성 완료 — `docs/specs/2026-09-01-coupon-system.md` (AC 20개)
 - [x] plan 작성 완료 — `docs/plans/2026-09-01-coupon-system.md` (Phase 1: 백엔드 쿠폰 도메인 / Phase 2: 백엔드 주문 연동 / Phase 3: 프론트 쿠폰함 / Phase 4: 프론트 결제 흐름 / Phase 5: E2E). Phase 1·2를 나눈 이유는 `Order.getItemsSubtotal()` 역산 제거 + 기존 주문 백필이 **이미 배포된 데이터에 영향을 주는 유일한 위험 구간**이라 격리한 것
-- [ ] **`plan-runner` 실행 불가 — 이 머신에 JDK 21이 없음**. `backend/build.gradle.kts:10-14`가 `JavaLanguageVersion.of(21)`을 요구하는데 설치된 JDK는 `~/.jdks/graalvm-jdk-17.0.12` 하나뿐이고 Gradle 툴체인 자동 다운로드도 미설정. `./dev.sh`가 `[2/3] 백엔드 기동`에서 실패(exit 127). Phase 1·2의 `./gradlew build`/`test`, 백엔드 기동, Phase 5 E2E가 전부 막힘
-  - 해소 후보: (a) `settings.gradle.kts`에 foojay-resolver-convention 플러그인 추가해 Gradle이 JDK 21을 자동 다운로드 — 집/회사 여러 머신을 오가는 환경이라 저장소 레벨 해결이 재발을 막음 (b) `winget install EclipseAdoptium.Temurin.21.JDK`로 직접 설치 (c) JDK 21이 있는 머신에서 구현 진행
-  - 참고: 이 세션 시작 시 작업 트리에 있던 Gradle wrapper 미커밋 드리프트(9.3.0→9.7.1)는 이 문제를 손보던 흔적일 가능성이 있으나, 원인이 Gradle 버전이 아니라 **Java 툴체인**이라 wrapper를 올려도 해결되지 않음. 되돌려서 커밋된 9.3.0 상태 유지
-  - 참고: `./dev.sh`가 DB 볼륨(`backend_momentive-db`)을 새로 생성했으므로, 다음에 백엔드가 처음 뜰 때 flyway 시드가 다시 들어감
+- [x] **JDK 21 블로커 해소** (2026-09-02, 다른 머신) — 이 머신은 Homebrew로 JDK 21(`/opt/homebrew/Cellar/openjdk@21/21.0.8`)이 이미 설치돼 있었음(과거 "JDK 21 자체가 없음" 블로커와 다른 상황). `JAVA_HOME`을 21로 지정하면(예: `JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.8/libexec/openjdk.jdk/Contents/Home ./gradlew build`) 바로 해소됨 — 셸 프로필에는 영구 반영하지 않기로 함(사용자 선택), 매 gradle 호출에 인라인으로 지정
+- [x] 착수 전 워크트리 정리 — 쿠폰 plan과 무관한 admin 로그인/시드 미커밋 변경(`LoginRequest`, `dev.sh`, 로그인 화면, `V9__seed_admin_user.sql`)을 발견해 `chore/admin-login-seed` 브랜치(develop 기준)로 분리·커밋(푸시는 안 함). **주의**: 이 브랜치도 `V9` 마이그레이션 파일명을 쓰는데, 쿠폰 시스템이 이미 `V9__create_coupon.sql`~`V11`을 선점했으므로 `chore/admin-login-seed`를 나중에 develop에 머지할 때 `V12`로 재번호해야 함
+- [x] `plan-runner`로 Phase 1~5 자동 실행 완료 — Phase 1~4는 전부 1회 시도로 통과(재시도 0회, backlog 실패 기록 없음). `./gradlew build`/`test`(coupon 포함 85 tests), `npm run build`/`lint` 전부 통과
+- [x] Phase 5 E2E 1차 실행 시 로컬 dev DB가 비어있어(coupon/product/orders/users 전부 0건, flyway 이력은 success인데 실제 데이터 없음 — 기존에 반복된 패턴과 동일) 대다수 시나리오 스킵 → `docker compose down -v` 후 `./dev.sh` 재기동으로 재시딩(상품 15건, 쿠폰 4건 확인) 후 재검증
+- [x] E2E 재검증 — `docs/e2e/2026-09-01-coupon-system.md` 시나리오 14개 중 12개 PASS, 2개는 "사전조건 미충족으로 스킵"(시나리오 4: 관리자 발급 API가 없어 만료 쿠폰 시드를 만들 방법 없음, 시나리오 13: 재시딩 직후라 V11 이전 주문을 재현할 수 없음 — 둘 다 코드 결함 아님, Phase 2 백엔드 테스트로 별도 커버). Toss confirm 성공 경로는 상점 미등록 제약으로 기존과 동일하게 스킵(위젯 렌더 금액만 확인)
+- [x] plan 전 phase 완료로 `status`를 `done`으로 갱신. spec AC는 실제 E2E로 확인된 9개만 체크, 나머지 11개는 각기 사유(백엔드 테스트로만 커버/환경 제약으로 검증 불가)를 남기고 미체크 유지 — `status`는 `implemented`로 올리지 않고 `confirmed` 유지(AC 전량 실증 전까지)
+- [ ] `feat/coupon-system` 커밋 및 `develop` 대상 PR 생성 필요
+
+## 디자인 수정 사전 조사 (2026-09-01, 내일 작업 준비)
+
+배경: 디자인 수정 예정이라 현재 프론트 디자인 관리 방식을 전수 조사. 코드 변경 없이 `docs/design.md`, `frontend/CLAUDE.md`, `frontend/src/app/globals.css`, `frontend/src/components/`, `(shell)` 라우트 전체를 확인했다. 결론은 **Tailwind CSS v4 + `globals.css` CSS 변수 토큰 + 자체 컴포넌트 + `/style-guide` 샘플** 구조이며, 외부 UI 컴포넌트 라이브러리(shadcn 등)는 없다. 아이콘은 `lucide-react`.
+
+- [x] 디자인 기준 문서: `docs/design.md`가 살아있는 디자인 시스템 문서. 원칙상 새 화면/컴포넌트 전 `docs/design.md`와 `/style-guide`를 확인하고, 토큰/컴포넌트가 바뀌면 문서도 같이 갱신해야 한다. `frontend/CLAUDE.md`도 같은 규칙을 갖고 있음(raw hex/rgb/hsl 금지, 반복 arbitrary Tailwind 값은 토큰화).
+- [x] 전역 토큰 원천: `frontend/src/app/globals.css`
+  - 색상: `brand-pink*`, `brand-yellow*`, `ink/body/muted/muted-soft`, `hairline/hairline-soft/border-strong`, `canvas/surface-*`, `success/error/sale/scrim`
+  - 레이아웃: radius `xs/sm/md/lg`, shadow `card/float`, spacing은 Tailwind 기본 4px 스케일 + `section` 64px
+  - 타이포: `layout.tsx`에서 Google Fonts `Jua` + `Noto Sans KR` 로드, `.text-display-*`, `.text-title*`, `.text-body*`, `.text-caption`, `.text-price`, `.text-button`, `.text-tag` 합성 유틸 제공
+- [x] 앱 셸 구조: `frontend/src/app/layout.tsx`는 폰트/전역 CSS만 담당. `frontend/src/app/(shell)/layout.tsx`가 모바일 앱 프레임(`max-w-[480px]`, 바깥 `surface-strong`, 안쪽 `canvas`, `shadow-float`)과 `AuthProvider`, `GlobalBottomNav`를 담당. `/style-guide`는 `(shell)` 밖이라 프레임/하단탭 제외.
+- [x] 공통 컴포넌트 원천: `frontend/src/components/`
+  - `core`: `Button`, `IconButton`, `Badge`, `Chip`
+  - `forms`: `TextField`, `PasswordField`, `SearchInput`, `AddressFields`
+  - `navigation`: `BottomNav`, `GlobalBottomNav`
+  - `commerce`: `ProductCard`, `ProductGridItem`, `ProductMiniCard`, `ProductImage`, `ProductDetailView`, `Rating`, `SizeSelector`, `FilterSheet`, `ReviewCard`, `ReviewForm`
+  - `feedback/skeleton`: `Toast`, `ShippingProgress`, `ProductCardSkeleton`
+- [x] 에셋 상태: `frontend/public/logo/momentive-logo.jpeg`가 사실상 유일한 브랜드 이미지. 나머지는 Next 기본 SVG. 상품 이미지는 API URL을 그대로 쓰고, 실패/부재 시 `surface-strong` 플레이스홀더로 대체. 디자인 수정이 실제 비주얼 중심이면 `frontend/public/`에 에셋 추가 전략부터 잡아야 함.
+- [x] 토큰 준수 상태: raw hex/rgb 색상은 `globals.css` 안에만 있음. 실제 화면/컴포넌트는 대부분 `bg-brand-*`, `text-ink`, `border-hairline` 같은 토큰 유틸을 사용. 단, `text-white`, `bg-white/90`, arbitrary 치수/보더(`text-[15px]`, `h-[38px]`, `border-[1.5px]`, `px-[18px]`, `h-[72px]`, `top-[52px]`, `rounded-[10px]`, `max-w-[480px]`)가 여러 파일에 흩어져 있음.
+- [x] 중복 패턴/추출 후보:
+  - 상단 헤더(`h-13`, 좌측 back, 가운데 제목, 우측 spacer)가 `cart`, `checkout`, `payment`, `orders`, `coupons`, `pets`, `support`, `ProductDetailView`에 반복됨
+  - 하단 CTA 바(`sticky bottom-16` 또는 `fixed bottom-0 left-1/2 max-w-[480px]`)가 `ProductDetailView`, `cart`, `checkout`, `checkout/payment`, `mypage/orders/[orderId]`에 반복됨
+  - 선택 원형 체크 UI가 `cart`, `checkout`에 반복됨
+  - 카드/목록 컨테이너(`border-hairline bg-surface-card rounded-md border p-3~3.5`)가 주문/쿠폰/반려견/고객센터/체크아웃에 반복됨
+  - 2열 상품 그리드는 홈/검색/위시리스트에 반복됨
+- [x] 눈에 띄는 드리프트: `docs/design.md`는 `/style-guide`를 기준 샘플로 안내하지만, `frontend/src/app/style-guide/page.tsx`의 BottomNav 예시는 아직 4탭(홈/검색/위시/장바구니)이고 실제 앱 `GlobalBottomNav`는 5탭(홈/카테고리/검색/위시/마이). 디자인 수정 때 `/style-guide`도 같이 갱신 필요.
+- [ ] 내일 권장 작업 순서:
+  1. 먼저 수정 범위를 확정: 단순 브랜드 토큰 변경인지, 화면 구조/컴포넌트 재정리까지 포함한 리디자인인지 구분
+  2. 기준 스냅샷 확보: `/style-guide`, `/`, `/search`, `/products/{id}`, `/cart`, `/checkout`, `/checkout/payment`, `/mypage`, `/mypage/orders`, `/mypage/coupons`, `/mypage/pets`, `/mypage/support`
+  3. 토큰 변경은 `globals.css` → `docs/design.md` 순서로 반영. 색/폰트/radius/shadow를 먼저 바꾸면 대부분 컴포넌트가 따라감
+  4. 공통 컴포넌트 수정: `Button/IconButton/Badge/Chip` → `TextField/PasswordField/SearchInput` → `ProductCard/ProductMiniCard/ProductImage/ProductGridItem` → `BottomNav/Toast/ShippingProgress/FilterSheet/ReviewCard/ReviewForm/SizeSelector`
+  5. 넓은 리디자인이면 반복 패턴을 먼저 컴포넌트화 후보로 검토: `AppHeader`, `BottomActionBar`, `SelectableCircle` 또는 `CheckControl`, `SummaryRows`, `SurfaceCard/ListRow`, `ProductGrid`
+  6. 마지막에 라우트별 페이지 sweep: 홈/검색/상품상세/장바구니/체크아웃/주문상세/마이 하위 화면 순서가 영향 범위가 큼
+- [ ] 검증 체크: `cd frontend && npm run lint && npm run build`. 브라우저 검증은 390px 모바일 폭과 1280px 데스크톱 폭 둘 다 확인. 특히 하단 네비와 CTA 겹침, `FilterSheet` 오버레이 위치, `Toast` 위치, 긴 한국어 텍스트 줄바꿈, 상품 이미지 실패 플레이스홀더를 확인.
+- [ ] 작업 전 주의: 쿠폰 시스템(`frontend/src/app/(shell)/cart/page.tsx`, `checkout/page.tsx`, `mypage/page.tsx`, `mypage/coupons/*` 등)이 2026-09-02 기준 구현·커밋 완료됨 — 디자인 작업은 이 화면들이 이미 반영된 최신 코드 위에서 진행하면 된다.
 
 ## 다음 작업 후보
 
-- [ ] 쿠폰 시스템 구현 — spec/plan은 위 섹션에서 완료. JDK 21 문제 해소 후 `plan-runner`로 Phase 1~5 실행하면 됨
+- [ ] 디자인 수정 작업 — 위 "디자인 수정 사전 조사" 섹션 기준으로 착수. 우선순위는 `globals.css` 토큰과 공통 컴포넌트부터, 화면별 직접 수정은 그 다음
 - [ ] **관리자 상품 관리 부재** — 상품 등록/수정/재고조정 API도 화면도 전혀 없고(`ProductController`는 `GET` 2개뿐), 상품 데이터는 `V2__seed_product.sql`의 15개 시드가 전부. `User.role`에 `ADMIN` enum은 있으나 부여 경로도 검사 지점도 0건인 미사용 스캐폴딩. **실 운영 중인데 신상품 등록·재입고에 매번 마이그레이션 작성 + 재배포가 필요한 상태**(2026-09-01 조사). 쿠폰도 같은 제약을 감수하고 시드 방식으로 가기로 했으므로, 이 항목이 해소되면 쿠폰 발급도 함께 편해짐
 - [ ] Toss 결제위젯 실연동은 상점(스토어) 등록 완료 후 재검증 필요 (`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`) — 사용자 측 외부 조치 대기 중
 - [ ] **우편번호 형식 검증 부재** — `AddressRequest.zipcode`가 `@NotBlank`만 있고 형식 검증이 전혀 없는 자유 텍스트(2026-08-31 배송비 정책 grillme 세션 중 발견). 배송비 spec에서는 제주 판정 시 숫자 파싱 실패/범위 밖이면 안전하게 "제주 아님"으로만 처리하고 정식 형식 검증(5자리 숫자 등)은 범위 밖으로 분리했음 — 기존에 저장된 배송지 데이터 하위호환까지 고려해야 해서 별도 작업으로 남김

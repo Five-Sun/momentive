@@ -13,6 +13,7 @@ import com.momentive.backend.auth.domain.User;
 import com.momentive.backend.auth.repository.UserRepository;
 import com.momentive.backend.common.exception.CustomException;
 import com.momentive.backend.common.exception.ErrorCode;
+import com.momentive.backend.coupon.repository.UserCouponRepository;
 import com.momentive.backend.order.dto.OrderCreateRequest;
 import com.momentive.backend.order.dto.OrderItemRequest;
 import com.momentive.backend.order.dto.OrderResponse;
@@ -48,6 +49,8 @@ class OrderServiceStockRetryTest {
     @Mock
     private UserRepository userRepository;
     @Mock
+    private UserCouponRepository userCouponRepository;
+    @Mock
     private AddressService addressService;
     @Mock
     private OrderExpirationService orderExpirationService;
@@ -60,7 +63,8 @@ class OrderServiceStockRetryTest {
 
     private void setUp() {
         orderService = new OrderService(
-                orderRepository, productRepository, addressRepository, userRepository, addressService, orderExpirationService);
+                orderRepository, productRepository, addressRepository, userRepository, userCouponRepository,
+                addressService, orderExpirationService);
 
         user = User.createUser("retry@momentive.com", "hash", "재시도");
         ReflectionTestUtils.setField(user, "id", 1L);
@@ -77,7 +81,7 @@ class OrderServiceStockRetryTest {
     }
 
     private OrderCreateRequest newRequest() {
-        return new OrderCreateRequest(java.util.List.of(new OrderItemRequest(100L, 1, null)), 10L, null);
+        return new OrderCreateRequest(java.util.List.of(new OrderItemRequest(100L, 1, null)), 10L, null, null);
     }
 
     @Test
