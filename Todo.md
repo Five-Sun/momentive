@@ -227,11 +227,18 @@
   - **웨이트가 Regular 1종뿐** — Bold는 미러 문제가 아니라 애초에 미배포(디자인베이스 "두께 1가지 제공"). 타이포 스케일 10개 중 7개가 weight 500~700이라 **synthetic bold로 렌더**되고, 굵기 위계가 4단계 → 실질 2단계로 축소됨. Phase 1에 육안 확인 게이트를 두고, 11~12px에서 뭉개지면 **해당 토큰만 weight 400 평탄화**가 유일한 후퇴안(다른 서체 대체 불가 — 클라이언트 지정 폰트)
   - 글리프: 한글 2,449/11,172자만 수록. 다만 **서비스 텍스트 397자 전량 커버, 미커버 0건**(프론트 UI 카피 + 시드 SQL 75개 파일 실측). UGC용 `Noto Sans KR` 폴백만 유지
   - 파일: woff2 358KB / woff 459KB / ttf 651KB → **woff2 self-host**(`frontend/public/fonts/`), jsDelivr CDN 미사용
-- [x] spec 작성 완료 — `docs/specs/2026-09-02-responsive-design-handoff.md` (AC 23개). `supersedes`는 걸지 않음(1차 이관 spec은 여전히 유효)
-- [x] plan 작성 완료 — `docs/plans/2026-09-02-responsive-design-handoff.md` (7 Phase). Phase 1 토큰기반 → 2 셸·네비 → 3 공통컴포넌트 → 4 레퍼런스 있는 7개 화면 → 5 레퍼런스 없는 11개 화면 → 6 `/style-guide` → 7 E2E. 영향 범위 넓은 순으로 배치해 뒤 phase의 재작업을 줄임
-- [ ] **다음: `plan-runner`로 Phase 1부터 실행**. Phase 1의 "굵기 육안 확인 게이트"는 수동 확인이라 결과를 보고 판단 필요
-- [ ] 참고: `(shell)` 하위 라우트는 **18개**(레퍼런스 있는 7개 + 없는 11개). 초기에 15개/8개로 세었다가 정정함
-- [ ] 참고: `docs/design.md`가 그동안 **존재하지 않았음** — `frontend/CLAUDE.md`가 필수 컨벤션으로 4회 참조하고 `frontend-reviewer`도 검증 기준으로 삼는데 파일이 없어 판정이 불가능한 상태였다. Phase 1에서 신규 작성
+- [x] spec 작성 완료 — `docs/specs/2026-09-02-responsive-design-handoff.md` (AC 23개, 전부 체크, `status: implemented`). `supersedes`는 걸지 않음(1차 이관 spec은 여전히 유효)
+- [x] plan 작성 완료 — `docs/plans/2026-09-02-responsive-design-handoff.md` (7 Phase, `status: done`). Phase 1 토큰기반 → 2 셸·네비 → 3 공통컴포넌트 → 4 레퍼런스 있는 7개 화면 → 5 레퍼런스 없는 11개 화면 → 6 `/style-guide` → 7 E2E. 영향 범위 넓은 순으로 배치해 뒤 phase의 재작업을 줄임
+- [x] `plan-runner`로 Phase 1~7 자동 실행 완료 — 전 phase 1차 통과(재시도 없음, backlog 없음). Docker Desktop 미기동으로 `./dev.sh` 1차 실패 → 사용자가 Docker 켠 뒤 재기동해 해소, Phase 7(E2E)만 서버 미기동으로 한 차례 `ENV_FAILURE` 후 재개해 통과
+- [x] `docs/e2e/2026-09-02-responsive-design-handoff.md` 생성 — 시나리오 7개 중 6개 PASS, 리뷰 작성/수정 서브플로우 1건은 Toss 샌드박스 실카드 결제 제약으로 사전조건 미충족 스킵(코드 결함 아님)
+- [x] **5개 수동 브라우저 검증 게이트를 dev-browser로 직접 확인 완료** (Phase 1 굵기 게이트, Phase 2 네비 전환, Phase 3 모션 4종, Phase 4/5 화면 3폭 스윕)
+  - **굵기 육안 확인 게이트 결과: 뭉개짐 없음, 평탄화 불필요** — `text-tag`(11px)/`text-caption`(12px) 둘 다 3배 확대 클로즈업으로 확인, 어비 세현체가 손글씨체 특성상 획이 두꺼워 synthetic bold에도 또렷함. `docs/design.md`에 근거 기록
+  - 1024px/1280px 네비 전환, 검색창 Enter 라우팅, 장바구니 배지, 위시 하트·사이즈 칩(`paw-pop`)·BottomNav 탭(`bump-up`)·Toast(`--ease-spring`) 모션 실제 발동과 `prefers-reduced-motion` 무력화(`animationDuration: 0s`) 전부 computed style로 확인
+  - Phase 4/7개+Phase 5/11개 화면을 390/1024/1440px 3폭으로 스윕(신규 계정 회원가입 후 로그인 상태 화면 포함) — CTA-네비게이션 겹침 없음, 그리드 열 전환, sticky 요약 컬럼 전부 정상
+  - `/style-guide`에서 타이포 10종·모션 3종 인터랙티브 샘플·브레이크포인트 표 실제 반영 확인
+  - plan 5개 체크박스 체크, spec AC 23개 전부 체크, plan `status: done` / spec `status: implemented` 갱신 완료
+- [x] 참고: `(shell)` 하위 라우트는 **18개**(레퍼런스 있는 7개 + 없는 11개). 초기에 15개/8개로 세었다가 정정함
+- [x] 참고: `docs/design.md`가 그동안 **존재하지 않았음** — `frontend/CLAUDE.md`가 필수 컨벤션으로 4회 참조하고 `frontend-reviewer`도 검증 기준으로 삼는데 파일이 없어 판정이 불가능한 상태였다. Phase 1에서 신규 작성 완료
 
 ## 다음 작업 후보
 

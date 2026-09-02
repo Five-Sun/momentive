@@ -165,7 +165,7 @@ export default function MyPetsPage() {
 
   return (
     <div className="bg-canvas relative flex min-h-screen flex-col">
-      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center border-b px-4">
+      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center border-b px-4 lg:hidden">
         <button onClick={() => router.back()} aria-label="뒤로가기" className="text-ink">
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -173,7 +173,11 @@ export default function MyPetsPage() {
         <div className="h-5 w-5" />
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 p-4 pb-28">
+      <div className="hidden px-0 pt-7 pb-4 lg:block">
+        <span className="text-title-sm text-ink">반려견 프로필 관리</span>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-3 p-4 pb-28 lg:px-0 lg:pb-16">
         {loaded && pets.length === 0 && !showForm && (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20">
             <span className="text-body text-muted">
@@ -188,7 +192,7 @@ export default function MyPetsPage() {
         )}
 
         {pets.length > 0 && (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
             {pets.map((pet) => (
               <div key={pet.id} className="border-hairline bg-surface-card flex gap-3 rounded-md border p-3.5">
                 <div
@@ -229,7 +233,7 @@ export default function MyPetsPage() {
         {showForm && (
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="border-hairline bg-surface-card flex flex-col gap-3 rounded-md border p-3.5"
+            className="border-hairline bg-surface-card flex flex-col gap-3 rounded-md border p-3.5 lg:max-w-[480px]"
           >
             <span className="text-title-sm text-ink">{editingPet ? "반려견 정보 수정" : "반려견 등록"}</span>
             <TextField label="이름" placeholder="반려견 이름" error={errors.name?.message} {...register("name")} />

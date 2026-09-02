@@ -81,12 +81,16 @@ export default function CartPage() {
 
   return (
     <div className="bg-canvas relative flex min-h-screen flex-col">
-      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center px-4 border-b">
+      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center px-4 border-b lg:hidden">
         <button onClick={() => router.back()} aria-label="뒤로가기" className="text-ink">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <span className="text-title-sm text-ink flex-1 text-center">장바구니</span>
         <div className="h-5 w-5" />
+      </div>
+
+      <div className="hidden px-0 pt-7 pb-4 lg:block">
+        <span className="text-title-sm text-ink">장바구니</span>
       </div>
 
       {items.length === 0 ? (
@@ -97,101 +101,110 @@ export default function CartPage() {
           </Button>
         </div>
       ) : (
-        <>
-          <button
-            onClick={handleToggleAll}
-            className="border-hairline bg-surface-card flex h-12 w-full flex-shrink-0 items-center gap-2 border-b px-4"
-          >
-            <span
-              className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] ${
-                allSelected ? "bg-brand-pink border-brand-pink" : "border-hairline bg-surface-card"
-              }`}
+        <div className="lg:grid lg:grid-cols-[1fr_340px] lg:items-start lg:gap-10 lg:pb-16">
+          <div className="flex flex-col lg:gap-4">
+            <button
+              onClick={handleToggleAll}
+              className="border-hairline bg-surface-card flex h-12 w-full flex-shrink-0 items-center gap-2 border-b px-4 lg:rounded-md lg:border lg:px-4"
             >
-              {allSelected && <Check className="h-3.5 w-3.5 text-on-brand" strokeWidth={3} />}
-            </span>
-            <span className="text-body-sm text-ink">
-              전체선택 ({selectedKeys.size}/{items.length})
-            </span>
-          </button>
+              <span
+                className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] ${
+                  allSelected ? "bg-brand-pink border-brand-pink" : "border-hairline bg-surface-card"
+                }`}
+              >
+                {allSelected && <Check className="h-3.5 w-3.5 text-on-brand" strokeWidth={3} />}
+              </span>
+              <span className="text-body-sm text-ink">
+                전체선택 ({selectedKeys.size}/{items.length})
+              </span>
+            </button>
 
-          <div className="flex flex-col gap-3 p-4">
-            {items.map((item) => {
-              const checked = selectedKeys.has(item.key);
-              return (
-                <div
-                  key={item.key}
-                  className="border-hairline bg-surface-card flex gap-3 rounded-md border p-3"
-                >
-                  <button
-                    onClick={() => handleToggleItem(item.key)}
-                    aria-label={checked ? "선택 해제" : "선택"}
-                    className={`mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] ${
-                      checked ? "bg-brand-pink border-brand-pink" : "border-hairline bg-surface-card"
-                    }`}
+            <div className="flex flex-col gap-3 p-4 lg:p-0">
+              {items.map((item) => {
+                const checked = selectedKeys.has(item.key);
+                return (
+                  <div
+                    key={item.key}
+                    className="border-hairline bg-surface-card flex gap-3 rounded-md border p-3"
                   >
-                    {checked && <Check className="h-3.5 w-3.5 text-on-brand" strokeWidth={3} />}
-                  </button>
-                  <div className="bg-surface-strong h-20 w-20 flex-shrink-0 rounded-sm" />
-                  <div className="flex flex-1 flex-col gap-1.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-title-sm text-ink">{item.title}</span>
-                      <button
-                        onClick={() => handleRemove(item.key)}
-                        aria-label="삭제"
-                        className="text-muted"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <span className="text-caption text-muted">사이즈 {item.size}</span>
-                    <div className="flex items-center justify-between">
-                      <div className="border-hairline flex items-center gap-3 rounded-full border px-2 py-1">
+                    <button
+                      onClick={() => handleToggleItem(item.key)}
+                      aria-label={checked ? "선택 해제" : "선택"}
+                      className={`mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] ${
+                        checked ? "bg-brand-pink border-brand-pink" : "border-hairline bg-surface-card"
+                      }`}
+                    >
+                      {checked && <Check className="h-3.5 w-3.5 text-on-brand" strokeWidth={3} />}
+                    </button>
+                    <div className="bg-surface-strong h-20 w-20 flex-shrink-0 rounded-sm" />
+                    <div className="flex flex-1 flex-col gap-1.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-title-sm text-ink">{item.title}</span>
                         <button
-                          onClick={() => handleQtyChange(item.key, item.qty - 1)}
-                          aria-label="수량 감소"
-                          className="text-ink"
+                          onClick={() => handleRemove(item.key)}
+                          aria-label="삭제"
+                          className="text-muted"
                         >
-                          <Minus className="h-3.5 w-3.5" />
-                        </button>
-                        <span className="text-body-sm text-ink w-4 text-center">{item.qty}</span>
-                        <button
-                          onClick={() => handleQtyChange(item.key, item.qty + 1)}
-                          aria-label="수량 증가"
-                          className="text-ink"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
+                          <X className="h-4 w-4" />
                         </button>
                       </div>
-                      <span className="text-price text-ink">{formatWon(item.unitPrice * item.qty)}</span>
+                      <span className="text-caption text-muted">사이즈 {item.size}</span>
+                      <div className="flex items-center justify-between">
+                        <div className="border-hairline flex items-center gap-3 rounded-full border px-2 py-1">
+                          <button
+                            onClick={() => handleQtyChange(item.key, item.qty - 1)}
+                            aria-label="수량 감소"
+                            className="text-ink"
+                          >
+                            <Minus className="h-3.5 w-3.5" />
+                          </button>
+                          <span className="text-body-sm text-ink w-4 text-center">{item.qty}</span>
+                          <button
+                            onClick={() => handleQtyChange(item.key, item.qty + 1)}
+                            aria-label="수량 증가"
+                            className="text-ink"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <span className="text-price text-ink">{formatWon(item.unitPrice * item.qty)}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+
+            <div className="px-4 lg:px-0">
+              <ShippingProgress remaining={remaining} formatAmount={formatWon} />
+            </div>
           </div>
 
-          <div className="px-4">
-            <ShippingProgress remaining={remaining} formatAmount={formatWon} />
-          </div>
-
-          <div className="flex flex-col gap-2 px-4 py-4">
+          <div className="border-hairline bg-surface-soft flex flex-col gap-3.5 rounded-md border p-5 lg:sticky lg:top-8 mx-4 my-4 lg:mx-0 lg:my-0">
             <div className="flex items-center justify-between">
               <span className="text-body-sm text-muted">상품금액</span>
               <span className="text-body-sm text-ink">{formatWon(subtotal)}</span>
             </div>
-            <div className="bg-hairline my-1.5 h-px" />
+            <div className="bg-hairline h-px" />
             <div className="flex items-center justify-between">
               <span className="text-title-sm text-ink">총 결제금액</span>
               <span className="text-price text-ink">{formatWon(total)}</span>
             </div>
+            <div className="hidden lg:block">
+              <Button variant="primary" disabled={selectedKeys.size === 0} onClick={handleCheckout} fullWidth>
+                구매하기
+              </Button>
+            </div>
           </div>
+        </div>
+      )}
 
-          <div className="border-hairline bg-surface-card sticky bottom-16 p-3.5 border-t">
-            <Button variant="primary" disabled={selectedKeys.size === 0} onClick={handleCheckout} fullWidth>
-              구매하기
-            </Button>
-          </div>
-        </>
+      {items.length > 0 && (
+        <div className="border-hairline bg-surface-card sticky bottom-16 p-3.5 border-t lg:hidden">
+          <Button variant="primary" disabled={selectedKeys.size === 0} onClick={handleCheckout} fullWidth>
+            구매하기
+          </Button>
+        </div>
       )}
     </div>
   );

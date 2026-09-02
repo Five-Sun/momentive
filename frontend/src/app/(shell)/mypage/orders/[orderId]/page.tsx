@@ -130,7 +130,7 @@ export default function OrderDetailPage() {
   if (!loaded) {
     return (
       <div className="bg-canvas flex min-h-screen flex-col">
-        <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center px-4 border-b">
+        <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center px-4 border-b lg:hidden">
           <button onClick={() => router.back()} aria-label="뒤로가기" className="text-ink">
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -158,7 +158,7 @@ export default function OrderDetailPage() {
 
   return (
     <div className="bg-canvas relative flex min-h-screen flex-col">
-      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center px-4 border-b">
+      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center px-4 border-b lg:hidden">
         <button onClick={() => router.back()} aria-label="뒤로가기" className="text-ink">
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -166,7 +166,11 @@ export default function OrderDetailPage() {
         <div className="h-5 w-5" />
       </div>
 
-      <div className="flex flex-col gap-6 px-4 py-5 pb-28">
+      <div className="hidden px-0 pt-7 pb-4 lg:block">
+        <span className="text-title-sm text-ink">주문 상세</span>
+      </div>
+
+      <div className="mx-auto flex w-full flex-col gap-6 px-4 py-5 pb-28 lg:max-w-[720px] lg:px-0 lg:py-0 lg:pb-16">
         <section className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <span className="text-caption text-muted">{formatDateTime(order.createdAt)}</span>
@@ -278,11 +282,18 @@ export default function OrderDetailPage() {
         </section>
 
         {canCancel && (
-          <div className="border-hairline bg-surface-card fixed bottom-0 left-1/2 w-full max-w-[480px] -translate-x-1/2 p-3.5 border-t">
-            <Button variant="secondary" fullWidth disabled={cancelling} onClick={handleCancel}>
-              주문 취소
-            </Button>
-          </div>
+          <>
+            <div className="border-hairline bg-surface-card fixed bottom-0 left-1/2 w-full max-w-[480px] -translate-x-1/2 p-3.5 border-t lg:hidden">
+              <Button variant="secondary" fullWidth disabled={cancelling} onClick={handleCancel}>
+                주문 취소
+              </Button>
+            </div>
+            <div className="hidden lg:block">
+              <Button variant="secondary" fullWidth disabled={cancelling} onClick={handleCancel}>
+                주문 취소
+              </Button>
+            </div>
+          </>
         )}
       </div>
 

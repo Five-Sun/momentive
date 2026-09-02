@@ -51,7 +51,7 @@ function CheckoutSuccessContent() {
         <span className="text-title text-ink">주문이 완료됐어요</span>
         <span className="text-body-sm text-muted">결제가 정상적으로 처리됐어요</span>
       </div>
-      <div className="flex w-full flex-col gap-2">
+      <div className="flex w-full flex-col gap-2 lg:max-w-[480px]">
         <Button variant="primary" fullWidth onClick={() => router.push(`/mypage/orders/${result.orderId}`)}>
           주문내역 보기
         </Button>

@@ -117,12 +117,16 @@ export default function MyCouponsPage() {
 
   return (
     <div className="bg-canvas relative flex min-h-screen flex-col">
-      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center border-b px-4">
+      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center border-b px-4 lg:hidden">
         <button onClick={() => router.back()} aria-label="뒤로가기" className="text-ink">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <span className="text-title-sm text-ink flex-1 text-center">쿠폰함</span>
         <div className="h-5 w-5" />
+      </div>
+
+      <div className="hidden px-0 pt-7 pb-4 lg:block">
+        <span className="text-title-sm text-ink">쿠폰함</span>
       </div>
 
       {!user ? (
@@ -133,10 +137,10 @@ export default function MyCouponsPage() {
           </Button>
         </div>
       ) : (
-        <div className="flex flex-1 flex-col gap-6 p-4 pb-28">
+        <div className="flex flex-1 flex-col gap-6 p-4 pb-28 lg:px-0 lg:pb-16">
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="border-hairline bg-surface-card flex flex-col gap-3 rounded-md border p-3.5"
+            className="border-hairline bg-surface-card flex flex-col gap-3 rounded-md border p-3.5 lg:max-w-[480px]"
           >
             <span className="text-title-sm text-ink">쿠폰 코드 등록</span>
             <div className="flex items-start gap-2">
@@ -165,7 +169,7 @@ export default function MyCouponsPage() {
           {availableCoupons.length > 0 && (
             <div className="flex flex-col gap-3">
               <span className="text-title-sm text-ink">사용 가능한 쿠폰</span>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
                 {availableCoupons.map((coupon) => (
                   <CouponCard key={coupon.id} coupon={coupon} inactive={false} />
                 ))}
@@ -176,7 +180,7 @@ export default function MyCouponsPage() {
           {inactiveCoupons.length > 0 && (
             <div className="flex flex-col gap-3">
               <span className="text-title-sm text-ink">사용 완료・만료</span>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
                 {inactiveCoupons.map((coupon) => (
                   <CouponCard key={coupon.id} coupon={coupon} inactive={true} />
                 ))}

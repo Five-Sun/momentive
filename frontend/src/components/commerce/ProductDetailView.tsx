@@ -186,7 +186,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
 
   return (
     <div className="bg-canvas relative flex min-h-screen flex-col">
-      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center justify-between border-b px-4">
+      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center justify-between border-b px-4 lg:hidden">
         <button onClick={() => router.back()} aria-label="뒤로가기" className="text-ink">
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -195,67 +195,96 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
         </IconButton>
       </div>
 
-      <div className="flex flex-col gap-3 p-4">
-        {product.images.length === 0 ? (
-          <div className="bg-surface-strong text-muted flex aspect-square items-center justify-center rounded-2xl text-center text-sm">
-            {product.name}
+      <div className="lg:grid lg:grid-cols-[1fr_1fr] lg:items-start lg:gap-10 lg:pt-8">
+        <div className="flex flex-col gap-3 p-4 lg:sticky lg:top-8 lg:p-0">
+          {product.images.length === 0 ? (
+            <div className="bg-surface-strong text-muted flex aspect-square items-center justify-center rounded-2xl text-center text-sm">
+              {product.name}
+            </div>
+          ) : (
+            product.images.map((image) => (
+              <ProductImage key={image.id} url={image.url} name={product.name} />
+            ))
+          )}
+        </div>
+
+        <div className="flex flex-col gap-3 px-4 lg:px-0">
+          <button
+            onClick={() => router.back()}
+            className="text-caption text-muted hidden items-center lg:flex"
+          >
+            <ArrowLeft className="mr-1 h-3.5 w-3.5" />
+            목록으로
+          </button>
+          <div className="flex items-center gap-2">
+            {product.soldOut && <Badge tone="soldout" label="품절" />}
+            {hasDiscount && (
+              <Badge
+                tone="sale"
+                label={`${Math.round((1 - product.discountPrice! / product.price) * 100)}%`}
+              />
+            )}
           </div>
-        ) : (
-          product.images.map((image) => (
-            <ProductImage key={image.id} url={image.url} name={product.name} />
-          ))
-        )}
+          <h1 className="text-title text-ink">{product.name}</h1>
+          {averageRating != null && <Rating value={averageRating} count={reviewCount} />}
+          <div className="flex items-baseline gap-1.5">
+            {hasDiscount && (
+              <span className="text-body-sm text-muted-soft line-through">
+                {formatWon(product.price)}
+              </span>
+            )}
+            <span className="text-price text-ink">{formatWon(unitPrice)}</span>
+          </div>
+
+          <div className="bg-hairline my-1.5 h-px" />
+
+          <div className="flex items-center justify-between">
+            <span className="text-title-sm text-ink">사이즈</span>
+            <button
+              onClick={() => setOpenPanel(openPanel === "guide" ? null : "guide")}
+              className="text-caption text-brand-pink-active underline"
+            >
+              사이즈 가이드
+            </button>
+          </div>
+          <div className={product.soldOut ? "pointer-events-none opacity-50" : undefined}>
+            <SizeSelector sizes={SIZES} selected={size ?? ""} onSelect={setSize} />
+          </div>
+          {openPanel === "guide" && (
+            <div className="bg-surface-soft rounded-sm flex flex-col gap-1.5 p-3.5">
+              <span className="text-caption text-ink font-bold">반려견 체형별 사이즈</span>
+              {SIZE_GUIDE.map(([s, d]) => (
+                <div key={s} className="text-body-sm text-body flex justify-between">
+                  <span>{s}</span>
+                  <span className="text-muted">{d}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="bg-hairline my-1.5 h-px" />
+
+          <span className="text-title-sm text-ink">상품 설명</span>
+          <p className="text-body text-ink m-0">{product.description}</p>
+
+          <div className="hidden lg:mt-2 lg:flex lg:gap-2.5">
+            <Button variant="secondary" onClick={handleToggleWishlist}>
+              {favorited ? "위시 완료" : "위시 담기"}
+            </Button>
+            <div className="flex-1">
+              <Button
+                variant="primary"
+                disabled={!size || product.soldOut}
+                onClick={handleAddToCart}
+              >
+                장바구니 담기
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-3 px-4">
-        <div className="flex items-center gap-2">
-          {product.soldOut && <Badge tone="soldout" label="품절" />}
-          {hasDiscount && (
-            <Badge
-              tone="sale"
-              label={`${Math.round((1 - product.discountPrice! / product.price) * 100)}%`}
-            />
-          )}
-        </div>
-        <h1 className="text-title text-ink">{product.name}</h1>
-        {averageRating != null && <Rating value={averageRating} count={reviewCount} />}
-        <div className="flex items-baseline gap-1.5">
-          {hasDiscount && (
-            <span className="text-body-sm text-muted-soft line-through">
-              {formatWon(product.price)}
-            </span>
-          )}
-          <span className="text-price text-ink">{formatWon(unitPrice)}</span>
-        </div>
-
-        <div className="bg-hairline my-1.5 h-px" />
-
-        <div className="flex items-center justify-between">
-          <span className="text-title-sm text-ink">사이즈</span>
-          <button
-            onClick={() => setOpenPanel(openPanel === "guide" ? null : "guide")}
-            className="text-caption text-brand-pink-active underline"
-          >
-            사이즈 가이드
-          </button>
-        </div>
-        <div className={product.soldOut ? "pointer-events-none opacity-50" : undefined}>
-          <SizeSelector sizes={SIZES} selected={size ?? ""} onSelect={setSize} />
-        </div>
-        {openPanel === "guide" && (
-          <div className="bg-surface-soft rounded-sm flex flex-col gap-1.5 p-3.5">
-            <span className="text-caption text-ink font-bold">반려견 체형별 사이즈</span>
-            {SIZE_GUIDE.map(([s, d]) => (
-              <div key={s} className="text-body-sm text-body flex justify-between">
-                <span>{s}</span>
-                <span className="text-muted">{d}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="bg-hairline my-1.5 h-px" />
-
+      <div className="flex flex-col gap-3 px-4 pt-6 lg:px-0 lg:pt-10">
         <button
           onClick={() => setOpenPanel(openPanel === "delivery" ? null : "delivery")}
           className="flex items-center justify-between"
@@ -274,11 +303,6 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             ))}
           </div>
         )}
-
-        <div className="bg-hairline my-1.5 h-px" />
-
-        <span className="text-title-sm text-ink">상품 설명</span>
-        <p className="text-body text-ink m-0">{product.description}</p>
 
         <div className="bg-hairline my-1.5 h-px" />
 
@@ -351,7 +375,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
         )}
       </div>
 
-      <div className="border-hairline bg-surface-card sticky bottom-16 flex gap-2.5 border-t p-3.5">
+      <div className="border-hairline bg-surface-card sticky bottom-16 flex gap-2.5 border-t p-3.5 lg:hidden">
         <Button variant="secondary" onClick={handleToggleWishlist}>
           {favorited ? "위시 완료" : "위시 담기"}
         </Button>

@@ -123,16 +123,33 @@ function PaymentWidgetContent() {
 
   return (
     <div className="bg-canvas relative flex min-h-screen flex-col">
-      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center justify-center px-4 border-b">
+      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center justify-center px-4 border-b lg:hidden">
         <span className="text-title-sm text-ink">결제</span>
       </div>
 
-      <div className="flex flex-1 flex-col gap-4 px-4 py-5 pb-28">
-        <div id="toss-payment-methods" />
-        <div id="toss-agreement" />
+      <div className="mx-auto w-full lg:max-w-[720px]">
+        <div className="hidden px-0 pt-7 pb-4 lg:block">
+          <span className="text-title-sm text-ink">결제</span>
+        </div>
+
+        <div className="flex flex-1 flex-col gap-4 px-4 py-5 pb-28 lg:px-0 lg:py-0 lg:pb-8">
+          <div id="toss-payment-methods" />
+          <div id="toss-agreement" />
+
+          <div className="hidden lg:block">
+            <button
+              type="button"
+              onClick={handlePay}
+              disabled={!order}
+              className="bg-brand-pink text-on-brand disabled:bg-brand-pink-soft disabled:text-muted-soft h-12 w-full rounded-full font-semibold"
+            >
+              {order ? `${order.totalAmount.toLocaleString("ko-KR")}원 결제하기` : "불러오는 중..."}
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="border-hairline bg-surface-card fixed bottom-0 left-1/2 w-full max-w-[480px] -translate-x-1/2 p-3.5 border-t">
+      <div className="border-hairline bg-surface-card fixed bottom-0 left-1/2 w-full max-w-[480px] -translate-x-1/2 p-3.5 border-t lg:hidden">
         <button
           type="button"
           onClick={handlePay}

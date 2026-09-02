@@ -53,42 +53,44 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="bg-canvas relative flex min-h-screen flex-col px-4 py-8">
-      <h1 className="text-title text-ink mb-6">회원가입</h1>
+    <main className="bg-canvas relative flex min-h-screen flex-col px-4 py-8 lg:items-center lg:justify-center lg:px-0">
+      <div className="w-full lg:max-w-[480px]">
+        <h1 className="text-title text-ink mb-6">회원가입</h1>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <TextField
-          label="이메일"
-          type="email"
-          placeholder="example@momentive.com"
-          error={errors.email?.message}
-          {...register("email")}
-        />
-        <PasswordField
-          label="비밀번호"
-          placeholder="영문/숫자 조합 8자 이상"
-          error={errors.password?.message}
-          {...register("password")}
-        />
-        <TextField
-          label="닉네임"
-          type="text"
-          placeholder="닉네임을 입력해주세요"
-          error={errors.nickname?.message}
-          {...register("nickname")}
-        />
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <TextField
+            label="이메일"
+            type="email"
+            placeholder="example@momentive.com"
+            error={errors.email?.message}
+            {...register("email")}
+          />
+          <PasswordField
+            label="비밀번호"
+            placeholder="영문/숫자 조합 8자 이상"
+            error={errors.password?.message}
+            {...register("password")}
+          />
+          <TextField
+            label="닉네임"
+            type="text"
+            placeholder="닉네임을 입력해주세요"
+            error={errors.nickname?.message}
+            {...register("nickname")}
+          />
 
-        <Button type="submit" fullWidth disabled={isSubmitting}>
-          회원가입
-        </Button>
-      </form>
+          <Button type="submit" fullWidth disabled={isSubmitting}>
+            회원가입
+          </Button>
+        </form>
 
-      <p className="text-body-sm text-muted mt-6 text-center">
-        이미 계정이 있으신가요?{" "}
-        <Link href="/login" className="text-ink font-semibold underline">
-          로그인
-        </Link>
-      </p>
+        <p className="text-body-sm text-muted mt-6 text-center">
+          이미 계정이 있으신가요?{" "}
+          <Link href="/login" className="text-ink font-semibold underline">
+            로그인
+          </Link>
+        </p>
+      </div>
 
       {toastMessage && <Toast message={toastMessage} visible={!!toastMessage} />}
     </main>

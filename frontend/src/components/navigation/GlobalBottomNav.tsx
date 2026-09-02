@@ -31,13 +31,15 @@ export function GlobalBottomNav() {
   const activeTab = TABS.find((tab) => tab.href === pathname);
 
   return (
-    <BottomNav
-      items={TABS.map(({ key, icon, label }) => ({ key, icon, label }))}
-      activeKey={activeTab?.key ?? ""}
-      onSelect={(key) => {
-        const tab = TABS.find((t) => t.key === key);
-        if (tab) router.push(tab.href);
-      }}
-    />
+    <div className="lg:hidden">
+      <BottomNav
+        items={TABS.map(({ key, icon, label }) => ({ key, icon, label }))}
+        activeKey={activeTab?.key ?? ""}
+        onSelect={(key) => {
+          const tab = TABS.find((t) => t.key === key);
+          if (tab) router.push(tab.href);
+        }}
+      />
+    </div>
   );
 }

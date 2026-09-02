@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { Jua, Noto_Sans_KR } from "next/font/google";
+import { Noto_Sans_KR } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const jua = Jua({
+const uhbeeSehyun = localFont({
+  src: "../../public/fonts/UhBeeSehyun.woff2",
   weight: "400",
-  subsets: ["latin"],
-  variable: "--font-jua",
+  variable: "--font-uhbee",
+  display: "swap",
 });
 
 const notoSansKr = Noto_Sans_KR({
@@ -21,7 +23,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className={`h-full antialiased ${jua.variable} ${notoSansKr.variable}`}>
+    <html
+      lang="ko"
+      className={`h-full antialiased ${uhbeeSehyun.variable} ${notoSansKr.variable}`}
+    >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

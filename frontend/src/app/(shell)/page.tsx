@@ -112,7 +112,7 @@ export default function Home() {
 
   return (
     <main className="bg-canvas flex min-h-screen flex-col">
-      <header className="flex flex-col gap-3 px-4 py-4">
+      <header className="mobile-search-row flex flex-col gap-3 px-4 py-4 lg:hidden">
         <div className="flex items-center justify-between">
           <Image
             src="/logo/momentive-logo.jpeg"
@@ -135,8 +135,8 @@ export default function Home() {
         </Link>
       </header>
 
-      <section className="flex-1 pb-20">
-        <div className="from-brand-pink-soft to-brand-pink-tint mx-4 mb-[18px] flex flex-col gap-1.5 rounded-lg bg-linear-to-br p-5">
+      <section className="flex-1 pb-20 lg:pb-16">
+        <div className="from-brand-pink-soft to-brand-pink-tint mx-4 mb-[18px] flex flex-col gap-1.5 rounded-lg bg-linear-to-br p-5 lg:mx-0 lg:mb-7 lg:min-h-[220px] lg:justify-center lg:rounded-lg lg:p-10">
           <span className="text-caption text-brand-pink-deep font-bold">WINTER SALE</span>
           <span className="text-display-md text-ink">겨울 신상 최대 20%</span>
           <span className="text-body-sm text-body">소중한 우리 강아지를 위한 첫 겨울 옷</span>
@@ -144,11 +144,11 @@ export default function Home() {
 
         {ranked.length > 0 && (
           <div className="mb-5">
-            <div className="flex items-baseline justify-between px-4 pb-2.5">
+            <div className="flex items-baseline justify-between px-4 pb-2.5 lg:px-0">
               <span className="text-title-sm text-ink">지금 인기 있는</span>
               <span className="text-caption text-muted">리뷰 많은순</span>
             </div>
-            <div className="flex gap-3 overflow-x-auto px-4 pb-1">
+            <div className="flex gap-3 overflow-x-auto px-4 pb-1 lg:px-0">
               {ranked.map((product, i) => (
                 <ProductMiniCard key={product.id} product={product} rank={i + 1} />
               ))}
@@ -156,7 +156,7 @@ export default function Home() {
           </div>
         )}
 
-        <div className="flex gap-2 overflow-x-auto px-4 pb-3.5">
+        <div className="flex gap-2 overflow-x-auto px-4 pb-3.5 lg:px-0 lg:pb-7">
           {CATEGORY_CHIPS.map((chip) => (
             <Chip
               key={chip.key}
@@ -167,7 +167,7 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="px-4">
+        <div className="px-4 lg:px-0">
           {initialLoadDone && products.length === 0 && !loading ? (
             <div className="flex flex-col items-center justify-center gap-2 py-24 text-center">
               <p className="text-title text-ink">아직 준비된 상품이 없어요</p>
@@ -175,7 +175,7 @@ export default function Home() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-10 xl:grid-cols-4">
                 {products.map((product) => (
                   <ProductGridItem key={product.id} product={product} />
                 ))}
@@ -189,10 +189,10 @@ export default function Home() {
 
         {recentlyViewed.length > 0 && (
           <div className="mt-6">
-            <div className="px-4 pb-2.5">
+            <div className="px-4 pb-2.5 lg:px-0">
               <span className="text-title-sm text-ink">최근 본 상품</span>
             </div>
-            <div className="flex gap-3 overflow-x-auto px-4">
+            <div className="flex gap-3 overflow-x-auto px-4 lg:px-0">
               {recentlyViewed.map((product) => (
                 <ProductMiniCard key={product.id} product={product} />
               ))}
