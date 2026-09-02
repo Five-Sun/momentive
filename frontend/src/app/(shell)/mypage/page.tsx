@@ -14,7 +14,7 @@ export default function MyPage() {
 
   const MENU_ITEMS = [
     { icon: Truck, label: "배송조회", onClick: () => {} },
-    { icon: Ticket, label: "쿠폰함", onClick: () => {} },
+    { icon: Ticket, label: "쿠폰함", onClick: () => router.push("/mypage/coupons") },
     { icon: Coins, label: "적립금", onClick: () => {} },
     { icon: PawPrint, label: "반려견 프로필 관리", onClick: () => router.push("/mypage/pets") },
     { icon: Headset, label: "고객센터", onClick: () => router.push("/mypage/support") },

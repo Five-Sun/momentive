@@ -8,6 +8,9 @@ import com.momentive.backend.auth.domain.User;
 import com.momentive.backend.auth.repository.UserRepository;
 import com.momentive.backend.common.exception.CustomException;
 import com.momentive.backend.common.exception.ErrorCode;
+import com.momentive.backend.coupon.domain.CouponDiscountPolicy;
+import com.momentive.backend.coupon.domain.UserCoupon;
+import com.momentive.backend.coupon.repository.UserCouponRepository;
 import com.momentive.backend.order.domain.Order;
 import com.momentive.backend.order.domain.OrderItem;
 import com.momentive.backend.order.domain.ShippingFeePolicy;
@@ -35,11 +38,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
 
     private static final int MAX_STOCK_RETRY = 2;
+    private static final int MAX_COUPON_RETRY = 2;
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
+    private final UserCouponRepository userCouponRepository;
     private final AddressService addressService;
     private final OrderExpirationService orderExpirationService;
 
@@ -60,11 +65,66 @@ public class OrderService {
             order.addItem(item);
             itemsSubtotal += item.getSubtotal();
         }
-        int shippingFee = ShippingFeePolicy.calculate(itemsSubtotal, address.getZipcode());
-        order.confirmAmounts(itemsSubtotal, shippingFee);
 
+        // 배송비는 반드시 할인 전 itemsSubtotal 기준으로 계산한다 — 무료배송 임계값이 할인으로 흔들리지 않게 하기 위함.
+        int shippingFee = ShippingFeePolicy.calculate(itemsSubtotal, address.getZipcode());
+        // 쿠폰의 usedOrderId를 채우려면 order.getId()가 필요하므로, 금액이 확정되지 않은 채로 먼저 저장해 ID를 확보한다.
+        order.confirmAmounts(itemsSubtotal, 0, shippingFee);
         orderRepository.save(order);
+
+        int discountAmount = applyCouponIfRequested(order, user, request.userCouponId(), itemsSubtotal);
+        order.confirmAmounts(itemsSubtotal, discountAmount, shippingFee);
+
         return OrderResponse.from(order);
+    }
+
+    /**
+     * userCouponId가 있으면 소유자 일치·상태·유효기간·최소 주문금액을 재검증한 뒤
+     * 할인액을 계산하고 쿠폰을 선점(USED)한다. 검증 실패 시 400.
+     *
+     * <p>상태와 유효기간은 {@link UserCoupon#isAvailable()}이 함께 판정한다
+     * (status가 AVAILABLE이면서 coupon.expiresAt이 지나지 않았을 것).
+     *
+     * <p>선점은 재고 차감과 같은 낙관적 락 + 재시도로 보호한다. 동시에 같은 쿠폰을 쓰려던
+     * 요청 중 진 쪽은 재조회 시 이미 USED이므로 {@code USER_COUPON_NOT_AVAILABLE}로 실패한다.
+     */
+    private int applyCouponIfRequested(Order order, User user, Long userCouponId, int itemsSubtotal) {
+        if (userCouponId == null) {
+            return 0;
+        }
+        int retryCount = 0;
+        while (true) {
+            try {
+                return claimCoupon(order, user, userCouponId, itemsSubtotal);
+            } catch (ObjectOptimisticLockingFailureException | OptimisticLockException e) {
+                retryCount++;
+                if (retryCount > MAX_COUPON_RETRY) {
+                    throw new CustomException(ErrorCode.USER_COUPON_NOT_AVAILABLE);
+                }
+            }
+        }
+    }
+
+    private int claimCoupon(Order order, User user, Long userCouponId, int itemsSubtotal) {
+        UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_COUPON_NOT_FOUND));
+        if (!userCoupon.isOwnedBy(user.getId())) {
+            throw new CustomException(ErrorCode.USER_COUPON_NOT_FOUND);
+        }
+        if (!userCoupon.isAvailable()) {
+            throw new CustomException(ErrorCode.USER_COUPON_NOT_AVAILABLE);
+        }
+        if (!userCoupon.getCoupon().meetsMinOrderAmount(itemsSubtotal)) {
+            throw new CustomException(ErrorCode.COUPON_MIN_ORDER_AMOUNT_NOT_MET);
+        }
+
+        int discountAmount = CouponDiscountPolicy.calculate(userCoupon.getCoupon(), itemsSubtotal);
+        userCoupon.use(order.getId());
+        // 낙관적 락 충돌을 이 지점에서 즉시 드러내기 위해 flush한다. 커밋까지 미루면
+        // 재시도 없이 트랜잭션 전체가 실패한다.
+        userCouponRepository.saveAndFlush(userCoupon);
+        order.applyCoupon(userCoupon);
+        return discountAmount;
     }
 
     private void assertAllInStock(List<OrderItemRequest> items) {

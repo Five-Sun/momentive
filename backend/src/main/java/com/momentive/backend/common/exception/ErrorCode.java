@@ -22,7 +22,13 @@ public enum ErrorCode {
     PURCHASE_NOT_VERIFIED(HttpStatus.FORBIDDEN, "구매 이력이 확인된 사용자만 리뷰를 작성할 수 있습니다."),
     REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 이 상품에 작성한 리뷰가 있습니다."),
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "리뷰를 찾을 수 없습니다."),
-    PET_NOT_FOUND(HttpStatus.NOT_FOUND, "반려견을 찾을 수 없습니다.");
+    PET_NOT_FOUND(HttpStatus.NOT_FOUND, "반려견을 찾을 수 없습니다."),
+    COUPON_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 쿠폰 코드입니다."),
+    COUPON_EXPIRED(HttpStatus.BAD_REQUEST, "유효기간이 지난 쿠폰입니다."),
+    COUPON_ALREADY_REGISTERED(HttpStatus.BAD_REQUEST, "이미 등록한 쿠폰입니다."),
+    USER_COUPON_NOT_FOUND(HttpStatus.BAD_REQUEST, "보유하지 않은 쿠폰입니다."),
+    USER_COUPON_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "사용할 수 없는 쿠폰입니다."),
+    COUPON_MIN_ORDER_AMOUNT_NOT_MET(HttpStatus.BAD_REQUEST, "최소 주문금액을 충족하지 않는 쿠폰입니다.");
 
     private final HttpStatus status;
     private final String message;

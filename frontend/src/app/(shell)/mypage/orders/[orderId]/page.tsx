@@ -259,6 +259,12 @@ export default function OrderDetailPage() {
             <span className="text-body-sm text-body">상품금액</span>
             <span className="text-body-sm text-ink">{formatWon(order.itemsSubtotal)}</span>
           </div>
+          {order.discountAmount > 0 && order.couponName && (
+            <div className="flex items-center justify-between">
+              <span className="text-body-sm text-body">쿠폰 할인 · {order.couponName}</span>
+              <span className="text-body-sm text-ink">-{formatWon(order.discountAmount)}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <span className="text-body-sm text-body">배송비</span>
             <span className="text-body-sm text-ink">

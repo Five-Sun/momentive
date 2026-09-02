@@ -13,7 +13,6 @@ import {
 } from "@/lib/storage/cart";
 import { setCheckoutSelection } from "@/lib/storage/checkoutSelection";
 
-const COUPON_DISCOUNT = 3000;
 const FREE_SHIPPING_THRESHOLD = 70000;
 
 function formatWon(amount: number) {
@@ -24,7 +23,6 @@ export default function CartPage() {
   const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
-  const [couponApplied, setCouponApplied] = useState(false);
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -77,9 +75,6 @@ export default function CartPage() {
 
   const selectedItems = items.filter((item) => selectedKeys.has(item.key));
   const subtotal = selectedItems.reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
-  // 쿠폰은 아직 결제 금액에 반영하지 않는 placeholder UI (실제 쿠폰 시스템은 이 spec의 범위 밖)
-  // "할인금액" 표시 줄에서만 사용하는 정보성 값이며, 총 결제금액(total) 계산에는 포함하지 않는다.
-  const discount = couponApplied && selectedItems.length > 0 ? COUPON_DISCOUNT : 0;
   const total = subtotal;
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const allSelected = items.length > 0 && selectedKeys.size === items.length;
@@ -179,30 +174,10 @@ export default function CartPage() {
             <ShippingProgress remaining={remaining} formatAmount={formatWon} />
           </div>
 
-          <div className="px-4 pt-4">
-            <button
-              onClick={() => setCouponApplied((prev) => !prev)}
-              className="border-hairline bg-surface-card flex h-14 w-full items-center justify-between rounded-md border px-4"
-            >
-              <span className="text-body-sm text-ink">쿠폰 할인 (3,000원)</span>
-              <div
-                className={`flex h-6 w-11 items-center rounded-full px-0.5 transition-colors ${
-                  couponApplied ? "bg-brand-pink justify-end" : "bg-hairline justify-start"
-                }`}
-              >
-                <div className="h-5 w-5 rounded-full bg-white" />
-              </div>
-            </button>
-          </div>
-
           <div className="flex flex-col gap-2 px-4 py-4">
             <div className="flex items-center justify-between">
               <span className="text-body-sm text-muted">상품금액</span>
               <span className="text-body-sm text-ink">{formatWon(subtotal)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-body-sm text-muted">할인금액</span>
-              <span className="text-body-sm text-ink">-{formatWon(discount)}</span>
             </div>
             <div className="bg-hairline my-1.5 h-px" />
             <div className="flex items-center justify-between">

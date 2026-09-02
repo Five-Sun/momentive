@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronLeft } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
@@ -13,8 +13,17 @@ import { getCart, type CartItem } from "@/lib/storage/cart";
 import { getCheckoutSelection } from "@/lib/storage/checkoutSelection";
 import { getAddresses, type AddressResponse } from "@/lib/api/addresses";
 import { createOrder, type OrderItemRequest } from "@/lib/api/orders";
+import { fetchMyCoupons, type UserCouponResponse } from "@/lib/api/coupon";
 import { ApiError } from "@/lib/api/client";
 import { calculateShippingFee } from "@/lib/shipping";
+import { calculateCouponDiscount, isCouponExpired } from "@/lib/coupon";
+
+/** 서버가 쿠폰을 거부하는 사유들. 이 경우 들고 있던 쿠폰 선택을 비워야 재시도가 가능하다. */
+const COUPON_REJECTION_CODES = [
+  "USER_COUPON_NOT_FOUND",
+  "USER_COUPON_NOT_AVAILABLE",
+  "COUPON_MIN_ORDER_AMOUNT_NOT_MET",
+];
 
 const addressSchema = z.object({
   recipient: z.string().min(1, "받는 사람을 입력해주세요"),
@@ -28,6 +37,10 @@ function formatWon(amount: number) {
   return `${amount.toLocaleString("ko-KR")}원`;
 }
 
+function isExpired(coupon: UserCouponResponse) {
+  return isCouponExpired(coupon);
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const [selectedItems, setSelectedItems] = useState<CartItem[]>([]);
@@ -37,6 +50,9 @@ export default function CheckoutPage() {
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [coupons, setCoupons] = useState<UserCouponResponse[]>([]);
+  const [couponLoadFailed, setCouponLoadFailed] = useState(false);
+  const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null);
 
   const {
     register,
@@ -77,6 +93,23 @@ export default function CheckoutPage() {
       .finally(() => setAddressesLoaded(true));
   }, []);
 
+  const loadCoupons = useCallback(() => {
+    return fetchMyCoupons()
+      .then((list) => {
+        setCoupons(list.filter((c) => c.status === "AVAILABLE" && !isExpired(c)));
+        setCouponLoadFailed(false);
+      })
+      .catch(() => {
+        // 조용히 빈 목록으로 두면 쿠폰 영역이 통째로 사라져, 사용자는 이유도 모른 채 정가를 낸다.
+        setCoupons([]);
+        setCouponLoadFailed(true);
+      });
+  }, []);
+
+  useEffect(() => {
+    loadCoupons();
+  }, [loadCoupons]);
+
   const itemsSubtotal = useMemo(
     () => selectedItems.reduce((sum, item) => sum + item.unitPrice * item.qty, 0),
     [selectedItems],
@@ -91,7 +124,12 @@ export default function CheckoutPage() {
     [itemsSubtotal, selectedZipcode],
   );
 
-  const totalAmount = itemsSubtotal + shippingFee;
+  const selectedCoupon = coupons.find((c) => c.id === selectedCouponId) ?? null;
+  const couponEligible = selectedCoupon !== null && itemsSubtotal >= selectedCoupon.minOrderAmount;
+  const discountAmount =
+    selectedCoupon && couponEligible ? calculateCouponDiscount(selectedCoupon, itemsSubtotal) : 0;
+
+  const totalAmount = itemsSubtotal - discountAmount + shippingFee;
 
   function showToast(message: string) {
     setToastMessage(message);
@@ -108,9 +146,11 @@ export default function CheckoutPage() {
         size: item.size || null,
       }));
 
+      const userCouponId = selectedCoupon && couponEligible ? selectedCoupon.id : undefined;
+
       const request =
         !showNewAddressForm && selectedAddressId !== null
-          ? { items, addressId: selectedAddressId }
+          ? { items, addressId: selectedAddressId, userCouponId }
           : {
               items,
               address: {
@@ -121,6 +161,7 @@ export default function CheckoutPage() {
                 address2: values.address2,
                 isDefault: true,
               },
+              userCouponId,
             };
 
       const order = await createOrder(request);
@@ -146,6 +187,14 @@ export default function CheckoutPage() {
           return;
         }
         if (err.errorCode === "PRODUCT_NOT_FOUND") {
+          showToast(err.message);
+          return;
+        }
+        if (COUPON_REJECTION_CODES.includes(err.errorCode)) {
+          // 쿠폰 선택을 비우지 않으면 재시도할 때마다 같은 쿠폰을 다시 보내 영구히 실패한다.
+          // (예: 체크아웃을 열어둔 사이 다른 탭에서 그 쿠폰을 써버린 경우)
+          setSelectedCouponId(null);
+          loadCoupons();
           showToast(err.message);
           return;
         }
@@ -242,11 +291,72 @@ export default function CheckoutPage() {
           </div>
         </section>
 
+        {couponLoadFailed && (
+          <section className="flex flex-col gap-3">
+            <span className="text-title-sm text-ink">쿠폰</span>
+            <div className="border-hairline bg-surface-card flex items-center justify-between rounded-md border p-3">
+              <span className="text-body-sm text-muted">쿠폰을 불러오지 못했어요</span>
+              <button
+                type="button"
+                onClick={() => loadCoupons()}
+                className="text-body-sm text-brand-pink-deep font-semibold"
+              >
+                다시 시도
+              </button>
+            </div>
+          </section>
+        )}
+
+        {coupons.length > 0 && (
+          <section className="flex flex-col gap-3">
+            <span className="text-title-sm text-ink">쿠폰</span>
+            <div className="flex flex-col gap-2">
+              {coupons.map((coupon) => {
+                const eligible = itemsSubtotal >= coupon.minOrderAmount;
+                const checked = selectedCouponId === coupon.id;
+                return (
+                  <button
+                    type="button"
+                    key={coupon.id}
+                    disabled={!eligible}
+                    onClick={() => setSelectedCouponId(checked ? null : coupon.id)}
+                    className={`flex items-start gap-3 rounded-md border p-3 text-left ${
+                      checked ? "border-brand-pink" : "border-hairline"
+                    } ${eligible ? "" : "opacity-50"}`}
+                  >
+                    <span
+                      className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] ${
+                        checked ? "bg-brand-pink border-brand-pink" : "border-hairline bg-surface-card"
+                      }`}
+                    >
+                      {checked && <Check className="h-3.5 w-3.5 text-on-brand" strokeWidth={3} />}
+                    </span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-body-sm text-ink font-semibold">{coupon.couponName}</span>
+                      {!eligible && (
+                        <span className="text-caption text-muted">
+                          {formatWon(coupon.minOrderAmount)} 이상 구매 시 사용 가능
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         <section className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <span className="text-body-sm text-body">상품금액</span>
             <span className="text-body-sm text-ink">{formatWon(itemsSubtotal)}</span>
           </div>
+          {discountAmount > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="text-body-sm text-body">쿠폰 할인</span>
+              <span className="text-body-sm text-ink">-{formatWon(discountAmount)}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <span className="text-body-sm text-body">배송비</span>
             <span className="text-body-sm text-ink">{shippingFee === 0 ? "무료" : formatWon(shippingFee)}</span>

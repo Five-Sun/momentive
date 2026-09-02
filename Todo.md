@@ -130,7 +130,7 @@
 - [x] spec AC 11개 전부 체크, status를 `implemented`로 갱신
 - [x] `feat/mypage-menu-cleanup` 커밋(기능 구현 + e2e-tester 개선 2개 커밋) 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/11, `develop`에 머지 완료
 
-## 배송비 정책 반영 (완료, PR 대기)
+## 배송비 정책 반영 (완료, PR 머지)
 
 배경: 실제 사업자 배송비 정책(네이버 스마트스토어 기준: 기본 3,400원 / 상품금액 7만원 이상 무료배송 / 제주 우편번호(63000~63644)면 상품금액과 무관하게 4,000원 항상 추가)이 `cart-order-payment`의 "배송비 없음" 구현과 불일치하던 문제(`mypage-menu-cleanup`의 고객센터 FAQ grillme 세션 중 발견)를 해소. `docs/specs/2026-08-31-shipping-fee-policy.md`(status: implemented), `docs/plans/2026-08-31-shipping-fee-policy.md`(status: done). `cart-order-payment`는 건드리지 않고 독립 spec으로 분리(Toss 위젯 실연동 이슈와 별개로 추적). 브랜치 `feat/shipping-fee-policy`.
 
@@ -142,10 +142,82 @@
 - [x] Phase 2·3의 "검증(수동, 브라우저)" 항목도 사용자 요청으로 e2e-tester가 대체 검증 — 시나리오 4(체크아웃 신규 배송지 제주↔비제주 왕복 전환 시 배송비 즉시 재계산: 비제주 3,400원 → 제주 경계값 63644 7,400원 → 비제주 복귀 3,400원), 시나리오 5(장바구니 선택 금액 70,000원 기준 왕복 전환 시 안내/진행바 전환) 추가 PASS. `docs/e2e/2026-08-31-shipping-fee-policy.md`에 시나리오 1~5 전부 기록
 - [x] Toss 결제위젯 confirm 성공 경로는 상점 미등록 제약으로 이번에도 스킵 대상(`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`와 동일) — 위젯 렌더링 금액은 시나리오 3에서 확인, confirm 검증 로직은 기존 `order.totalAmount` 단일 소스 구조 재확인으로 대체
 - [x] plan 전 phase 완료로 `status`를 `done`으로 갱신, spec AC 9개 전부 체크 및 `status`를 `implemented`로 갱신
-- [x] `feat/shipping-fee-policy` 커밋 및 `develop` 대상 PR 생성 완료 → https://github.com/Five-Sun/momentive/pull/13
+- [x] `feat/shipping-fee-policy` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/13, `develop`에 머지 완료 (커밋 `f506d69`)
+
+## 쿠폰 시스템 (완료, PR #14 리뷰 대기)
+
+배경: 마이페이지 "쿠폰함"이 `onClick: () => {}` 무동작이고, 장바구니 쿠폰 토글은 `COUPON_DISCOUNT = 3000` 하드코딩으로 표시만 바뀌고 실제 결제금액에 미반영(실 고객에게 노출된 거짓 UI). 백엔드에 coupon 도메인 전무였음. `docs/specs/2026-09-01-coupon-system.md`(status: confirmed, AC 13/20 검증), `docs/plans/2026-09-01-coupon-system.md`(status: done). 브랜치 `feat/coupon-system`.
+
+- [x] grillme 세션(Q1~Q17) — 적립금/배송조회/무료배송쿠폰/관리자 발급 API/회원가입 자동지급/상품·카테고리 한정/선착순 소진/쿠폰 중복사용은 전부 범위 밖. 발급은 **쿠폰 코드 입력 하나로 고정**(정의는 flyway 시드), 정액+정률(상한 필수) 2종, 조건은 유효기간·최소주문금액·1인1회, 한 주문 1장, 무료배송 임계값은 **할인 전** 금액 기준, 할인액은 `min(할인액, itemsSubtotal)`로 제한, 쿠폰은 주문 생성(PENDING) 시 선점하고 실패·만료·PAID취소 3경로에서 복원, `Coupon`/`UserCoupon` 2테이블, 체크아웃에서 선택(장바구니 토글 제거), 할인 계산은 배송비와 동일하게 프론트 미러링 결정
+- [x] spec 작성 완료 — `docs/specs/2026-09-01-coupon-system.md` (AC 20개)
+- [x] plan 작성 완료 — `docs/plans/2026-09-01-coupon-system.md` (Phase 1: 백엔드 쿠폰 도메인 / Phase 2: 백엔드 주문 연동 / Phase 3: 프론트 쿠폰함 / Phase 4: 프론트 결제 흐름 / Phase 5: E2E). Phase 1·2를 나눈 이유는 `Order.getItemsSubtotal()` 역산 제거 + 기존 주문 백필이 **이미 배포된 데이터에 영향을 주는 유일한 위험 구간**이라 격리한 것
+- [x] **JDK 21 블로커 해소** (2026-09-02, 다른 머신) — 이 머신은 Homebrew로 JDK 21(`/opt/homebrew/Cellar/openjdk@21/21.0.8`)이 이미 설치돼 있었음(과거 "JDK 21 자체가 없음" 블로커와 다른 상황). `JAVA_HOME`을 21로 지정하면(예: `JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.8/libexec/openjdk.jdk/Contents/Home ./gradlew build`) 바로 해소됨 — 셸 프로필에는 영구 반영하지 않기로 함(사용자 선택), 매 gradle 호출에 인라인으로 지정
+- [x] 착수 전 워크트리 정리 — 쿠폰 plan과 무관한 admin 로그인/시드 미커밋 변경(`LoginRequest`, `dev.sh`, 로그인 화면, `V9__seed_admin_user.sql`)을 발견해 `chore/admin-login-seed` 브랜치(develop 기준)로 분리·커밋(푸시는 안 함). **주의**: 이 브랜치도 `V9` 마이그레이션 파일명을 쓰는데, 쿠폰 시스템이 `V9__create_coupon.sql`~`V12`를 선점했으므로 `chore/admin-login-seed`를 나중에 develop에 머지할 때 `V13`으로 재번호해야 함 (PR #14 리뷰 조치로 `V12__add_user_coupon_version.sql`이 추가되면서 한 칸 더 밀림)
+- [x] `plan-runner`로 Phase 1~5 자동 실행 완료 — Phase 1~4는 전부 1회 시도로 통과(재시도 0회, backlog 실패 기록 없음). `./gradlew build`/`test`(coupon 포함 85 tests), `npm run build`/`lint` 전부 통과
+- [x] Phase 5 E2E 1차 실행 시 로컬 dev DB가 비어있어(coupon/product/orders/users 전부 0건, flyway 이력은 success인데 실제 데이터 없음 — 기존에 반복된 패턴과 동일) 대다수 시나리오 스킵 → `docker compose down -v` 후 `./dev.sh` 재기동으로 재시딩(상품 15건, 쿠폰 4건 확인) 후 재검증
+- [x] E2E 재검증 — `docs/e2e/2026-09-01-coupon-system.md` 시나리오 14개 중 12개 PASS, 2개는 "사전조건 미충족으로 스킵"(시나리오 4: 관리자 발급 API가 없어 만료 쿠폰 시드를 만들 방법 없음, 시나리오 13: 재시딩 직후라 V11 이전 주문을 재현할 수 없음 — 둘 다 코드 결함 아님, Phase 2 백엔드 테스트로 별도 커버). Toss confirm 성공 경로는 상점 미등록 제약으로 기존과 동일하게 스킵(위젯 렌더 금액만 확인)
+- [x] plan 전 phase 완료로 `status`를 `done`으로 갱신. spec AC는 실제 E2E로 확인된 9개만 체크, 나머지 11개는 각기 사유(백엔드 테스트로만 커버/환경 제약으로 검증 불가)를 남기고 미체크 유지 — `status`는 `implemented`로 올리지 않고 `confirmed` 유지(AC 전량 실증 전까지)
+- [x] **Windows 머신 QA (2026-09-02)** — 사용자가 `C:\Users\tyo10\.jdks\graalvm-jdk-21.0.7`에 JDK 21을 설치해 이 머신에서도 백엔드 기동이 가능해짐. E2E가 "사전조건 미충족"으로 스킵했던 항목과 아무도 눈으로 안 본 화면을 직접 확인
+  - `./gradlew build test` 통과 (84 tests, 실패 0 — 쿠폰 관련 23개 포함), `npm run build`/`lint` 통과
+  - **만료 쿠폰 UX 확인** — 시드에 만료 쿠폰이 없는 게 원인이었으므로 로컬 DB에 직접 넣어 검증. 등록 실패 3종("유효기간이 지난 쿠폰입니다"/"존재하지 않는 쿠폰 코드입니다"/"이미 등록한 쿠폰입니다") 전부 인라인 표시 확인
+  - **만료 파생 판정 확인** — 등록해둔 쿠폰의 `expires_at`을 과거로 바꾸자 `status`는 `AVAILABLE`인데도 "사용 완료・만료" 구간으로 이동. 상태값이 아닌 `expiresAt` 기준 판정이 실제 동작함
+  - **정률 상한** 72,000원 × 10% = 7,200원 → 상한 5,000원으로 제한 확인. **무료배송 할인 전 기준** 할인 후 총액 67,000원(임계값 미만)인데도 배송비 무료 유지 확인
+  - 장바구니 "쿠폰" 문자열 0건(가짜 토글 완전 제거), 마이페이지 메뉴 → `/mypage/coupons` 라우팅, 만료 쿠폰이 체크아웃 목록에서 제외됨 확인
+  - 화면 시각 확인 — 기존 화면과 디자인 언어 일관. fullPage 스크린샷에서 결제하기 CTA가 금액 요약을 가리는 것처럼 보였으나 `position: fixed` 캡처 왜곡이었고, 뷰포트 좌표 측정 결과 겹침 없음(총 결제금액 하단 748px / 버튼 상단 798px)
+  - spec AC 4개 추가 체크(메뉴 라우팅·등록 실패 3종·정률 상한·빌드 4종) → 13/20. 나머지 7개는 백엔드 테스트로만 커버되거나(복원 3경로, 할인액 초과, 서버 재검증) 환경 제약(Toss confirm, V11 이전 주문 재현 불가)이라 미체크 유지
+  - 개선 제안(버그 아님): 체크아웃 쿠폰 카드에 쿠폰명만 있고 할인 내용/유효기간이 없음, 쿠폰함 카드에서 최소금액과 유효기간이 구분자 없이 붙어 보임, 만료 쿠폰 시드가 없어 이 영역이 계속 회귀 검증 사각지대로 남음
+- [x] **`dev.sh` 크로스 플랫폼 대응** — `uname -s`로 macOS/Linux/Windows(Git Bash)를 판별해 분기하도록 개선. (1) 포트 정리를 OS별로 분기 — Windows에는 `lsof`가 없어 종료 시 정리가 실패하고 좀비 프로세스가 남던 문제(Todo에 기록된 "8081 포트 22시간 점유"의 원인)를 `netstat -ano` + `taskkill`로 해소 (2) JDK 21 자동 감지 — OS별 표준 설치 경로(Homebrew Cellar / `~/.jdks` / Program Files 등)를 훑어 `JAVA_HOME`을 지정, 못 찾으면 안내 후 중단 (3) Windows에서는 `gradlew.bat` 사용 (4) 기동 전 docker 설치·데몬 응답 확인 단계 추가. Windows에서 기동~종료 전 구간 실동작 확인 완료
+  - 참고: 이전 세션에서 "dev.sh가 Windows에서 docker를 못 찾는다"고 기록했던 것은 **오진**이었음 — PowerShell에서 `bash -lc`에 인자를 넘길 때 `\$PATH`가 PowerShell 변수로 먼저 확장돼 PATH가 비워진 호출 실수였고, Git Bash 자체에는 docker가 정상적으로 잡힌다
+- [x] `feat/coupon-system` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/14
+- [x] **PR #14 코드 리뷰 및 지적사항 7건 전부 조치 (2026-09-02)**
+  - (medium) `UserCoupon` 동시성 구멍 — 읽고·확인하고·쓰는 사이에 락이 없어 동시 주문 시 같은 쿠폰이 두 번 쓰일 수 있었음. `@Version` 낙관적 락 + `Product` 재고와 동일한 재시도 패턴 적용, `V12__add_user_coupon_version.sql` 추가
+  - (medium) 체크아웃이 쿠폰 거부 3종(`USER_COUPON_NOT_FOUND`/`NOT_AVAILABLE`/`MIN_ORDER_AMOUNT_NOT_MET`)을 분기하지 않아 "잠시 후 다시 시도"로 뭉개고 `selectedCouponId`도 남아, 재시도할 때마다 죽은 쿠폰을 다시 보내 **결제가 영구 불가**였음. 사유 문구 노출 + 선택 해제 + 목록 재조회로 복구 가능하게 수정
+  - (low→실제로는 운영 영향 큼) 타임존 불일치 — 백엔드가 `LocalDateTime`을 오프셋 없이 직렬화하는데 프론트는 브라우저 로컬로 파싱해, Railway(UTC)/고객(KST) 조합에서 **만료 9시간 전에 쿠폰이 화면에서 먼저 사라짐**. 서버 기본 시간대를 `Asia/Seoul`로 고정하고, 프론트는 `lib/coupon.ts`의 `parseServerDateTime`/`formatExpiresAt`으로 KST 기준 해석·표시하도록 통일
+  - (low) 중복 등록 race가 DB unique 제약에 걸려 핸들러 없는 500으로 나가던 것을 `DataIntegrityViolationException` 캐치 후 400 `COUPON_ALREADY_REGISTERED`로 정정
+  - (low) `CouponDiscountPolicy`의 `int` 곱셈 오버플로 — 상품금액이 커지면 할인액이 음수가 되어 결제금액이 상품금액보다 커지는 역전 발생. `long` 계산 후 좁히도록 수정하고 회귀 테스트 2개 추가
+  - (low) `findMyCoupons`의 N+1 — `join fetch`로 해소 (`findAllByUserIdWithCoupon`)
+  - (low) 체크아웃 쿠폰 목록 로드 실패가 무음 처리돼 쿠폰 영역이 통째로 사라지고 사용자가 이유도 모른 채 정가를 내던 것을, 안내 문구 + "다시 시도" 버튼으로 노출
+  - 부수 수정: `user_coupon`이 `users`를 참조하는데 6개 테스트 클래스의 정리 루틴이 `user_coupon`을 지우지 않아, dev DB에 쿠폰 데이터가 하나라도 있으면 Auth/Address/Pet/Review/Order/Payment 테스트가 FK 제약으로 무더기 실패하던 문제 해소 (실제로 QA 중 12건 실패로 발현)
+  - 검증: `./gradlew build test` 86 tests 실패 0, `npm run build`/`lint` 통과. 브라우저로 쿠폰 거부 복구(토스트·선택 해제·목록 갱신·정가 복구), 로드 실패 안내와 재시도 복구, `V12` 마이그레이션 적용까지 직접 확인
+
+## 디자인 수정 사전 조사 (2026-09-01, 내일 작업 준비)
+
+배경: 디자인 수정 예정이라 현재 프론트 디자인 관리 방식을 전수 조사. 코드 변경 없이 `docs/design.md`, `frontend/CLAUDE.md`, `frontend/src/app/globals.css`, `frontend/src/components/`, `(shell)` 라우트 전체를 확인했다. 결론은 **Tailwind CSS v4 + `globals.css` CSS 변수 토큰 + 자체 컴포넌트 + `/style-guide` 샘플** 구조이며, 외부 UI 컴포넌트 라이브러리(shadcn 등)는 없다. 아이콘은 `lucide-react`.
+
+- [x] 디자인 기준 문서: `docs/design.md`가 살아있는 디자인 시스템 문서. 원칙상 새 화면/컴포넌트 전 `docs/design.md`와 `/style-guide`를 확인하고, 토큰/컴포넌트가 바뀌면 문서도 같이 갱신해야 한다. `frontend/CLAUDE.md`도 같은 규칙을 갖고 있음(raw hex/rgb/hsl 금지, 반복 arbitrary Tailwind 값은 토큰화).
+- [x] 전역 토큰 원천: `frontend/src/app/globals.css`
+  - 색상: `brand-pink*`, `brand-yellow*`, `ink/body/muted/muted-soft`, `hairline/hairline-soft/border-strong`, `canvas/surface-*`, `success/error/sale/scrim`
+  - 레이아웃: radius `xs/sm/md/lg`, shadow `card/float`, spacing은 Tailwind 기본 4px 스케일 + `section` 64px
+  - 타이포: `layout.tsx`에서 Google Fonts `Jua` + `Noto Sans KR` 로드, `.text-display-*`, `.text-title*`, `.text-body*`, `.text-caption`, `.text-price`, `.text-button`, `.text-tag` 합성 유틸 제공
+- [x] 앱 셸 구조: `frontend/src/app/layout.tsx`는 폰트/전역 CSS만 담당. `frontend/src/app/(shell)/layout.tsx`가 모바일 앱 프레임(`max-w-[480px]`, 바깥 `surface-strong`, 안쪽 `canvas`, `shadow-float`)과 `AuthProvider`, `GlobalBottomNav`를 담당. `/style-guide`는 `(shell)` 밖이라 프레임/하단탭 제외.
+- [x] 공통 컴포넌트 원천: `frontend/src/components/`
+  - `core`: `Button`, `IconButton`, `Badge`, `Chip`
+  - `forms`: `TextField`, `PasswordField`, `SearchInput`, `AddressFields`
+  - `navigation`: `BottomNav`, `GlobalBottomNav`
+  - `commerce`: `ProductCard`, `ProductGridItem`, `ProductMiniCard`, `ProductImage`, `ProductDetailView`, `Rating`, `SizeSelector`, `FilterSheet`, `ReviewCard`, `ReviewForm`
+  - `feedback/skeleton`: `Toast`, `ShippingProgress`, `ProductCardSkeleton`
+- [x] 에셋 상태: `frontend/public/logo/momentive-logo.jpeg`가 사실상 유일한 브랜드 이미지. 나머지는 Next 기본 SVG. 상품 이미지는 API URL을 그대로 쓰고, 실패/부재 시 `surface-strong` 플레이스홀더로 대체. 디자인 수정이 실제 비주얼 중심이면 `frontend/public/`에 에셋 추가 전략부터 잡아야 함.
+- [x] 토큰 준수 상태: raw hex/rgb 색상은 `globals.css` 안에만 있음. 실제 화면/컴포넌트는 대부분 `bg-brand-*`, `text-ink`, `border-hairline` 같은 토큰 유틸을 사용. 단, `text-white`, `bg-white/90`, arbitrary 치수/보더(`text-[15px]`, `h-[38px]`, `border-[1.5px]`, `px-[18px]`, `h-[72px]`, `top-[52px]`, `rounded-[10px]`, `max-w-[480px]`)가 여러 파일에 흩어져 있음.
+- [x] 중복 패턴/추출 후보:
+  - 상단 헤더(`h-13`, 좌측 back, 가운데 제목, 우측 spacer)가 `cart`, `checkout`, `payment`, `orders`, `coupons`, `pets`, `support`, `ProductDetailView`에 반복됨
+  - 하단 CTA 바(`sticky bottom-16` 또는 `fixed bottom-0 left-1/2 max-w-[480px]`)가 `ProductDetailView`, `cart`, `checkout`, `checkout/payment`, `mypage/orders/[orderId]`에 반복됨
+  - 선택 원형 체크 UI가 `cart`, `checkout`에 반복됨
+  - 카드/목록 컨테이너(`border-hairline bg-surface-card rounded-md border p-3~3.5`)가 주문/쿠폰/반려견/고객센터/체크아웃에 반복됨
+  - 2열 상품 그리드는 홈/검색/위시리스트에 반복됨
+- [x] 눈에 띄는 드리프트: `docs/design.md`는 `/style-guide`를 기준 샘플로 안내하지만, `frontend/src/app/style-guide/page.tsx`의 BottomNav 예시는 아직 4탭(홈/검색/위시/장바구니)이고 실제 앱 `GlobalBottomNav`는 5탭(홈/카테고리/검색/위시/마이). 디자인 수정 때 `/style-guide`도 같이 갱신 필요.
+- [ ] 내일 권장 작업 순서:
+  1. 먼저 수정 범위를 확정: 단순 브랜드 토큰 변경인지, 화면 구조/컴포넌트 재정리까지 포함한 리디자인인지 구분
+  2. 기준 스냅샷 확보: `/style-guide`, `/`, `/search`, `/products/{id}`, `/cart`, `/checkout`, `/checkout/payment`, `/mypage`, `/mypage/orders`, `/mypage/coupons`, `/mypage/pets`, `/mypage/support`
+  3. 토큰 변경은 `globals.css` → `docs/design.md` 순서로 반영. 색/폰트/radius/shadow를 먼저 바꾸면 대부분 컴포넌트가 따라감
+  4. 공통 컴포넌트 수정: `Button/IconButton/Badge/Chip` → `TextField/PasswordField/SearchInput` → `ProductCard/ProductMiniCard/ProductImage/ProductGridItem` → `BottomNav/Toast/ShippingProgress/FilterSheet/ReviewCard/ReviewForm/SizeSelector`
+  5. 넓은 리디자인이면 반복 패턴을 먼저 컴포넌트화 후보로 검토: `AppHeader`, `BottomActionBar`, `SelectableCircle` 또는 `CheckControl`, `SummaryRows`, `SurfaceCard/ListRow`, `ProductGrid`
+  6. 마지막에 라우트별 페이지 sweep: 홈/검색/상품상세/장바구니/체크아웃/주문상세/마이 하위 화면 순서가 영향 범위가 큼
+- [ ] 검증 체크: `cd frontend && npm run lint && npm run build`. 브라우저 검증은 390px 모바일 폭과 1280px 데스크톱 폭 둘 다 확인. 특히 하단 네비와 CTA 겹침, `FilterSheet` 오버레이 위치, `Toast` 위치, 긴 한국어 텍스트 줄바꿈, 상품 이미지 실패 플레이스홀더를 확인.
+- [ ] 작업 전 주의: 쿠폰 시스템(`frontend/src/app/(shell)/cart/page.tsx`, `checkout/page.tsx`, `mypage/page.tsx`, `mypage/coupons/*` 등)이 2026-09-02 기준 구현·커밋 완료됨 — 디자인 작업은 이 화면들이 이미 반영된 최신 코드 위에서 진행하면 된다.
 
 ## 다음 작업 후보
 
-- [ ] 쿠폰 시스템 — 마이페이지 남은 메뉴(쿠폰함/적립금)와 겹치는 항목, 결제 금액 계산 로직까지 손대야 해서 범위가 큼. 다음 `/grillme` 후보
+- [ ] 디자인 수정 작업 — 위 "디자인 수정 사전 조사" 섹션 기준으로 착수. 우선순위는 `globals.css` 토큰과 공통 컴포넌트부터, 화면별 직접 수정은 그 다음
+- [ ] **관리자 상품 관리 부재** — 상품 등록/수정/재고조정 API도 화면도 전혀 없고(`ProductController`는 `GET` 2개뿐), 상품 데이터는 `V2__seed_product.sql`의 15개 시드가 전부. `User.role`에 `ADMIN` enum은 있으나 부여 경로도 검사 지점도 0건인 미사용 스캐폴딩. **실 운영 중인데 신상품 등록·재입고에 매번 마이그레이션 작성 + 재배포가 필요한 상태**(2026-09-01 조사). 쿠폰도 같은 제약을 감수하고 시드 방식으로 가기로 했으므로, 이 항목이 해소되면 쿠폰 발급도 함께 편해짐
 - [ ] Toss 결제위젯 실연동은 상점(스토어) 등록 완료 후 재검증 필요 (`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`) — 사용자 측 외부 조치 대기 중
 - [ ] **우편번호 형식 검증 부재** — `AddressRequest.zipcode`가 `@NotBlank`만 있고 형식 검증이 전혀 없는 자유 텍스트(2026-08-31 배송비 정책 grillme 세션 중 발견). 배송비 spec에서는 제주 판정 시 숫자 파싱 실패/범위 밖이면 안전하게 "제주 아님"으로만 처리하고 정식 형식 검증(5자리 숫자 등)은 범위 밖으로 분리했음 — 기존에 저장된 배송지 데이터 하위호환까지 고려해야 해서 별도 작업으로 남김

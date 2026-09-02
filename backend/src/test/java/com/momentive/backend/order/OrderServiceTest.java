@@ -10,6 +10,7 @@ import com.momentive.backend.auth.repository.RefreshTokenRepository;
 import com.momentive.backend.auth.repository.UserRepository;
 import com.momentive.backend.common.exception.CustomException;
 import com.momentive.backend.common.exception.ErrorCode;
+import com.momentive.backend.coupon.repository.UserCouponRepository;
 import com.momentive.backend.order.domain.OrderStatus;
 import com.momentive.backend.order.dto.OrderCreateRequest;
 import com.momentive.backend.order.dto.OrderItemRequest;
@@ -52,11 +53,16 @@ class OrderServiceTest {
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
 
+    // user_coupon이 users를 참조하므로, 남아 있으면 userRepository.deleteAll()이 FK 제약에 걸린다.
+    @Autowired
+    private UserCouponRepository userCouponRepository;
+
     @BeforeEach
     void setUp() {
         orderRepository.deleteAll();
         addressRepository.deleteAll();
         productRepository.deleteAll();
+        userCouponRepository.deleteAll();
         refreshTokenRepository.deleteAll();
         userRepository.deleteAll();
     }
@@ -66,6 +72,7 @@ class OrderServiceTest {
         orderRepository.deleteAll();
         addressRepository.deleteAll();
         productRepository.deleteAll();
+        userCouponRepository.deleteAll();
         refreshTokenRepository.deleteAll();
         userRepository.deleteAll();
     }
@@ -90,7 +97,8 @@ class OrderServiceTest {
         OrderCreateRequest request = new OrderCreateRequest(
                 List.of(new OrderItemRequest(product.getId(), 2, "M")),
                 null,
-                newAddressRequest()
+                newAddressRequest(),
+                null
         );
 
         OrderResponse response = orderService.createOrder(user.getId(), request);
@@ -114,7 +122,8 @@ class OrderServiceTest {
         OrderCreateRequest request = new OrderCreateRequest(
                 List.of(new OrderItemRequest(product.getId(), 1, null)),
                 null,
-                newAddressRequest()
+                newAddressRequest(),
+                null
         );
 
         OrderResponse response = orderService.createOrder(user.getId(), request);
@@ -134,7 +143,8 @@ class OrderServiceTest {
         OrderCreateRequest request = new OrderCreateRequest(
                 List.of(new OrderItemRequest(product.getId(), 1, null)),
                 null,
-                jejuAddress
+                jejuAddress,
+                null
         );
 
         OrderResponse response = orderService.createOrder(user.getId(), request);
@@ -152,7 +162,8 @@ class OrderServiceTest {
         OrderCreateRequest request = new OrderCreateRequest(
                 List.of(new OrderItemRequest(product.getId(), 2, null)),
                 null,
-                newAddressRequest()
+                newAddressRequest(),
+                null
         );
 
         assertThatThrownBy(() -> orderService.createOrder(user.getId(), request))
@@ -170,12 +181,12 @@ class OrderServiceTest {
         User user = createUser("order3@momentive.com");
         Product product = createProduct("사료", 10000, 5);
         Long addressId = orderService.createOrder(user.getId(), new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest()
+                List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest(), null
         )).address().id();
 
         Product product2 = createProduct("간식", 5000, 5);
         OrderResponse response = orderService.createOrder(user.getId(), new OrderCreateRequest(
-                List.of(new OrderItemRequest(product2.getId(), 1, null)), addressId, null
+                List.of(new OrderItemRequest(product2.getId(), 1, null)), addressId, null, null
         ));
 
         assertThat(response.address().id()).isEqualTo(addressId);
@@ -187,7 +198,7 @@ class OrderServiceTest {
         Product product = createProduct("사료", 10000, 5);
 
         OrderCreateRequest request = new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 1, null)), null, null
+                List.of(new OrderItemRequest(product.getId(), 1, null)), null, null, null
         );
 
         assertThatThrownBy(() -> orderService.createOrder(user.getId(), request))
@@ -203,7 +214,7 @@ class OrderServiceTest {
         Product product = createProduct("사료", 10000, 5);
 
         OrderResponse order = orderService.createOrder(owner.getId(), new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest()
+                List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest(), null
         ));
 
         assertThatThrownBy(() -> orderService.getOrder(other.getId(), order.orderId()))
@@ -240,7 +251,7 @@ class OrderServiceTest {
                 readyLatch.countDown();
                 startLatch.await();
                 orderService.createOrder(userA.getId(), new OrderCreateRequest(
-                        List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest()));
+                        List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest(), null));
                 successCount.incrementAndGet();
             } catch (CustomException e) {
                 failureCount.incrementAndGet();
@@ -255,7 +266,7 @@ class OrderServiceTest {
                 readyLatch.countDown();
                 startLatch.await();
                 orderService.createOrder(userB.getId(), new OrderCreateRequest(
-                        List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest()));
+                        List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest(), null));
                 successCount.incrementAndGet();
             } catch (CustomException e) {
                 failureCount.incrementAndGet();

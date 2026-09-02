@@ -21,6 +21,7 @@ export interface OrderCreateRequest {
   items: OrderItemRequest[];
   addressId?: number;
   address?: AddressRequest;
+  userCouponId?: number;
 }
 
 export interface OrderResponse {
@@ -28,6 +29,8 @@ export interface OrderResponse {
   status: OrderStatus;
   itemsSubtotal: number;
   shippingFee: number;
+  discountAmount: number;
+  couponName: string | null;
   totalAmount: number;
   items: OrderItemResponse[];
   address: AddressResponse;
