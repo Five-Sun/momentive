@@ -144,7 +144,7 @@
 - [x] plan 전 phase 완료로 `status`를 `done`으로 갱신, spec AC 9개 전부 체크 및 `status`를 `implemented`로 갱신
 - [x] `feat/shipping-fee-policy` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/13, `develop`에 머지 완료 (커밋 `f506d69`)
 
-## 쿠폰 시스템 (완료, PR #14 리뷰 대기)
+## 쿠폰 시스템 (완료, PR 머지)
 
 배경: 마이페이지 "쿠폰함"이 `onClick: () => {}` 무동작이고, 장바구니 쿠폰 토글은 `COUPON_DISCOUNT = 3000` 하드코딩으로 표시만 바뀌고 실제 결제금액에 미반영(실 고객에게 노출된 거짓 UI). 백엔드에 coupon 도메인 전무였음. `docs/specs/2026-09-01-coupon-system.md`(status: confirmed, AC 13/20 검증), `docs/plans/2026-09-01-coupon-system.md`(status: done). 브랜치 `feat/coupon-system`.
 
@@ -215,9 +215,27 @@
 - [ ] 검증 체크: `cd frontend && npm run lint && npm run build`. 브라우저 검증은 390px 모바일 폭과 1280px 데스크톱 폭 둘 다 확인. 특히 하단 네비와 CTA 겹침, `FilterSheet` 오버레이 위치, `Toast` 위치, 긴 한국어 텍스트 줄바꿈, 상품 이미지 실패 플레이스홀더를 확인.
 - [ ] 작업 전 주의: 쿠폰 시스템(`frontend/src/app/(shell)/cart/page.tsx`, `checkout/page.tsx`, `mypage/page.tsx`, `mypage/coupons/*` 등)이 2026-09-02 기준 구현·커밋 완료됨 — 디자인 작업은 이 화면들이 이미 반영된 최신 코드 위에서 진행하면 된다.
 
+## 디자인 핸드오프 2차 이관 (폰트·모션·데스크톱 반응형) (spec/plan 확정, 구현 대기)
+
+배경: 클라이언트가 2차 핸드오프(`Momentive 강아지 의류 디자인 시스템.zip`)를 전달. 1차 이관(2026-08-26, PR #3)에서 색상·radius·shadow·spacing·타이포 스케일은 **이미 값까지 동일하게 반영 완료**임을 대조로 확인했고, 실제 신규분은 **폰트·모션·데스크톱 반응형 3가지**였다. `docs/specs/2026-09-02-responsive-design-handoff.md`(status: confirmed), `docs/plans/2026-09-02-responsive-design-handoff.md`(status: planned). 브랜치 `feat/responsive-design-handoff`.
+
+- [x] 핸드오프 번들을 리포지토리 루트 `design_handoff_momentive_app/`에 커밋 (구현·리뷰 에이전트가 원본 대조 가능하도록)
+- [x] grillme 세션(Q1~Q14) — 주요 결정: `web-app/index.html`은 **레이아웃 근거로만** 사용하고 화면 내용물은 현행 유지 / 레퍼런스 목업 로직(무료배송 5만원, 쿠폰 3,000원 토글, 하드코딩 평점)은 이관 대상 아님 / 모바일 5탭·데스크톱 상단 네비 4탭+검색창 / `max-w-[480px]` 폰 프레임 제거 / 그리드 ≥1024px 3열·≥1280px 4열 / 상품상세 좌 이미지 sticky 2단 / `cart`·`checkout`은 우측 340px 요약 컬럼 sticky / 모션은 CSS keyframes만(Framer Motion 미도입) + `prefers-reduced-motion` 대응 / `docs/design.md` 신규 작성
+  - **레퍼런스 함정 발견**: `web-app/index.html`은 데스크톱 레이어만 얹은 **축약본**이라 검색 화면이 아예 없고(`onSearch`가 빈 함수), BottomNav가 4탭이며, 상품상세에 리뷰·사이즈가이드·배송 아코디언이 전부 빠져 있다. 지시대로 "픽셀 단위 재현"하면 이미 배포된 기능이 삭제된다 — spec의 Out of Scope에 명시적으로 박아둠
+- [x] **어비 세현체 사전 조사 완료** (실제 폰트 파일을 `fontTools`로 직접 검사)
+  - 라이선스: 웹사이트·임베딩·상업사용 전부 허용, `fsType=8`(Editable embedding), 출처 표기 불필요. self-host 적법
+  - **웨이트가 Regular 1종뿐** — Bold는 미러 문제가 아니라 애초에 미배포(디자인베이스 "두께 1가지 제공"). 타이포 스케일 10개 중 7개가 weight 500~700이라 **synthetic bold로 렌더**되고, 굵기 위계가 4단계 → 실질 2단계로 축소됨. Phase 1에 육안 확인 게이트를 두고, 11~12px에서 뭉개지면 **해당 토큰만 weight 400 평탄화**가 유일한 후퇴안(다른 서체 대체 불가 — 클라이언트 지정 폰트)
+  - 글리프: 한글 2,449/11,172자만 수록. 다만 **서비스 텍스트 397자 전량 커버, 미커버 0건**(프론트 UI 카피 + 시드 SQL 75개 파일 실측). UGC용 `Noto Sans KR` 폴백만 유지
+  - 파일: woff2 358KB / woff 459KB / ttf 651KB → **woff2 self-host**(`frontend/public/fonts/`), jsDelivr CDN 미사용
+- [x] spec 작성 완료 — `docs/specs/2026-09-02-responsive-design-handoff.md` (AC 23개). `supersedes`는 걸지 않음(1차 이관 spec은 여전히 유효)
+- [x] plan 작성 완료 — `docs/plans/2026-09-02-responsive-design-handoff.md` (7 Phase). Phase 1 토큰기반 → 2 셸·네비 → 3 공통컴포넌트 → 4 레퍼런스 있는 7개 화면 → 5 레퍼런스 없는 11개 화면 → 6 `/style-guide` → 7 E2E. 영향 범위 넓은 순으로 배치해 뒤 phase의 재작업을 줄임
+- [ ] **다음: `plan-runner`로 Phase 1부터 실행**. Phase 1의 "굵기 육안 확인 게이트"는 수동 확인이라 결과를 보고 판단 필요
+- [ ] 참고: `(shell)` 하위 라우트는 **18개**(레퍼런스 있는 7개 + 없는 11개). 초기에 15개/8개로 세었다가 정정함
+- [ ] 참고: `docs/design.md`가 그동안 **존재하지 않았음** — `frontend/CLAUDE.md`가 필수 컨벤션으로 4회 참조하고 `frontend-reviewer`도 검증 기준으로 삼는데 파일이 없어 판정이 불가능한 상태였다. Phase 1에서 신규 작성
+
 ## 다음 작업 후보
 
-- [ ] 디자인 수정 작업 — 위 "디자인 수정 사전 조사" 섹션 기준으로 착수. 우선순위는 `globals.css` 토큰과 공통 컴포넌트부터, 화면별 직접 수정은 그 다음
+- [x] 디자인 수정 작업 — 위 "디자인 핸드오프 2차 이관" 섹션으로 구체화되어 spec/plan 확정됨
 - [ ] **관리자 상품 관리 부재** — 상품 등록/수정/재고조정 API도 화면도 전혀 없고(`ProductController`는 `GET` 2개뿐), 상품 데이터는 `V2__seed_product.sql`의 15개 시드가 전부. `User.role`에 `ADMIN` enum은 있으나 부여 경로도 검사 지점도 0건인 미사용 스캐폴딩. **실 운영 중인데 신상품 등록·재입고에 매번 마이그레이션 작성 + 재배포가 필요한 상태**(2026-09-01 조사). 쿠폰도 같은 제약을 감수하고 시드 방식으로 가기로 했으므로, 이 항목이 해소되면 쿠폰 발급도 함께 편해짐
 - [ ] Toss 결제위젯 실연동은 상점(스토어) 등록 완료 후 재검증 필요 (`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`) — 사용자 측 외부 조치 대기 중
 - [ ] **우편번호 형식 검증 부재** — `AddressRequest.zipcode`가 `@NotBlank`만 있고 형식 검증이 전혀 없는 자유 텍스트(2026-08-31 배송비 정책 grillme 세션 중 발견). 배송비 spec에서는 제주 판정 시 숫자 파싱 실패/범위 밖이면 안전하게 "제주 아님"으로만 처리하고 정식 형식 검증(5자리 숫자 등)은 범위 밖으로 분리했음 — 기존에 저장된 배송지 데이터 하위호환까지 고려해야 해서 별도 작업으로 남김
