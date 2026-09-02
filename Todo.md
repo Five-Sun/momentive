@@ -144,7 +144,7 @@
 - [x] plan 전 phase 완료로 `status`를 `done`으로 갱신, spec AC 9개 전부 체크 및 `status`를 `implemented`로 갱신
 - [x] `feat/shipping-fee-policy` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/13, `develop`에 머지 완료 (커밋 `f506d69`)
 
-## 쿠폰 시스템 (완료, PR 대기)
+## 쿠폰 시스템 (완료, PR #14 리뷰 대기)
 
 배경: 마이페이지 "쿠폰함"이 `onClick: () => {}` 무동작이고, 장바구니 쿠폰 토글은 `COUPON_DISCOUNT = 3000` 하드코딩으로 표시만 바뀌고 실제 결제금액에 미반영(실 고객에게 노출된 거짓 UI). 백엔드에 coupon 도메인 전무였음. `docs/specs/2026-09-01-coupon-system.md`(status: confirmed, AC 13/20 검증), `docs/plans/2026-09-01-coupon-system.md`(status: done). 브랜치 `feat/coupon-system`.
 
@@ -168,7 +168,7 @@
   - 개선 제안(버그 아님): 체크아웃 쿠폰 카드에 쿠폰명만 있고 할인 내용/유효기간이 없음, 쿠폰함 카드에서 최소금액과 유효기간이 구분자 없이 붙어 보임, 만료 쿠폰 시드가 없어 이 영역이 계속 회귀 검증 사각지대로 남음
 - [x] **`dev.sh` 크로스 플랫폼 대응** — `uname -s`로 macOS/Linux/Windows(Git Bash)를 판별해 분기하도록 개선. (1) 포트 정리를 OS별로 분기 — Windows에는 `lsof`가 없어 종료 시 정리가 실패하고 좀비 프로세스가 남던 문제(Todo에 기록된 "8081 포트 22시간 점유"의 원인)를 `netstat -ano` + `taskkill`로 해소 (2) JDK 21 자동 감지 — OS별 표준 설치 경로(Homebrew Cellar / `~/.jdks` / Program Files 등)를 훑어 `JAVA_HOME`을 지정, 못 찾으면 안내 후 중단 (3) Windows에서는 `gradlew.bat` 사용 (4) 기동 전 docker 설치·데몬 응답 확인 단계 추가. Windows에서 기동~종료 전 구간 실동작 확인 완료
   - 참고: 이전 세션에서 "dev.sh가 Windows에서 docker를 못 찾는다"고 기록했던 것은 **오진**이었음 — PowerShell에서 `bash -lc`에 인자를 넘길 때 `\$PATH`가 PowerShell 변수로 먼저 확장돼 PATH가 비워진 호출 실수였고, Git Bash 자체에는 docker가 정상적으로 잡힌다
-- [ ] `feat/coupon-system` 커밋 및 `develop` 대상 PR 생성 필요
+- [x] `feat/coupon-system` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/14 (리뷰/머지 대기)
 
 ## 디자인 수정 사전 조사 (2026-09-01, 내일 작업 준비)
 
