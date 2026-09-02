@@ -61,4 +61,27 @@ class CouponDiscountPolicyTest {
 
         assertThat(discount).isEqualTo(500);
     }
+
+    /**
+     * int 곱셈으로 계산하면 상품금액이 커질 때 오버플로해 할인액이 음수가 되고,
+     * 그 경우 총 결제금액이 상품금액보다 커지는 역전이 발생한다.
+     */
+    @Test
+    void percent_discount_does_not_overflow_for_large_items_subtotal() {
+        Coupon coupon = percentCoupon(20, 10000, 0);
+
+        int discount = CouponDiscountPolicy.calculate(coupon, Integer.MAX_VALUE);
+
+        assertThat(discount).isEqualTo(10000);
+    }
+
+    @Test
+    void percent_discount_stays_non_negative_without_max_discount_amount() {
+        Coupon coupon = percentCoupon(20, null, 0);
+
+        int discount = CouponDiscountPolicy.calculate(coupon, Integer.MAX_VALUE);
+
+        assertThat(discount).isNotNegative();
+        assertThat(discount).isLessThanOrEqualTo(Integer.MAX_VALUE);
+    }
 }

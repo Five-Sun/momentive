@@ -11,15 +11,16 @@ public final class CouponDiscountPolicy {
     }
 
     public static int calculate(Coupon coupon, int itemsSubtotal) {
-        int rawDiscount = switch (coupon.getDiscountType()) {
+        // 정률 계산은 int 곱셈이 오버플로하면 할인액이 음수가 되고, 그 경우 결제금액이 상품금액보다
+        // 커지는 역전이 발생하므로 long으로 계산한 뒤 상한을 적용하고 마지막에 좁힌다.
+        long discount = switch (coupon.getDiscountType()) {
             case FIXED -> coupon.getDiscountValue();
-            case PERCENT -> itemsSubtotal * coupon.getDiscountValue() / 100;
+            case PERCENT -> (long) itemsSubtotal * coupon.getDiscountValue() / 100;
         };
 
-        int discount = rawDiscount;
         if (coupon.getDiscountType() == DiscountType.PERCENT && coupon.getMaxDiscountAmount() != null) {
             discount = Math.min(discount, coupon.getMaxDiscountAmount());
         }
-        return Math.min(discount, itemsSubtotal);
+        return (int) Math.min(discount, itemsSubtotal);
     }
 }

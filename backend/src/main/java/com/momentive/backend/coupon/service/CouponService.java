@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,17 +41,27 @@ public class CouponService {
 
         userCouponRepository.findByUserIdAndCouponId(userId, coupon.getId())
                 .ifPresent(existing -> {
-                    throw new CustomException(ErrorCode.COUPON_ALREADY_REGISTERED,
-                            Map.of("code", ErrorCode.COUPON_ALREADY_REGISTERED.getMessage()));
+                    throw alreadyRegistered();
                 });
 
         UserCoupon userCoupon = UserCoupon.register(user, coupon);
-        userCouponRepository.save(userCoupon);
+        try {
+            userCouponRepository.saveAndFlush(userCoupon);
+        } catch (DataIntegrityViolationException e) {
+            // 위 조회와 저장 사이에 동시 요청이 먼저 등록하면 uq_user_coupon 제약에 걸린다.
+            // 그대로 두면 500이 나가므로, 중복 등록과 같은 400 인라인 에러로 맞춘다.
+            throw alreadyRegistered();
+        }
         return UserCouponResponse.from(userCoupon);
     }
 
+    private CustomException alreadyRegistered() {
+        return new CustomException(ErrorCode.COUPON_ALREADY_REGISTERED,
+                Map.of("code", ErrorCode.COUPON_ALREADY_REGISTERED.getMessage()));
+    }
+
     public List<UserCouponResponse> findMyCoupons(Long userId) {
-        List<UserCoupon> userCoupons = userCouponRepository.findAllByUserIdOrderByRegisteredAtDesc(userId);
+        List<UserCoupon> userCoupons = userCouponRepository.findAllByUserIdWithCoupon(userId);
         return userCoupons.stream()
                 .sorted(Comparator.comparing((UserCoupon uc) -> !uc.isAvailable()))
                 .map(UserCouponResponse::from)

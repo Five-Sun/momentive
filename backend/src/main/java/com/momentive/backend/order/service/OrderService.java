@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
 
     private static final int MAX_STOCK_RETRY = 2;
+    private static final int MAX_COUPON_RETRY = 2;
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
@@ -78,13 +79,33 @@ public class OrderService {
     }
 
     /**
-     * userCouponId가 있으면 소유자 일치·AVAILABLE 상태·유효기간·최소 주문금액 4종을 재검증한 뒤
+     * userCouponId가 있으면 소유자 일치·상태·유효기간·최소 주문금액을 재검증한 뒤
      * 할인액을 계산하고 쿠폰을 선점(USED)한다. 검증 실패 시 400.
+     *
+     * <p>상태와 유효기간은 {@link UserCoupon#isAvailable()}이 함께 판정한다
+     * (status가 AVAILABLE이면서 coupon.expiresAt이 지나지 않았을 것).
+     *
+     * <p>선점은 재고 차감과 같은 낙관적 락 + 재시도로 보호한다. 동시에 같은 쿠폰을 쓰려던
+     * 요청 중 진 쪽은 재조회 시 이미 USED이므로 {@code USER_COUPON_NOT_AVAILABLE}로 실패한다.
      */
     private int applyCouponIfRequested(Order order, User user, Long userCouponId, int itemsSubtotal) {
         if (userCouponId == null) {
             return 0;
         }
+        int retryCount = 0;
+        while (true) {
+            try {
+                return claimCoupon(order, user, userCouponId, itemsSubtotal);
+            } catch (ObjectOptimisticLockingFailureException | OptimisticLockException e) {
+                retryCount++;
+                if (retryCount > MAX_COUPON_RETRY) {
+                    throw new CustomException(ErrorCode.USER_COUPON_NOT_AVAILABLE);
+                }
+            }
+        }
+    }
+
+    private int claimCoupon(Order order, User user, Long userCouponId, int itemsSubtotal) {
         UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_COUPON_NOT_FOUND));
         if (!userCoupon.isOwnedBy(user.getId())) {
@@ -99,6 +120,9 @@ public class OrderService {
 
         int discountAmount = CouponDiscountPolicy.calculate(userCoupon.getCoupon(), itemsSubtotal);
         userCoupon.use(order.getId());
+        // 낙관적 락 충돌을 이 지점에서 즉시 드러내기 위해 flush한다. 커밋까지 미루면
+        // 재시도 없이 트랜잭션 전체가 실패한다.
+        userCouponRepository.saveAndFlush(userCoupon);
         order.applyCoupon(userCoupon);
         return discountAmount;
     }

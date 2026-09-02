@@ -10,6 +10,7 @@ import com.momentive.backend.auth.repository.RefreshTokenRepository;
 import com.momentive.backend.auth.repository.UserRepository;
 import com.momentive.backend.common.exception.CustomException;
 import com.momentive.backend.common.exception.ErrorCode;
+import com.momentive.backend.coupon.repository.UserCouponRepository;
 import com.momentive.backend.order.domain.Order;
 import com.momentive.backend.order.domain.OrderStatus;
 import com.momentive.backend.order.dto.OrderConfirmRequest;
@@ -67,6 +68,10 @@ class PaymentServiceTest {
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
 
+    // user_coupon이 users를 참조하므로, 남아 있으면 userRepository.deleteAll()이 FK 제약에 걸린다.
+    @Autowired
+    private UserCouponRepository userCouponRepository;
+
     @Autowired
     private FakePaymentGatewayClient fakePaymentGatewayClient;
 
@@ -89,6 +94,7 @@ class PaymentServiceTest {
         orderRepository.deleteAll();
         addressRepository.deleteAll();
         productRepository.deleteAll();
+        userCouponRepository.deleteAll();
         refreshTokenRepository.deleteAll();
         userRepository.deleteAll();
     }

@@ -152,7 +152,7 @@
 - [x] spec 작성 완료 — `docs/specs/2026-09-01-coupon-system.md` (AC 20개)
 - [x] plan 작성 완료 — `docs/plans/2026-09-01-coupon-system.md` (Phase 1: 백엔드 쿠폰 도메인 / Phase 2: 백엔드 주문 연동 / Phase 3: 프론트 쿠폰함 / Phase 4: 프론트 결제 흐름 / Phase 5: E2E). Phase 1·2를 나눈 이유는 `Order.getItemsSubtotal()` 역산 제거 + 기존 주문 백필이 **이미 배포된 데이터에 영향을 주는 유일한 위험 구간**이라 격리한 것
 - [x] **JDK 21 블로커 해소** (2026-09-02, 다른 머신) — 이 머신은 Homebrew로 JDK 21(`/opt/homebrew/Cellar/openjdk@21/21.0.8`)이 이미 설치돼 있었음(과거 "JDK 21 자체가 없음" 블로커와 다른 상황). `JAVA_HOME`을 21로 지정하면(예: `JAVA_HOME=/opt/homebrew/Cellar/openjdk@21/21.0.8/libexec/openjdk.jdk/Contents/Home ./gradlew build`) 바로 해소됨 — 셸 프로필에는 영구 반영하지 않기로 함(사용자 선택), 매 gradle 호출에 인라인으로 지정
-- [x] 착수 전 워크트리 정리 — 쿠폰 plan과 무관한 admin 로그인/시드 미커밋 변경(`LoginRequest`, `dev.sh`, 로그인 화면, `V9__seed_admin_user.sql`)을 발견해 `chore/admin-login-seed` 브랜치(develop 기준)로 분리·커밋(푸시는 안 함). **주의**: 이 브랜치도 `V9` 마이그레이션 파일명을 쓰는데, 쿠폰 시스템이 이미 `V9__create_coupon.sql`~`V11`을 선점했으므로 `chore/admin-login-seed`를 나중에 develop에 머지할 때 `V12`로 재번호해야 함
+- [x] 착수 전 워크트리 정리 — 쿠폰 plan과 무관한 admin 로그인/시드 미커밋 변경(`LoginRequest`, `dev.sh`, 로그인 화면, `V9__seed_admin_user.sql`)을 발견해 `chore/admin-login-seed` 브랜치(develop 기준)로 분리·커밋(푸시는 안 함). **주의**: 이 브랜치도 `V9` 마이그레이션 파일명을 쓰는데, 쿠폰 시스템이 `V9__create_coupon.sql`~`V12`를 선점했으므로 `chore/admin-login-seed`를 나중에 develop에 머지할 때 `V13`으로 재번호해야 함 (PR #14 리뷰 조치로 `V12__add_user_coupon_version.sql`이 추가되면서 한 칸 더 밀림)
 - [x] `plan-runner`로 Phase 1~5 자동 실행 완료 — Phase 1~4는 전부 1회 시도로 통과(재시도 0회, backlog 실패 기록 없음). `./gradlew build`/`test`(coupon 포함 85 tests), `npm run build`/`lint` 전부 통과
 - [x] Phase 5 E2E 1차 실행 시 로컬 dev DB가 비어있어(coupon/product/orders/users 전부 0건, flyway 이력은 success인데 실제 데이터 없음 — 기존에 반복된 패턴과 동일) 대다수 시나리오 스킵 → `docker compose down -v` 후 `./dev.sh` 재기동으로 재시딩(상품 15건, 쿠폰 4건 확인) 후 재검증
 - [x] E2E 재검증 — `docs/e2e/2026-09-01-coupon-system.md` 시나리오 14개 중 12개 PASS, 2개는 "사전조건 미충족으로 스킵"(시나리오 4: 관리자 발급 API가 없어 만료 쿠폰 시드를 만들 방법 없음, 시나리오 13: 재시딩 직후라 V11 이전 주문을 재현할 수 없음 — 둘 다 코드 결함 아님, Phase 2 백엔드 테스트로 별도 커버). Toss confirm 성공 경로는 상점 미등록 제약으로 기존과 동일하게 스킵(위젯 렌더 금액만 확인)
@@ -168,7 +168,17 @@
   - 개선 제안(버그 아님): 체크아웃 쿠폰 카드에 쿠폰명만 있고 할인 내용/유효기간이 없음, 쿠폰함 카드에서 최소금액과 유효기간이 구분자 없이 붙어 보임, 만료 쿠폰 시드가 없어 이 영역이 계속 회귀 검증 사각지대로 남음
 - [x] **`dev.sh` 크로스 플랫폼 대응** — `uname -s`로 macOS/Linux/Windows(Git Bash)를 판별해 분기하도록 개선. (1) 포트 정리를 OS별로 분기 — Windows에는 `lsof`가 없어 종료 시 정리가 실패하고 좀비 프로세스가 남던 문제(Todo에 기록된 "8081 포트 22시간 점유"의 원인)를 `netstat -ano` + `taskkill`로 해소 (2) JDK 21 자동 감지 — OS별 표준 설치 경로(Homebrew Cellar / `~/.jdks` / Program Files 등)를 훑어 `JAVA_HOME`을 지정, 못 찾으면 안내 후 중단 (3) Windows에서는 `gradlew.bat` 사용 (4) 기동 전 docker 설치·데몬 응답 확인 단계 추가. Windows에서 기동~종료 전 구간 실동작 확인 완료
   - 참고: 이전 세션에서 "dev.sh가 Windows에서 docker를 못 찾는다"고 기록했던 것은 **오진**이었음 — PowerShell에서 `bash -lc`에 인자를 넘길 때 `\$PATH`가 PowerShell 변수로 먼저 확장돼 PATH가 비워진 호출 실수였고, Git Bash 자체에는 docker가 정상적으로 잡힌다
-- [x] `feat/coupon-system` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/14 (리뷰/머지 대기)
+- [x] `feat/coupon-system` 커밋 및 `develop` 대상 PR 생성 → https://github.com/Five-Sun/momentive/pull/14
+- [x] **PR #14 코드 리뷰 및 지적사항 7건 전부 조치 (2026-09-02)**
+  - (medium) `UserCoupon` 동시성 구멍 — 읽고·확인하고·쓰는 사이에 락이 없어 동시 주문 시 같은 쿠폰이 두 번 쓰일 수 있었음. `@Version` 낙관적 락 + `Product` 재고와 동일한 재시도 패턴 적용, `V12__add_user_coupon_version.sql` 추가
+  - (medium) 체크아웃이 쿠폰 거부 3종(`USER_COUPON_NOT_FOUND`/`NOT_AVAILABLE`/`MIN_ORDER_AMOUNT_NOT_MET`)을 분기하지 않아 "잠시 후 다시 시도"로 뭉개고 `selectedCouponId`도 남아, 재시도할 때마다 죽은 쿠폰을 다시 보내 **결제가 영구 불가**였음. 사유 문구 노출 + 선택 해제 + 목록 재조회로 복구 가능하게 수정
+  - (low→실제로는 운영 영향 큼) 타임존 불일치 — 백엔드가 `LocalDateTime`을 오프셋 없이 직렬화하는데 프론트는 브라우저 로컬로 파싱해, Railway(UTC)/고객(KST) 조합에서 **만료 9시간 전에 쿠폰이 화면에서 먼저 사라짐**. 서버 기본 시간대를 `Asia/Seoul`로 고정하고, 프론트는 `lib/coupon.ts`의 `parseServerDateTime`/`formatExpiresAt`으로 KST 기준 해석·표시하도록 통일
+  - (low) 중복 등록 race가 DB unique 제약에 걸려 핸들러 없는 500으로 나가던 것을 `DataIntegrityViolationException` 캐치 후 400 `COUPON_ALREADY_REGISTERED`로 정정
+  - (low) `CouponDiscountPolicy`의 `int` 곱셈 오버플로 — 상품금액이 커지면 할인액이 음수가 되어 결제금액이 상품금액보다 커지는 역전 발생. `long` 계산 후 좁히도록 수정하고 회귀 테스트 2개 추가
+  - (low) `findMyCoupons`의 N+1 — `join fetch`로 해소 (`findAllByUserIdWithCoupon`)
+  - (low) 체크아웃 쿠폰 목록 로드 실패가 무음 처리돼 쿠폰 영역이 통째로 사라지고 사용자가 이유도 모른 채 정가를 내던 것을, 안내 문구 + "다시 시도" 버튼으로 노출
+  - 부수 수정: `user_coupon`이 `users`를 참조하는데 6개 테스트 클래스의 정리 루틴이 `user_coupon`을 지우지 않아, dev DB에 쿠폰 데이터가 하나라도 있으면 Auth/Address/Pet/Review/Order/Payment 테스트가 FK 제약으로 무더기 실패하던 문제 해소 (실제로 QA 중 12건 실패로 발현)
+  - 검증: `./gradlew build test` 86 tests 실패 0, `npm run build`/`lint` 통과. 브라우저로 쿠폰 거부 복구(토스트·선택 해제·목록 갱신·정가 복구), 로드 실패 안내와 재시도 복구, `V12` 마이그레이션 적용까지 직접 확인
 
 ## 디자인 수정 사전 조사 (2026-09-01, 내일 작업 준비)
 

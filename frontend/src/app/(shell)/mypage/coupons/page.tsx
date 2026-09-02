@@ -12,6 +12,7 @@ import { Toast } from "@/components/feedback/Toast";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { fetchMyCoupons, registerCoupon, type UserCouponResponse } from "@/lib/api/coupon";
 import { ApiError } from "@/lib/api/client";
+import { formatExpiresAt, isCouponExpired } from "@/lib/coupon";
 
 const couponSchema = z.object({
   code: z.string().min(1, "쿠폰 코드를 입력해주세요"),
@@ -31,13 +32,8 @@ function formatDiscount(coupon: UserCouponResponse) {
   return `${coupon.discountValue}% 할인${maxLabel}`;
 }
 
-function formatExpiresAt(expiresAt: string) {
-  const date = new Date(expiresAt);
-  return `${date.toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" })}까지`;
-}
-
 function isExpired(coupon: UserCouponResponse) {
-  return new Date(coupon.expiresAt).getTime() < Date.now();
+  return isCouponExpired(coupon);
 }
 
 function CouponCard({ coupon, inactive }: { coupon: UserCouponResponse; inactive: boolean }) {

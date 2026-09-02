@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -38,6 +39,13 @@ public class UserCoupon {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserCouponStatus status;
+
+    /**
+     * 같은 쿠폰으로 동시에 주문이 들어오면 둘 다 AVAILABLE을 읽고 둘 다 USED로 써서
+     * 쿠폰이 두 번 쓰이는 구멍이 생긴다. Product 재고와 동일하게 낙관적 락으로 막는다.
+     */
+    @Version
+    private Long version;
 
     private Long usedOrderId;
 
