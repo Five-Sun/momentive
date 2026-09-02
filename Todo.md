@@ -146,7 +146,7 @@
 
 ## 쿠폰 시스템 (완료, PR 대기)
 
-배경: 마이페이지 "쿠폰함"이 `onClick: () => {}` 무동작이고, 장바구니 쿠폰 토글은 `COUPON_DISCOUNT = 3000` 하드코딩으로 표시만 바뀌고 실제 결제금액에 미반영(실 고객에게 노출된 거짓 UI). 백엔드에 coupon 도메인 전무였음. `docs/specs/2026-09-01-coupon-system.md`(status: confirmed, AC 9/20 E2E 검증), `docs/plans/2026-09-01-coupon-system.md`(status: done). 브랜치 `feat/coupon-system`.
+배경: 마이페이지 "쿠폰함"이 `onClick: () => {}` 무동작이고, 장바구니 쿠폰 토글은 `COUPON_DISCOUNT = 3000` 하드코딩으로 표시만 바뀌고 실제 결제금액에 미반영(실 고객에게 노출된 거짓 UI). 백엔드에 coupon 도메인 전무였음. `docs/specs/2026-09-01-coupon-system.md`(status: confirmed, AC 13/20 검증), `docs/plans/2026-09-01-coupon-system.md`(status: done). 브랜치 `feat/coupon-system`.
 
 - [x] grillme 세션(Q1~Q17) — 적립금/배송조회/무료배송쿠폰/관리자 발급 API/회원가입 자동지급/상품·카테고리 한정/선착순 소진/쿠폰 중복사용은 전부 범위 밖. 발급은 **쿠폰 코드 입력 하나로 고정**(정의는 flyway 시드), 정액+정률(상한 필수) 2종, 조건은 유효기간·최소주문금액·1인1회, 한 주문 1장, 무료배송 임계값은 **할인 전** 금액 기준, 할인액은 `min(할인액, itemsSubtotal)`로 제한, 쿠폰은 주문 생성(PENDING) 시 선점하고 실패·만료·PAID취소 3경로에서 복원, `Coupon`/`UserCoupon` 2테이블, 체크아웃에서 선택(장바구니 토글 제거), 할인 계산은 배송비와 동일하게 프론트 미러링 결정
 - [x] spec 작성 완료 — `docs/specs/2026-09-01-coupon-system.md` (AC 20개)
@@ -157,6 +157,17 @@
 - [x] Phase 5 E2E 1차 실행 시 로컬 dev DB가 비어있어(coupon/product/orders/users 전부 0건, flyway 이력은 success인데 실제 데이터 없음 — 기존에 반복된 패턴과 동일) 대다수 시나리오 스킵 → `docker compose down -v` 후 `./dev.sh` 재기동으로 재시딩(상품 15건, 쿠폰 4건 확인) 후 재검증
 - [x] E2E 재검증 — `docs/e2e/2026-09-01-coupon-system.md` 시나리오 14개 중 12개 PASS, 2개는 "사전조건 미충족으로 스킵"(시나리오 4: 관리자 발급 API가 없어 만료 쿠폰 시드를 만들 방법 없음, 시나리오 13: 재시딩 직후라 V11 이전 주문을 재현할 수 없음 — 둘 다 코드 결함 아님, Phase 2 백엔드 테스트로 별도 커버). Toss confirm 성공 경로는 상점 미등록 제약으로 기존과 동일하게 스킵(위젯 렌더 금액만 확인)
 - [x] plan 전 phase 완료로 `status`를 `done`으로 갱신. spec AC는 실제 E2E로 확인된 9개만 체크, 나머지 11개는 각기 사유(백엔드 테스트로만 커버/환경 제약으로 검증 불가)를 남기고 미체크 유지 — `status`는 `implemented`로 올리지 않고 `confirmed` 유지(AC 전량 실증 전까지)
+- [x] **Windows 머신 QA (2026-09-02)** — 사용자가 `C:\Users\tyo10\.jdks\graalvm-jdk-21.0.7`에 JDK 21을 설치해 이 머신에서도 백엔드 기동이 가능해짐. E2E가 "사전조건 미충족"으로 스킵했던 항목과 아무도 눈으로 안 본 화면을 직접 확인
+  - `./gradlew build test` 통과 (84 tests, 실패 0 — 쿠폰 관련 23개 포함), `npm run build`/`lint` 통과
+  - **만료 쿠폰 UX 확인** — 시드에 만료 쿠폰이 없는 게 원인이었으므로 로컬 DB에 직접 넣어 검증. 등록 실패 3종("유효기간이 지난 쿠폰입니다"/"존재하지 않는 쿠폰 코드입니다"/"이미 등록한 쿠폰입니다") 전부 인라인 표시 확인
+  - **만료 파생 판정 확인** — 등록해둔 쿠폰의 `expires_at`을 과거로 바꾸자 `status`는 `AVAILABLE`인데도 "사용 완료・만료" 구간으로 이동. 상태값이 아닌 `expiresAt` 기준 판정이 실제 동작함
+  - **정률 상한** 72,000원 × 10% = 7,200원 → 상한 5,000원으로 제한 확인. **무료배송 할인 전 기준** 할인 후 총액 67,000원(임계값 미만)인데도 배송비 무료 유지 확인
+  - 장바구니 "쿠폰" 문자열 0건(가짜 토글 완전 제거), 마이페이지 메뉴 → `/mypage/coupons` 라우팅, 만료 쿠폰이 체크아웃 목록에서 제외됨 확인
+  - 화면 시각 확인 — 기존 화면과 디자인 언어 일관. fullPage 스크린샷에서 결제하기 CTA가 금액 요약을 가리는 것처럼 보였으나 `position: fixed` 캡처 왜곡이었고, 뷰포트 좌표 측정 결과 겹침 없음(총 결제금액 하단 748px / 버튼 상단 798px)
+  - spec AC 4개 추가 체크(메뉴 라우팅·등록 실패 3종·정률 상한·빌드 4종) → 13/20. 나머지 7개는 백엔드 테스트로만 커버되거나(복원 3경로, 할인액 초과, 서버 재검증) 환경 제약(Toss confirm, V11 이전 주문 재현 불가)이라 미체크 유지
+  - 개선 제안(버그 아님): 체크아웃 쿠폰 카드에 쿠폰명만 있고 할인 내용/유효기간이 없음, 쿠폰함 카드에서 최소금액과 유효기간이 구분자 없이 붙어 보임, 만료 쿠폰 시드가 없어 이 영역이 계속 회귀 검증 사각지대로 남음
+- [x] **`dev.sh` 크로스 플랫폼 대응** — `uname -s`로 macOS/Linux/Windows(Git Bash)를 판별해 분기하도록 개선. (1) 포트 정리를 OS별로 분기 — Windows에는 `lsof`가 없어 종료 시 정리가 실패하고 좀비 프로세스가 남던 문제(Todo에 기록된 "8081 포트 22시간 점유"의 원인)를 `netstat -ano` + `taskkill`로 해소 (2) JDK 21 자동 감지 — OS별 표준 설치 경로(Homebrew Cellar / `~/.jdks` / Program Files 등)를 훑어 `JAVA_HOME`을 지정, 못 찾으면 안내 후 중단 (3) Windows에서는 `gradlew.bat` 사용 (4) 기동 전 docker 설치·데몬 응답 확인 단계 추가. Windows에서 기동~종료 전 구간 실동작 확인 완료
+  - 참고: 이전 세션에서 "dev.sh가 Windows에서 docker를 못 찾는다"고 기록했던 것은 **오진**이었음 — PowerShell에서 `bash -lc`에 인자를 넘길 때 `\$PATH`가 PowerShell 변수로 먼저 확장돼 PATH가 비워진 호출 실수였고, Git Bash 자체에는 docker가 정상적으로 잡힌다
 - [ ] `feat/coupon-system` 커밋 및 `develop` 대상 PR 생성 필요
 
 ## 디자인 수정 사전 조사 (2026-09-01, 내일 작업 준비)
