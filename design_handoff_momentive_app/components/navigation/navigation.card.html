@@ -1,0 +1,19 @@
+<!-- @dsCard group="Components" viewport="380x90" name="Navigation" subtitle="BottomNav" -->
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_preview_bundle.js"></script>
+<div id="root"></div>
+<script type="text/plain" id="app-src">
+const { BottomNav } = window.Momentive;
+function Demo(){ const [k,setK]=React.useState('home'); return <BottomNav activeKey={k} onSelect={setK} items={[
+  {key:'home',icon:'⌂',label:'홈'},{key:'search',icon:'⌕',label:'검색'},{key:'wish',icon:'♥',label:'위시'},{key:'cart',icon:'🛍',label:'장바구니'},{key:'my',icon:'☺',label:'마이'}
+]} />; }
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+<script>
+  const { code } = Babel.transform(document.getElementById('app-src').textContent, { presets: [['react', { runtime: 'classic' }]] });
+  (0, eval)(code);
+</script>
+

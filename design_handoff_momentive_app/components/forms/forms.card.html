@@ -1,0 +1,17 @@
+<!-- @dsCard group="Components" viewport="700x120" name="Forms" subtitle="SearchInput" -->
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_preview_bundle.js"></script>
+<div id="root" style="background:var(--canvas);padding:20px"></div>
+<script type="text/plain" id="app-src">
+const { SearchInput } = window.Momentive;
+function Demo(){ const [v,setV]=React.useState(''); return <div style={{maxWidth:420}}><SearchInput value={v} onChange={setV} placeholder="브랜드, 상품 검색" /></div>; }
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+<script>
+  const { code } = Babel.transform(document.getElementById('app-src').textContent, { presets: [['react', { runtime: 'classic' }]] });
+  (0, eval)(code);
+</script>
+

@@ -1,0 +1,14 @@
+:root {
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+@keyframes paw-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.28); }
+  70% { transform: scale(.94); }
+  100% { transform: scale(1); }
+}
+@keyframes bump-up {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.15); }
+  100% { transform: translateY(0) scale(1); }
+}

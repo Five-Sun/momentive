@@ -1,0 +1,36 @@
+:root{
+  /* Brand — extracted from momentive logo (assets/logo/momentive-logo.jpeg) */
+  --brand-pink:#f57ea0;
+  --brand-pink-active:#e8547f;
+  --brand-pink-deep:#d6396a;
+  --brand-pink-soft:#fce0ea;
+  --brand-pink-tint:#fff2f6;
+  --brand-yellow:#fef8c4;
+  --brand-yellow-soft:#fffdf0;
+
+  /* Ink & neutrals — warm, pink-leaning */
+  --ink:#33242b;
+  --body:#5c454f;
+  --muted:#93818a;
+  --muted-soft:#c4aeb7;
+  --hairline:#f3e2e9;
+  --hairline-soft:#f9edf1;
+  --border-strong:#e3c3d0;
+
+  /* Surface — pink-tinted */
+  --canvas:#fffbfc;
+  --surface-soft:#fdf1f4;
+  --surface-card:#ffffff;
+  --surface-strong:#fbe4ea;
+
+  /* On-color */
+  --on-brand:#2b2621;
+  --on-dark:#ffffff;
+
+  /* Semantic */
+  --success:#5a8a6b;
+  --error:#c1543b;
+  --sale:#e8547f;
+
+  --scrim:rgba(51,36,43,.5);
+}

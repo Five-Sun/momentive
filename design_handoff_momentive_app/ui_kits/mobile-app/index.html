@@ -1,0 +1,476 @@
+<!-- @dsCard group="Mobile App" viewport="390x844" name="Momentive App" subtitle="Home · Search · Product · Cart · Wishlist · Category · My" -->
+<!-- @startingPoint section="Mobile App" subtitle="Full click-through Momentive shopping app" viewport="390x844" -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Momentive App UI Kit</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body{margin:0;background:var(--surface-strong);display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:var(--font-body)}
+  .phone{width:390px;height:844px;background:#000;border-radius:52px;padding:14px;box-shadow:0 30px 60px rgba(0,0,0,.35)}
+  .screen{width:100%;height:100%;background:var(--canvas);border-radius:38px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:28px;background:#000;border-radius:0 0 18px 18px;z-index:30}
+  .statusbar{height:44px;flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font:600 14px var(--font-body);color:var(--ink)}
+  .hscroll{display:flex;gap:12px;overflow-x:auto;padding:0 16px}
+  .hscroll::-webkit-scrollbar{display:none}
+</style>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_preview_bundle.js"></script>
+<script src="./image-slot.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/plain" id="app-src">
+const { Toast, BottomNav, FilterSheet, ReviewCard, ShippingProgress } = window.Momentive;
+const fmt = n => n.toLocaleString('ko-KR') + '원';
+
+function Header({ title, onBack, right }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52, padding: '0 16px', background: 'var(--surface-card)', borderBottom: '1px solid var(--hairline)', flexShrink: 0 }}>
+      <div style={{ width: 32 }}>{onBack && <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--ink)' }}>‹</button>}</div>
+      <span style={{ font: 'var(--text-title-sm)', color: 'var(--ink)' }}>{title}</span>
+      <div style={{ width: 32, display: 'flex', justifyContent: 'flex-end' }}>{right}</div>
+    </div>
+  );
+}
+
+function MiniCard({ product, rank, favorited, onToggleFav, onSelect }) {
+  const { Rating } = window.Momentive;
+  return (
+    <div onClick={() => onSelect(product)} style={{ width: 128, flexShrink: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ position: 'relative', aspectRatio: '1', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--surface-strong)' }}>
+        <image-slot id={`mini-${product.id}`} placeholder={product.title}></image-slot>
+        {rank && <div style={{ position: 'absolute', top: 8, left: 8, width: 22, height: 22, borderRadius: '50%', background: 'var(--ink)', color: '#fff', font: 'var(--text-tag)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{rank}</div>}
+        <button onClick={(e) => { e.stopPropagation(); onToggleFav(product.id); }} style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,.9)', color: favorited ? 'var(--brand-pink-active)' : 'var(--muted)', cursor: 'pointer', fontSize: 13 }}>♥</button>
+      </div>
+      <span style={{ font: 'var(--text-caption)', color: 'var(--ink)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.title}</span>
+      <span style={{ font: 'var(--text-body-sm)', color: 'var(--ink)', fontWeight: 700 }}>{product.price}</span>
+    </div>
+  );
+}
+
+function Home({ products, favorites, onToggleFav, onSelect, onSearchTap, category, setCategory, onCartTap, cartCount, recentlyViewed }) {
+  const { ProductCard, Badge, Rating, Chip } = window.Momentive;
+  const cats = ['전체', '아우터', '니트', '이너웨어', '악세서리'];
+  const filtered = category === '전체' ? products : products.filter(p => p.category === category);
+  const ranked = [...products].sort((a, b) => b.reviews - a.reviews).slice(0, 4);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--canvas)' }}>
+      <div style={{ padding: '14px 16px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <img src="../../assets/logo/momentive-logo.jpeg" style={{ width: 30, height: 30, borderRadius: '50%' }} alt="momentive" />
+        <button onClick={onCartTap} style={{ position: 'relative', background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>
+          🛍
+          {cartCount > 0 && <span style={{ position: 'absolute', top: -4, right: -6, background: 'var(--brand-pink-active)', color: '#fff', borderRadius: 999, fontSize: 10, padding: '1px 5px', fontWeight: 700 }}>{cartCount}</span>}
+        </button>
+      </div>
+      <div style={{ padding: '0 16px 12px', flexShrink: 0 }} onClick={onSearchTap}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 44, padding: '0 16px', borderRadius: 'var(--radius-full)', background: 'var(--surface-soft)', border: '1px solid var(--hairline)', color: 'var(--muted)', font: 'var(--text-body-sm)' }}>
+          <span>⌕</span><span>브랜드, 상품 검색</span>
+        </div>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
+        <div style={{ margin: '0 16px 18px', padding: 20, borderRadius: 'var(--radius-lg)', background: 'linear-gradient(135deg, var(--brand-pink-soft), var(--brand-pink-tint))', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ font: 'var(--text-caption)', color: 'var(--brand-pink-deep)', fontWeight: 700 }}>WINTER SALE</span>
+          <span style={{ font: 'var(--text-display-md)', color: 'var(--ink)' }}>겨울 신상 최대 20%</span>
+          <span style={{ font: 'var(--text-body-sm)', color: 'var(--body)' }}>소중한 우리 강아지를 위한 첫 겨울 옷</span>
+        </div>
+
+        <div style={{ padding: '0 16px 10px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <span style={{ font: 'var(--text-title-sm)', color: 'var(--ink)' }}>지금 인기 있는</span>
+          <span style={{ font: 'var(--text-caption)', color: 'var(--muted)' }}>리뷰 많은순</span>
+        </div>
+        <div className="hscroll" style={{ paddingBottom: 20 }}>
+          {ranked.map((p, i) => <MiniCard key={p.id} product={p} rank={i + 1} favorited={favorites.includes(p.id)} onToggleFav={onToggleFav} onSelect={onSelect} />)}
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, padding: '0 16px 14px', overflowX: 'auto' }}>
+          {cats.map(c => <Chip key={c} label={c} selected={category === c} onClick={() => setCategory(c)} />)}
+        </div>
+        <div style={{ padding: '0 16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            {filtered.map(p => (
+              <div key={p.id} onClick={() => onSelect(p)} style={{ cursor: 'pointer' }}>
+                <ProductCard
+                  image={<image-slot id={`home-${p.id}`} placeholder={p.title}></image-slot>}
+                  title={p.title} price={p.price} originalPrice={p.originalPrice}
+                  badge={p.badge && <Badge label={p.badge} tone={p.badgeTone} />}
+                  favorited={favorites.includes(p.id)} onToggleFavorite={() => onToggleFav(p.id)}
+                  rating={<Rating value={p.rating} count={p.reviews} />}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {recentlyViewed.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <div style={{ padding: '0 16px 10px' }}><span style={{ font: 'var(--text-title-sm)', color: 'var(--ink)' }}>최근 본 상품</span></div>
+            <div className="hscroll">
+              {recentlyViewed.map(p => <MiniCard key={p.id} product={p} favorited={favorites.includes(p.id)} onToggleFav={onToggleFav} onSelect={onSelect} />)}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CategoryScreen({ onSelectCategory, onBack }) {
+  const cats = [
+    { key: '아우터', desc: '패딩 · 코트 · 후드집업' },
+    { key: '니트', desc: '스웨터 · 가디건' },
+    { key: '이너웨어', desc: '티셔츠 · 레이어드' },
+    { key: '악세서리', desc: '비니 · 스카프' },
+  ];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--canvas)' }}>
+      <Header title="카테고리" onBack={onBack} />
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {cats.map(c => (
+          <button key={c.key} onClick={() => onSelectCategory(c.key)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 72, padding: '0 18px', borderRadius: 'var(--radius-md)', border: '1px solid var(--hairline)', background: 'var(--surface-card)', cursor: 'pointer', textAlign: 'left' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ font: 'var(--text-title-sm)', color: 'var(--ink)' }}>{c.key}</span>
+              <span style={{ font: 'var(--text-caption)', color: 'var(--muted)' }}>{c.desc}</span>
+            </div>
+            <span style={{ color: 'var(--muted)' }}>›</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MyScreen({ favoritesCount, cartCount, onBack }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--canvas)' }}>
+      <Header title="마이" onBack={onBack} />
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--brand-pink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--text-title)', color: 'var(--brand-pink-deep)' }}>🐾</div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ font: 'var(--text-title-sm)', color: 'var(--ink)' }}>모모 보호자님</span>
+            <span style={{ font: 'var(--text-caption)', color: 'var(--muted)' }}>momentive_official 회원</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', borderRadius: 'var(--radius-md)', background: 'var(--surface-soft)', padding: '16px 0' }}>
+          {[['주문내역', '3'], ['위시리스트', String(favoritesCount)], ['장바구니', String(cartCount)]].map(([label, val]) => (
+            <div key={label} style={{ flex: 1, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ font: 'var(--text-title)', color: 'var(--ink)' }}>{val}</span>
+              <span style={{ font: 'var(--text-caption)', color: 'var(--muted)' }}>{label}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {['배송 조회', '쿠폰함', '적립금', '반려견 프로필 관리', '고객센터'].map(m => (
+            <div key={m} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 50, borderBottom: '1px solid var(--hairline)', font: 'var(--text-body)', color: 'var(--body)' }}>
+              {m}<span style={{ color: 'var(--muted)' }}>›</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProductDetail({ product, favorited, onToggleFav, onBack, onAddToCart }) {
+  const { Badge, Rating, SizeSelector, Button, IconButton } = window.Momentive;
+  const [size, setSize] = React.useState(product.sizes[1]);
+  const [openPanel, setOpenPanel] = React.useState(null); // 'guide' | 'delivery'
+  const reviews = [
+    { author: '몽이맘', rating: 5, date: '2026.08.10', text: '핏이 예쁘고 소재가 부드러워요. 다음에도 재구매할게요.', photoCount: 2 },
+    { author: '보리아빠', rating: 4.5, date: '2026.07.28', text: '사이즈 가이드대로 주문했는데 딱 맞았어요.', photoCount: 0 },
+  ];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--canvas)' }}>
+      <Header title={product.title} onBack={onBack} right={<IconButton size={32} active={favorited} onClick={onToggleFav}>♥</IconButton>} />
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ position: 'relative', aspectRatio: '1', background: 'var(--surface-strong)' }}>
+          <image-slot id={`pd-${product.id}`} placeholder={product.title}></image-slot>
+          {product.badge && <div style={{ position: 'absolute', top: 12, left: 12 }}><Badge label={product.badge} tone={product.badgeTone} /></div>}
+          <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 5 }}>
+            {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: i === 0 ? 'var(--brand-pink)' : 'rgba(255,255,255,.7)' }} />)}
+          </div>
+        </div>
+        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <span style={{ font: 'var(--text-title)', color: 'var(--ink)' }}>{product.title}</span>
+          <Rating value={product.rating} count={product.reviews} />
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            {product.originalPrice && <span style={{ font: 'var(--text-body-sm)', color: 'var(--muted-soft)', textDecoration: 'line-through' }}>{product.originalPrice}</span>}
+            <span style={{ font: 'var(--text-display-md)', color: 'var(--ink)' }}>{product.price}</span>
+          </div>
+          <div style={{ height: 1, background: 'var(--hairline)', margin: '6px 0' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ font: 'var(--text-title-sm)', color: 'var(--ink)' }}>사이즈</span>
+            <button onClick={() => setOpenPanel(openPanel === 'guide' ? null : 'guide')} style={{ background: 'none', border: 'none', color: 'var(--brand-pink-active)', font: 'var(--text-caption)', cursor: 'pointer', textDecoration: 'underline' }}>사이즈 가이드</button>
+          </div>
+          <SizeSelector sizes={product.sizes} selected={size} onSelect={setSize} />
+          {openPanel === 'guide' && (
+            <div style={{ background: 'var(--surface-soft)', borderRadius: 'var(--radius-sm)', padding: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ font: 'var(--text-caption)', color: 'var(--ink)', fontWeight: 700 }}>반려견 체형별 사이즈</span>
+              {[['XS', '2~3kg · 등길이 20cm'], ['S', '3~5kg · 등길이 25cm'], ['M', '5~8kg · 등길이 30cm'], ['L', '8~12kg · 등길이 35cm'], ['XL', '12kg~ · 등길이 40cm']].map(([s, d]) => (
+                <div key={s} style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--text-body-sm)', color: 'var(--body)' }}><span>{s}</span><span style={{ color: 'var(--muted)' }}>{d}</span></div>
+              ))}
+            </div>
+          )}
+          <div style={{ height: 1, background: 'var(--hairline)', margin: '6px 0' }} />
+          <button onClick={() => setOpenPanel(openPanel === 'delivery' ? null : 'delivery')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <span style={{ font: 'var(--text-title-sm)', color: 'var(--ink)' }}>배송 · 교환/반품 안내</span>
+            <span style={{ color: 'var(--muted)' }}>{openPanel === 'delivery' ? '−' : '+'}</span>
+          </button>
+          {openPanel === 'delivery' && (
+            <div style={{ font: 'var(--text-body-sm)', color: 'var(--body)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span>· 오후 2시 이전 결제 시 당일 출고</span>
+              <span>· 제주/도서산간 지역 추가 배송비 3,000원</span>
+              <span>· 단순 변심 교환/반품은 상품 수령 후 7일 이내 가능</span>
+            </div>
+          )}
+          <div style={{ height: 1, background: 'var(--hairline)', margin: '6px 0' }} />
+          <span style={{ font: 'var(--text-title-sm)', color: 'var(--ink)' }}>상품 설명</span>
+          <p style={{ font: 'var(--text-body)', color: 'var(--body)', margin: 0 }}>{product.description}</p>
+          <div style={{ height: 1, background: 'var(--hairline)', margin: '6px 0' }} />
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ font: 'var(--text-title-sm)', color: 'var(--ink)' }}>리뷰</span>
+            <span style={{ font: 'var(--text-caption)', color: 'var(--muted)' }}>{product.reviews}개</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {reviews.map((r, i) => <ReviewCard key={i} {...r} />)}
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 10, padding: 14, borderTop: '1px solid var(--hairline)', background: 'var(--surface-card)' }}>
+        <Button variant="secondary" onClick={onToggleFav} icon="♥">{favorited ? '위시 완료' : '위시 담기'}</Button>
+        <div style={{ flex: 1 }}><Button variant="primary" onClick={() => onAddToCart(product, size)}>장바구니 담기</Button></div>
+      </div>
+    </div>
+  );
+}
+
+function SearchScreen({ products, favorites, onToggleFav, onSelect, onBack }) {
+  const { ProductCard, Rating, Chip, Badge } = window.Momentive;
+  const [q, setQ] = React.useState('');
+  const [submitted, setSubmitted] = React.useState(false);
+  const [sheetOpen, setSheetOpen] = React.useState(false);
+  const [sort, setSort] = React.useState('인기순');
+  const recent = ['플리스', '레인코트', '니트'];
+  const popular = ['겨울 아우터', '강아지 한복', '스트라이프 티'];
+  const suggestions = q && !submitted ? products.filter(p => p.title.includes(q)).slice(0, 5) : [];
+  let results = submitted ? products.filter(p => p.title.includes(q)) : null;
+  if (results) {
+    results = [...results].sort((a, b) => sort === '낮은 가격순' ? a.unitPrice - b.unitPrice : sort === '높은 가격순' ? b.unitPrice - a.unitPrice : sort === '신상순' ? b.id - a.id : b.reviews - a.reviews);
+  }
+  const runSearch = (term) => { setQ(term); setSubmitted(true); };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--canvas)', position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid var(--hairline)', flexShrink: 0 }}>
+        <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--ink)' }}>‹</button>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, height: 40, padding: '0 14px', borderRadius: 'var(--radius-full)', background: 'var(--surface-soft)', border: '1px solid var(--hairline)' }}>
+          <span style={{ color: 'var(--muted)' }}>⌕</span>
+          <input autoFocus value={q} onChange={e => { setQ(e.target.value); setSubmitted(false); }} onKeyDown={e => e.key === 'Enter' && runSearch(q)} placeholder="브랜드, 상품 검색" style={{ border: 'none', outline: 'none', background: 'transparent', flex: 1, font: 'var(--text-body-sm)', color: 'var(--ink)' }} />
+        </div>
+      </div>
+      {suggestions.length > 0 && (
+        <div style={{ position: 'absolute', top: 62, left: 0, right: 0, background: 'var(--surface-card)', borderBottom: '1px solid var(--hairline)', zIndex: 20, boxShadow: 'var(--shadow-card)' }}>
+          {suggestions.map(p => (
+            <button key={p.id} onClick={() => runSearch(p.title)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 16px', background: 'none', border: 'none', font: 'var(--text-body-sm)', color: 'var(--ink)', cursor: 'pointer' }}>⌕ {p.title}</button>
+          ))}
+        </div>
+      )}
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+        {!submitted && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div>
+              <span style={{ font: 'var(--text-caption)', color: 'var(--muted)' }}>최근 검색어</span>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>{recent.map(r => <Chip key={r} label={r} onClick={() => runSearch(r)} />)}</div>
+            </div>
+            <div>
+              <span style={{ font: 'var(--text-caption)', color: 'var(--muted)' }}>인기 검색어</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 8 }}>
+                {popular.map((r, i) => (
+                  <button key={r} onClick={() => runSearch(r)} style={{ display: 'flex', gap: 10, alignItems: 'center', height: 36, background: 'none', border: 'none', cursor: 'pointer', font: 'var(--text-body-sm)', color: 'var(--ink)' }}>
+                    <span style={{ color: 'var(--brand-pink-active)', fontWeight: 700, width: 14 }}>{i + 1}</span>{r}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        {submitted && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ font: 'var(--text-caption)', color: 'var(--muted)' }}>{results.length}개 결과</span>
+              <button onClick={() => setSheetOpen(true)} style={{ background: 'none', border: '1px solid var(--hairline)', borderRadius: 'var(--radius-full)', padding: '6px 12px', font: 'var(--text-caption)', color: 'var(--ink)', cursor: 'pointer' }}>{sort} ▾</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              {results.length === 0 && <span style={{ font: 'var(--text-body-sm)', color: 'var(--muted)' }}>검색 결과가 없어요</span>}
+              {results.map(p => (
+                <div key={p.id} onClick={() => onSelect(p)} style={{ cursor: 'pointer' }}>
+                  <ProductCard image={<image-slot id={`s-${p.id}`} placeholder={p.title}></image-slot>} title={p.title} price={p.price} badge={p.badge && <Badge label={p.badge} tone={p.badgeTone} />} favorited={favorites.includes(p.id)} onToggleFavorite={() => onToggleFav(p.id)} rating={<Rating value={p.rating} count={p.reviews} />} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <FilterSheet open={sheetOpen} sortOptions={['인기순', '신상순', '낮은 가격순', '높은 가격순']} selected={sort} onSelect={setSort} onApply={() => setSheetOpen(false)} onClose={() => setSheetOpen(false)} />
+    </div>
+  );
+}
+
+function CartScreen({ cart, onQty, onRemove, onBack, onCheckout }) {
+  const { Button } = window.Momentive;
+  const [couponApplied, setCouponApplied] = React.useState(false);
+  const subtotal = cart.reduce((s, c) => s + c.unitPrice * c.qty, 0);
+  const discount = couponApplied ? 3000 : 0;
+  const shipping = (subtotal - discount) > 0 && (subtotal - discount) < 50000 ? 3000 : 0;
+  const remainingForFree = Math.max(0, 50000 - (subtotal - discount));
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--canvas)' }}>
+      <Header title="장바구니" onBack={onBack} />
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+        {cart.length === 0 && <div style={{ textAlign: 'center', marginTop: 60, font: 'var(--text-body-sm)', color: 'var(--muted)' }}>장바구니가 비어있어요</div>}
+        {cart.length > 0 && <div style={{ marginBottom: 16 }}><ShippingProgress remaining={remainingForFree} formatAmount={fmt} /></div>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {cart.map(c => (
+            <div key={c.key} style={{ display: 'flex', gap: 12 }}>
+              <div style={{ width: 76, height: 76, borderRadius: 'var(--radius-sm)', overflow: 'hidden', flexShrink: 0 }}>
+                <image-slot id={`cart-${c.key}`} placeholder={c.title}></image-slot>
+              </div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ font: 'var(--text-title-sm)', color: 'var(--ink)' }}>{c.title}</span>
+                <span style={{ font: 'var(--text-caption)', color: 'var(--muted)' }}>사이즈: {c.size}</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--hairline)', borderRadius: 'var(--radius-full)', padding: '2px 4px' }}>
+                    <button onClick={() => onQty(c.key, -1)} style={{ width: 22, height: 22, border: 'none', background: 'none', cursor: 'pointer', font: 'var(--text-body-sm)' }}>−</button>
+                    <span style={{ font: 'var(--text-body-sm)' }}>{c.qty}</span>
+                    <button onClick={() => onQty(c.key, 1)} style={{ width: 22, height: 22, border: 'none', background: 'none', cursor: 'pointer', font: 'var(--text-body-sm)' }}>+</button>
+                  </div>
+                  <span style={{ font: 'var(--text-price)', color: 'var(--ink)' }}>{fmt(c.unitPrice * c.qty)}</span>
+                </div>
+              </div>
+              <button onClick={() => onRemove(c.key)} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--muted-soft)', cursor: 'pointer', fontSize: 16 }}>✕</button>
+            </div>
+          ))}
+        </div>
+        {cart.length > 0 && (
+          <React.Fragment>
+            <button onClick={() => setCouponApplied(!couponApplied)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginTop: 20, padding: '14px 16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--hairline)', background: 'var(--surface-card)', cursor: 'pointer' }}>
+              <span style={{ font: 'var(--text-body-sm)', color: 'var(--ink)' }}>{couponApplied ? '3,000원 쿠폰 적용됨' : '적용 가능한 쿠폰 1장'}</span>
+              <span style={{ font: 'var(--text-caption)', color: 'var(--brand-pink-active)', fontWeight: 700 }}>{couponApplied ? '취소' : '적용'}</span>
+            </button>
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--hairline)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--text-body-sm)', color: 'var(--body)' }}><span>상품 금액</span><span>{fmt(subtotal)}</span></div>
+              {discount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--text-body-sm)', color: 'var(--brand-pink-active)' }}><span>쿠폰 할인</span><span>−{fmt(discount)}</span></div>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--text-body-sm)', color: 'var(--body)' }}><span>배송비</span><span>{shipping ? fmt(shipping) : '무료'}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--text-title-sm)', color: 'var(--ink)', paddingTop: 6 }}><span>총 결제금액</span><span>{fmt(subtotal - discount + shipping)}</span></div>
+            </div>
+          </React.Fragment>
+        )}
+      </div>
+      {cart.length > 0 && (
+        <div style={{ padding: 14, borderTop: '1px solid var(--hairline)', background: 'var(--surface-card)' }}>
+          <Button variant="primary" onClick={onCheckout}>{fmt(subtotal - discount + shipping)} 결제하기</Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WishlistScreen({ products, favorites, onToggleFav, onSelect, onBack }) {
+  const { ProductCard, Rating, Badge } = window.Momentive;
+  const items = products.filter(p => favorites.includes(p.id));
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--canvas)' }}>
+      <Header title="위시리스트" onBack={onBack} />
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+        {items.length === 0 && <div style={{ textAlign: 'center', marginTop: 60, font: 'var(--text-body-sm)', color: 'var(--muted)' }}>담아둔 상품이 없어요</div>}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          {items.map(p => (
+            <div key={p.id} onClick={() => onSelect(p)} style={{ cursor: 'pointer' }}>
+              <ProductCard image={<image-slot id={`w-${p.id}`} placeholder={p.title}></image-slot>} title={p.title} price={p.price} originalPrice={p.originalPrice} badge={p.badge && <Badge label={p.badge} tone={p.badgeTone} />} favorited={true} onToggleFavorite={() => onToggleFav(p.id)} rating={<Rating value={p.rating} count={p.reviews} />} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const PRODUCTS = [
+  { id: 1, title: '플리스 후드 집업', category: '아우터', price: '38,000원', originalPrice: '48,000원', unitPrice: 38000, badge: '-20%', badgeTone: 'sale', rating: 4.8, reviews: 132, sizes: ['XS','S','M','L','XL'], description: '보들보들한 플리스 소재로 산책부터 실내까지 편안하게. 스몰견부터 미디움견까지 넉넉한 핏.' },
+  { id: 2, title: '베이직 니트 스웨터', category: '니트', price: '29,000원', unitPrice: 29000, badge: 'NEW', badgeTone: 'new', rating: 4.9, reviews: 88, sizes: ['XS','S','M','L'], description: '얇지만 보온성이 좋은 니트 소재. 데일리로 입기 좋은 베이직 컬러.' },
+  { id: 3, title: '레인코트 판초', category: '아우터', price: '32,000원', unitPrice: 32000, rating: 4.6, reviews: 41, sizes: ['S','M','L','XL'], description: '방수 소재로 비 오는 날 산책도 걱정 없이. 가볍고 통풍이 잘 돼요.' },
+  { id: 4, title: '스트라이프 이너 티', category: '이너웨어', price: '19,000원', unitPrice: 19000, badge: 'BEST', badgeTone: 'neutral', rating: 4.7, reviews: 205, sizes: ['XS','S','M','L','XL'], description: '얇은 코튼 소재의 이너웨어. 아우터 안에 레이어드하기 좋아요.' },
+  { id: 5, title: '폼폼 니트 비니', category: '악세서리', price: '15,000원', unitPrice: 15000, rating: 4.9, reviews: 63, sizes: ['S','M'], description: '귀 구멍이 있는 니트 비니. 겨울 산책 필수템.' },
+  { id: 6, title: '바람막이 자켓', category: '아우터', price: '35,000원', unitPrice: 35000, badge: 'NEW', badgeTone: 'new', rating: 4.5, reviews: 27, sizes: ['XS','S','M','L','XL'], description: '가벼운 바람막이 소재. 환절기 산책에 딱 맞아요.' },
+];
+
+function App() {
+  const [screen, setScreen] = React.useState('home');
+  const [category, setCategory] = React.useState('전체');
+  const [favorites, setFavorites] = React.useState([2, 4]);
+  const [cart, setCart] = React.useState([]);
+  const [activeProduct, setActiveProduct] = React.useState(null);
+  const [toast, setToast] = React.useState('');
+  const [recentlyViewed, setRecentlyViewed] = React.useState([]);
+
+  const flash = (msg) => { setToast(msg); setTimeout(() => setToast(''), 1800); };
+  const toggleFav = (id) => setFavorites(f => f.includes(id) ? f.filter(x => x !== id) : [...f, id]);
+  const addToCart = (product, size) => {
+    const key = product.id + '-' + size;
+    setCart(c => {
+      const existing = c.find(x => x.key === key);
+      if (existing) return c.map(x => x.key === key ? { ...x, qty: x.qty + 1 } : x);
+      return [...c, { key, id: product.id, title: product.title, size, unitPrice: product.unitPrice, qty: 1 }];
+    });
+    flash('장바구니에 담았어요');
+  };
+  const qtyChange = (key, d) => setCart(c => c.map(x => x.key === key ? { ...x, qty: Math.max(1, x.qty + d) } : x));
+  const removeItem = (key) => setCart(c => c.filter(x => x.key !== key));
+  const openProduct = (p) => {
+    setActiveProduct(p);
+    setScreen('detail');
+    setRecentlyViewed(rv => [p, ...rv.filter(x => x.id !== p.id)].slice(0, 8));
+  };
+
+  const cartCount = cart.reduce((s, c) => s + c.qty, 0);
+  const tabs = [
+    { key: 'home', icon: '⌂', label: '홈' },
+    { key: 'category', icon: '▤', label: '카테고리' },
+    { key: 'search', icon: '⌕', label: '검색' },
+    { key: 'wishlist', icon: '♥', label: '위시' },
+    { key: 'my', icon: '☺', label: '마이' },
+  ];
+  const showTabBar = ['home', 'category', 'search', 'wishlist', 'my'].includes(screen);
+
+  let content;
+  if (screen === 'home') content = <Home products={PRODUCTS} favorites={favorites} onToggleFav={toggleFav} onSelect={openProduct} onSearchTap={() => setScreen('search')} category={category} setCategory={setCategory} onCartTap={() => setScreen('cart')} cartCount={cartCount} recentlyViewed={recentlyViewed} />;
+  else if (screen === 'category') content = <CategoryScreen onBack={() => setScreen('home')} onSelectCategory={(c) => { setCategory(c); setScreen('search'); }} />;
+  else if (screen === 'search') content = <SearchScreen products={PRODUCTS} favorites={favorites} onToggleFav={toggleFav} onSelect={openProduct} onBack={() => setScreen('home')} />;
+  else if (screen === 'detail') content = <ProductDetail product={activeProduct} favorited={favorites.includes(activeProduct.id)} onToggleFav={() => toggleFav(activeProduct.id)} onBack={() => setScreen('home')} onAddToCart={addToCart} />;
+  else if (screen === 'cart') content = <CartScreen cart={cart} onQty={qtyChange} onRemove={removeItem} onBack={() => setScreen('home')} onCheckout={() => flash('주문이 완료되었어요 🤍')} />;
+  else if (screen === 'wishlist') content = <WishlistScreen products={PRODUCTS} favorites={favorites} onToggleFav={toggleFav} onSelect={openProduct} onBack={() => setScreen('home')} />;
+  else if (screen === 'my') content = <MyScreen favoritesCount={favorites.length} cartCount={cartCount} onBack={() => setScreen('home')} />;
+
+  return (
+    <div className="phone">
+      <div className="screen">
+        <div className="notch"></div>
+        <div className="statusbar"><span>9:41</span><span>🔋</span></div>
+        <div style={{ flex: 1, minHeight: 0 }}>{content}</div>
+        {showTabBar && <BottomNav items={tabs} activeKey={screen} onSelect={setScreen} />}
+        <Toast message={toast} visible={!!toast} />
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+<script>
+  const { code } = Babel.transform(document.getElementById('app-src').textContent, { presets: [['react', { runtime: 'classic' }]] });
+  (0, eval)(code);
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!-- @dsCard group="Components" viewport="380x220" name="Feedback" subtitle="Toast, ShippingProgress" -->
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_preview_bundle.js"></script>
+<div id="root" style="position:relative;padding:16px;background:var(--surface-soft);display:flex;flex-direction:column;gap:16px"></div>
+<script type="text/plain" id="app-src">
+const { Toast, ShippingProgress } = window.Momentive;
+function Demo(){
+  return (
+    <React.Fragment>
+      <ShippingProgress remaining={12000} formatAmount={n => n.toLocaleString('ko-KR') + '원'} />
+      <div style={{position:'relative',height:80}}><Toast message="장바구니에 담았어요" visible={true} /></div>
+    </React.Fragment>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+<script>
+  const { code } = Babel.transform(document.getElementById('app-src').textContent, { presets: [['react', { runtime: 'classic' }]] });
+  (0, eval)(code);
+</script>
+
