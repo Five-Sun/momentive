@@ -4,7 +4,9 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/core/Button";
-import { confirmOrder } from "@/lib/api/orders";
+import { confirmOrder, getOrder } from "@/lib/api/orders";
+import { cartKeyOf, removeCartItems } from "@/lib/storage/cart";
+import { clearCheckoutSelection } from "@/lib/storage/checkoutSelection";
 
 interface ConfirmedResult {
   orderId: number;
@@ -26,14 +28,37 @@ function CheckoutSuccessContent() {
     }
 
     const numericOrderId = Number(tossOrderId);
-
-    confirmOrder(numericOrderId, {
+    const confirmRequest = {
       paymentKey,
       orderId: tossOrderId,
       amount: Number(amount),
-    })
-      .then(() => setResult({ orderId: numericOrderId }))
-      .catch(() => router.replace(`/checkout/fail?orderId=${numericOrderId}`));
+    };
+
+    async function finalize() {
+      try {
+        await confirmOrder(numericOrderId, confirmRequest);
+      } catch {
+        router.replace(`/checkout/fail?orderId=${numericOrderId}`);
+        return;
+      }
+
+      // 여기서부터 결제는 이미 확정됐다. 아래 장바구니 정리가 실패하더라도
+      // 실패 화면으로 보내면 안 되므로 confirm과 분리해 처리한다.
+      setResult({ orderId: numericOrderId });
+
+      try {
+        // 부분결제를 지원하므로 장바구니 전체를 비우지 않는다. 서버가 확정한 주문 항목만
+        // 키로 되돌려 제거해, 결제하지 않고 남겨둔 항목은 그대로 유지한다.
+        const order = await getOrder(numericOrderId);
+        removeCartItems(order.items.map((item) => cartKeyOf(item.productId, item.size)));
+      } catch (err) {
+        // 정리에 실패해도 주문 자체엔 영향이 없다. 원인 파악용으로 남기기만 한다.
+        console.error("결제 완료 후 장바구니 정리 실패", err);
+      }
+      clearCheckoutSelection();
+    }
+
+    finalize();
   }, [router, searchParams]);
 
   if (!result) {
