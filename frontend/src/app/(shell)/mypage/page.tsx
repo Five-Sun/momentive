@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Truck, Ticket, Coins, PawPrint, Headset, ChevronRight } from "lucide-react";
+import { Truck, Ticket, PawPrint, Headset, ChevronRight } from "lucide-react";
 import { getWishlist } from "@/lib/storage/wishlist";
 import { getCartCount } from "@/lib/storage/cart";
 import { useAuth } from "@/lib/auth/AuthProvider";
@@ -12,10 +12,12 @@ import { getOrders } from "@/lib/api/orders";
 export default function MyPage() {
   const router = useRouter();
 
+  // 적립금: 제도 도입 여부가 미정이라 메뉴에서 내려둔 상태. 도입이 확정되면
+  // { icon: Coins, label: "적립금", onClick: () => router.push("/mypage/points") }를
+  // 쿠폰함 다음 자리에 복원한다 (lucide-react의 Coins 아이콘 import도 함께).
   const MENU_ITEMS = [
     { icon: Truck, label: "배송조회", onClick: () => {} },
     { icon: Ticket, label: "쿠폰함", onClick: () => router.push("/mypage/coupons") },
-    { icon: Coins, label: "적립금", onClick: () => {} },
     { icon: PawPrint, label: "반려견 프로필 관리", onClick: () => router.push("/mypage/pets") },
     { icon: Headset, label: "고객센터", onClick: () => router.push("/mypage/support") },
   ];
