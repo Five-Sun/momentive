@@ -47,39 +47,41 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="bg-canvas flex min-h-screen flex-col px-4 py-8">
-      <h1 className="text-title text-ink mb-6">로그인</h1>
+    <main className="bg-canvas flex min-h-screen flex-col px-4 py-8 lg:items-center lg:justify-center lg:px-0">
+      <div className="w-full lg:max-w-[480px]">
+        <h1 className="text-title text-ink mb-6">로그인</h1>
 
-      {formError && (
-        <div className="bg-brand-pink-tint text-error text-body-sm mb-4 rounded-md px-4 py-3">{formError}</div>
-      )}
+        {formError && (
+          <div className="bg-brand-pink-tint text-error text-body-sm mb-4 rounded-md px-4 py-3">{formError}</div>
+        )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <TextField
-          label="이메일"
-          type="email"
-          placeholder="example@momentive.com"
-          error={errors.email?.message}
-          {...register("email")}
-        />
-        <PasswordField
-          label="비밀번호"
-          placeholder="비밀번호를 입력해주세요"
-          error={errors.password?.message}
-          {...register("password")}
-        />
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <TextField
+            label="이메일"
+            type="email"
+            placeholder="example@momentive.com"
+            error={errors.email?.message}
+            {...register("email")}
+          />
+          <PasswordField
+            label="비밀번호"
+            placeholder="비밀번호를 입력해주세요"
+            error={errors.password?.message}
+            {...register("password")}
+          />
 
-        <Button type="submit" fullWidth disabled={isSubmitting}>
-          로그인
-        </Button>
-      </form>
+          <Button type="submit" fullWidth disabled={isSubmitting}>
+            로그인
+          </Button>
+        </form>
 
-      <p className="text-body-sm text-muted mt-6 text-center">
-        아직 계정이 없으신가요?{" "}
-        <Link href="/signup" className="text-ink font-semibold underline">
-          회원가입
-        </Link>
-      </p>
+        <p className="text-body-sm text-muted mt-6 text-center">
+          아직 계정이 없으신가요?{" "}
+          <Link href="/signup" className="text-ink font-semibold underline">
+            회원가입
+          </Link>
+        </p>
+      </div>
     </main>
   );
 }

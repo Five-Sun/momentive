@@ -31,7 +31,7 @@ export default function WishlistPage() {
 
   return (
     <main className="bg-canvas flex min-h-screen flex-col">
-      <header className="flex items-center justify-center px-4 py-4">
+      <header className="flex items-center justify-center px-4 py-4 lg:justify-start lg:px-0 lg:py-7">
         <span className="text-title-sm text-ink">위시리스트</span>
       </header>
 
@@ -43,7 +43,7 @@ export default function WishlistPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 px-4 pb-20">
+        <div className="grid grid-cols-2 gap-4 px-4 pb-20 lg:grid-cols-3 lg:gap-10 lg:px-0 lg:pb-16 xl:grid-cols-4">
           {items.map((product) => {
             const hasDiscount = !product.soldOut && product.discountPrice != null;
             const badge = product.soldOut ? (

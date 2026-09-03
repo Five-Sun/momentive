@@ -45,12 +45,12 @@ export default function MyPage() {
 
   return (
     <main className="bg-canvas flex min-h-screen flex-col">
-      <header className="flex items-center justify-center px-4 py-4">
+      <header className="flex items-center justify-center px-4 py-4 lg:justify-start lg:px-0 lg:py-7">
         <span className="text-title-sm text-ink">마이</span>
       </header>
 
       {user ? (
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-3 lg:px-0">
           <div className="flex items-center gap-3">
             <div className="bg-surface-strong h-14 w-14 flex-shrink-0 rounded-full" />
             <span className="text-title text-ink">{user.nickname}님</span>
@@ -60,7 +60,7 @@ export default function MyPage() {
           </Button>
         </div>
       ) : (
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-3 lg:px-0">
           <span className="text-title text-ink">로그인이 필요합니다</span>
           <Button variant="primary" size="sm" onClick={() => router.push("/login")}>
             로그인
@@ -68,7 +68,7 @@ export default function MyPage() {
         </div>
       )}
 
-      <div className="border-hairline mx-4 flex rounded-md border">
+      <div className="border-hairline mx-4 flex rounded-md border lg:mx-0">
         <button
           onClick={() => router.push("/mypage/orders")}
           className="flex flex-1 flex-col items-center gap-1 py-4"
@@ -94,12 +94,12 @@ export default function MyPage() {
         </button>
       </div>
 
-      <div className="mt-4 flex flex-col px-4 pb-20">
+      <div className="mt-4 flex flex-col px-4 pb-20 lg:grid lg:grid-cols-3 lg:gap-3 lg:px-0 lg:pb-16">
         {MENU_ITEMS.map(({ icon: Icon, label, onClick }) => (
           <button
             key={label}
             onClick={onClick}
-            className="border-hairline flex h-14 items-center justify-between border-b"
+            className="border-hairline flex h-14 items-center justify-between border-b lg:rounded-md lg:border lg:px-4"
           >
             <div className="flex items-center gap-3">
               <Icon className="text-ink h-5 w-5" />

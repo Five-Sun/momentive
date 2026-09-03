@@ -25,7 +25,9 @@ export function BottomNav({ items, activeKey, onSelect }: BottomNavProps) {
               active ? "text-brand-pink-active" : "text-muted"
             }`}
           >
-            <span className="text-xl">{item.icon}</span>
+            <span key={active ? `${item.key}-active` : item.key} className={`text-xl ${active ? "animate-bump-up" : ""}`}>
+              {item.icon}
+            </span>
             <span className={`text-caption ${active ? "font-bold" : ""}`}>{item.label}</span>
           </button>
         );

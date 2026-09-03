@@ -48,6 +48,9 @@
 
   /* Spacing — only values missing from Tailwind's default 4px-step scale */
   --spacing-section: 64px;
+
+  /* Motion */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @theme inline {
@@ -90,8 +93,11 @@
 
   --spacing-section: var(--spacing-section);
 
-  --font-display: var(--font-jua), var(--font-noto-sans-kr), sans-serif;
-  --font-body: var(--font-noto-sans-kr), -apple-system, sans-serif;
+  --font-display: var(--font-uhbee), var(--font-noto-sans-kr), sans-serif;
+  --font-body: var(--font-uhbee), var(--font-noto-sans-kr), sans-serif;
+
+  --animate-paw-pop: paw-pop 0.4s var(--ease-spring);
+  --animate-bump-up: bump-up 0.4s var(--ease-spring);
 }
 
 body {
@@ -134,5 +140,45 @@ body {
   }
   .text-tag {
     font: 600 11px/1 var(--font-body);
+  }
+}
+
+/* Motion keyframes — 미세 인터랙션 전용 (위시 하트/칩/Badge 토글, 하단 탭 활성화).
+   화면 전환 등 큰 모션에는 사용하지 않는다. */
+@keyframes paw-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.28);
+  }
+  70% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bump-up {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.15);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-paw-pop,
+  .animate-bump-up {
+    animation: none !important;
+  }
+
+  * {
+    transition-duration: 0.001ms !important;
   }
 }

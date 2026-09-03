@@ -9,11 +9,11 @@ export default function CategoryPage() {
 
   return (
     <main className="bg-canvas flex min-h-screen flex-col">
-      <header className="flex items-center justify-center px-4 py-4">
+      <header className="flex items-center justify-center px-4 py-4 lg:justify-start lg:px-0 lg:py-7">
         <span className="text-title-sm text-ink">카테고리</span>
       </header>
 
-      <div className="flex flex-col gap-3 px-4 pb-20">
+      <div className="flex flex-col gap-3 px-4 pb-20 lg:grid lg:grid-cols-2 lg:gap-5 lg:px-0 lg:pb-16">
         {CATEGORY_LIST.map((c) => (
           <button
             key={c.key}

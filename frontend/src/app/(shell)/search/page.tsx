@@ -78,7 +78,7 @@ function SearchPageInner() {
 
   return (
     <main className="bg-canvas relative flex min-h-screen flex-col">
-      <div className="border-hairline flex items-center gap-2.5 border-b px-4 py-2.5">
+      <div className="border-hairline flex items-center gap-2.5 border-b px-4 py-2.5 lg:px-0">
         <div className="bg-surface-soft border-hairline flex h-10 flex-1 items-center gap-2 rounded-full border px-3.5">
           <Search className="text-muted h-4 w-4" />
           <input
@@ -96,12 +96,12 @@ function SearchPageInner() {
       </div>
 
       {suggestions.length > 0 && (
-        <div className="border-hairline shadow-card bg-surface-card absolute inset-x-0 top-[52px] z-20 border-b">
+        <div className="border-hairline shadow-card bg-surface-card absolute inset-x-0 top-[52px] z-20 border-b lg:inset-x-0 lg:rounded-md lg:border">
           {suggestions.map((p) => (
             <button
               key={p.id}
               onClick={() => runSearch(p.name)}
-              className="text-body-sm text-ink flex w-full items-center gap-2 px-4 py-2.5 text-left"
+              className="text-body-sm text-ink flex w-full items-center gap-2 px-4 py-2.5 text-left lg:px-4"
             >
               <Search className="text-muted h-3.5 w-3.5" />
               {p.name}
@@ -110,7 +110,7 @@ function SearchPageInner() {
         </div>
       )}
 
-      <div className="flex-1 px-4 py-4">
+      <div className="flex-1 px-4 py-4 lg:px-0">
         {!submitted && !query && (
           <div className="flex flex-col gap-5">
             {recentSearches.length > 0 && (
@@ -156,7 +156,7 @@ function SearchPageInner() {
               </button>
             </div>
             {results == null ? (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-10 xl:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <ProductCardSkeleton key={i} />
                 ))}
@@ -167,7 +167,7 @@ function SearchPageInner() {
                 <p className="text-body-sm text-muted">다른 검색어로 시도해보세요</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
                 {results.map((p) => (
                   <ProductGridItem key={p.id} product={p} />
                 ))}

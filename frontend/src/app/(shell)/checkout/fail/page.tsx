@@ -17,9 +17,11 @@ function CheckoutFailContent() {
           결제가 완료되지 않았어요. 장바구니에서 다시 시도해주세요
         </span>
       </div>
-      <Button variant="primary" fullWidth onClick={() => router.push("/cart")}>
-        장바구니로 돌아가기
-      </Button>
+      <div className="w-full lg:max-w-[480px]">
+        <Button variant="primary" fullWidth onClick={() => router.push("/cart")}>
+          장바구니로 돌아가기
+        </Button>
+      </div>
     </div>
   );
 }

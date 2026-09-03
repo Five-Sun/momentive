@@ -40,7 +40,7 @@ export default function SupportPage() {
 
   return (
     <div className="bg-canvas relative flex min-h-screen flex-col">
-      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center border-b px-4">
+      <div className="border-hairline bg-surface-card flex h-13 flex-shrink-0 items-center border-b px-4 lg:hidden">
         <button onClick={() => router.back()} aria-label="뒤로가기" className="text-ink">
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -48,7 +48,11 @@ export default function SupportPage() {
         <div className="h-5 w-5" />
       </div>
 
-      <div className="flex flex-1 flex-col gap-6 p-4 pb-28">
+      <div className="hidden px-0 pt-7 pb-4 lg:block">
+        <span className="text-title-sm text-ink">고객센터</span>
+      </div>
+
+      <div className="mx-auto flex w-full flex-1 flex-col gap-6 p-4 pb-28 lg:max-w-[720px] lg:px-0 lg:pb-16">
         <div className="flex flex-col gap-3">
           <span className="text-title-sm text-ink">자주 묻는 질문</span>
           <div className="border-hairline bg-surface-card flex flex-col rounded-md border">

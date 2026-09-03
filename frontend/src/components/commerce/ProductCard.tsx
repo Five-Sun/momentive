@@ -37,7 +37,11 @@ export function ProductCard({
               favorited ? "text-brand-pink-active" : "text-muted"
             }`}
           >
-            <Heart className="h-4 w-4" fill={favorited ? "currentColor" : "none"} />
+            <Heart
+              key={String(favorited)}
+              className="animate-paw-pop h-4 w-4"
+              fill={favorited ? "currentColor" : "none"}
+            />
           </button>
         </div>
       </div>

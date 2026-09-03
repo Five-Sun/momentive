@@ -13,7 +13,7 @@ const toneClasses = {
 export function Badge({ label, tone = "new" }: BadgeProps) {
   return (
     <span
-      className={`text-tag inline-flex items-center rounded-full px-2.5 py-1 tracking-[0.2px] ${toneClasses[tone]}`}
+      className={`text-tag animate-paw-pop inline-flex items-center rounded-full px-2.5 py-1 tracking-[0.2px] ${toneClasses[tone]}`}
     >
       {label}
     </span>

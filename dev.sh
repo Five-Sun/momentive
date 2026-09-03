@@ -117,15 +117,99 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+start_docker_desktop_windows() {
+  local candidates=(
+    "/c/Program Files/Docker/Docker/Docker Desktop.exe"
+    "/c/Program Files (x86)/Docker/Docker/Docker Desktop.exe"
+  )
+
+  if command -v cygpath >/dev/null 2>&1 && [ -n "${LOCALAPPDATA:-}" ]; then
+    local local_app_data
+    local_app_data="$(cygpath -u "$LOCALAPPDATA" 2>/dev/null || true)"
+    if [ -n "$local_app_data" ]; then
+      candidates+=("$local_app_data/Docker/Docker Desktop/Docker Desktop.exe")
+    fi
+  fi
+
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [ -x "$candidate" ]; then
+      "$candidate" >/dev/null 2>&1 &
+      return 0
+    fi
+  done
+
+  if command -v powershell.exe >/dev/null 2>&1; then
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "\$paths = @((\$env:ProgramFiles + '\Docker\Docker\Docker Desktop.exe'), ([Environment]::GetEnvironmentVariable('ProgramFiles(x86)') + '\Docker\Docker\Docker Desktop.exe'), (\$env:LocalAppData + '\Docker\Docker Desktop\Docker Desktop.exe')); foreach (\$path in \$paths) { if (\$path -and (Test-Path -LiteralPath \$path)) { Start-Process -FilePath \$path; exit 0 } }; exit 1" >/dev/null 2>&1
+    return $?
+  fi
+
+  return 1
+}
+
+ensure_docker_daemon() {
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "  docker를 찾을 수 없습니다. Docker Desktop이 설치되어 있는지 확인하세요."
+    exit 1
+  fi
+
+  if docker info >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo "  Docker 데몬이 응답하지 않습니다. 자동 기동을 시도합니다..."
+  case "$PLATFORM" in
+    macos)
+      if ! open -a Docker >/dev/null 2>&1; then
+        echo "  Docker Desktop을 실행할 수 없습니다. Docker Desktop 설치 상태를 확인하세요."
+        exit 1
+      fi
+      ;;
+    linux)
+      if command -v systemctl >/dev/null 2>&1; then
+        if [ "$(id -u)" -eq 0 ]; then
+          systemctl start docker
+        else
+          sudo systemctl start docker
+        fi
+      elif command -v service >/dev/null 2>&1; then
+        if [ "$(id -u)" -eq 0 ]; then
+          service docker start
+        else
+          sudo service docker start
+        fi
+      else
+        echo "  Docker 데몬 자동 기동 방법을 찾지 못했습니다. Docker를 직접 실행한 뒤 다시 시도하세요."
+        exit 1
+      fi
+      ;;
+    windows)
+      if ! start_docker_desktop_windows; then
+        echo "  Docker Desktop 자동 기동 방법을 찾지 못했습니다. Docker Desktop을 직접 실행한 뒤 다시 시도하세요."
+        exit 1
+      fi
+      ;;
+    *)
+      echo "  현재 OS에서 Docker 데몬 자동 기동을 지원하지 않습니다. Docker를 직접 실행한 뒤 다시 시도하세요."
+      exit 1
+      ;;
+  esac
+
+  echo "  Docker 데몬 준비 대기 중..."
+  for i in $(seq 1 60); do
+    if docker info >/dev/null 2>&1; then
+      echo "  Docker 데몬 준비 완료"
+      return 0
+    fi
+    sleep 2
+  done
+
+  echo "  Docker 데몬이 120초 내에 준비되지 않았습니다. Docker 상태를 확인하세요."
+  exit 1
+}
+
 echo "[0/3] 환경 확인... (OS: $PLATFORM)"
-if ! command -v docker >/dev/null 2>&1; then
-  echo "  docker를 찾을 수 없습니다. Docker Desktop이 설치·실행 중인지 확인하세요."
-  exit 1
-fi
-if ! docker info >/dev/null 2>&1; then
-  echo "  Docker 데몬이 응답하지 않습니다. Docker Desktop을 실행한 뒤 다시 시도하세요."
-  exit 1
-fi
+ensure_docker_daemon
 if ! ensure_java21; then
   echo "  JDK 21을 찾을 수 없습니다. backend/build.gradle.kts가 Java 21 툴체인을 요구합니다."
   echo "  JDK 21을 설치하거나, 이미 있다면 JAVA_HOME을 직접 지정한 뒤 다시 실행하세요."

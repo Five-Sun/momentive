@@ -1,0 +1,38 @@
+<!-- @dsCard group="Components" viewport="700x480" name="Commerce" subtitle="ProductCard, Rating, SizeSelector, FilterSheet, ReviewCard" -->
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_preview_bundle.js"></script>
+<div id="root" style="background:var(--canvas);padding:20px"></div>
+<script type="text/plain" id="app-src">
+const { ProductCard, Rating, SizeSelector, Badge, FilterSheet, ReviewCard } = window.Momentive;
+function Ph(){ return <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--muted-soft)',font:'var(--text-caption)'}}>제품 사진</div>; }
+function Demo(){
+  const [fav,setFav]=React.useState(true); const [size,setSize]=React.useState('M'); const [sort,setSort]=React.useState('인기순'); const [sheetOpen,setSheetOpen]=React.useState(false);
+  return (
+    <div style={{display:'flex', flexDirection:'column', gap:24}}>
+      <div style={{display:'flex', gap:24, alignItems:'flex-start'}}>
+        <div style={{width:200}}><ProductCard image={<Ph/>} title="플리스 후드 집업" price="38,000원" originalPrice="48,000원" badge={<Badge label="-20%" tone="sale"/>} favorited={fav} onToggleFavorite={()=>setFav(!fav)} rating={<Rating value={4.8} count={22}/>} /></div>
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          <SizeSelector sizes={['XS','S','M','L','XL']} selected={size} onSelect={setSize} />
+          <button onClick={()=>setSheetOpen(true)} style={{alignSelf:'flex-start',border:'1px solid var(--hairline)',borderRadius:999,padding:'6px 12px',background:'none',cursor:'pointer',font:'var(--text-caption)'}}>{sort} ▾ (필터시트 열기)</button>
+        </div>
+      </div>
+      <div style={{maxWidth:360,display:'flex',flexDirection:'column',gap:12}}>
+        <ReviewCard author="몽이맘" rating={5} date="2026.08.10" text="핏이 예쁘고 소재가 부드러워요." photoCount={2} />
+        <ReviewCard author="보리아빠" rating={4.5} date="2026.07.28" text="사이즈 가이드대로 주문했는데 딱 맞았어요." />
+      </div>
+      <div style={{position:'relative',height:sheetOpen?260:0}}>
+        <FilterSheet open={sheetOpen} sortOptions={['인기순','신상순','낮은 가격순','높은 가격순']} selected={sort} onSelect={setSort} onApply={()=>setSheetOpen(false)} onClose={()=>setSheetOpen(false)} />
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+<script>
+  const { code } = Babel.transform(document.getElementById('app-src').textContent, { presets: [['react', { runtime: 'classic' }]] });
+  (0, eval)(code);
+</script>
+
