@@ -4,8 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/core/Button";
-import { confirmOrder } from "@/lib/api/orders";
-import { removeCartItems } from "@/lib/storage/cart";
+import { confirmOrder, getOrder } from "@/lib/api/orders";
+import { cartKeyOf, removeCartItems } from "@/lib/storage/cart";
 import { clearCheckoutSelection, getCheckoutSelection } from "@/lib/storage/checkoutSelection";
 
 interface ConfirmedResult {
@@ -46,12 +46,26 @@ function CheckoutSuccessContent() {
       // 실패 화면으로 보내면 안 되므로 confirm과 분리해 처리한다.
       setResult({ orderId: numericOrderId });
 
-      // 부분결제를 지원하므로 장바구니 전체를 비우지 않는다. 결제 대상으로 선택했던 항목의
-      // 키만 걷어내, 결제하지 않고 남겨둔 항목은 그대로 유지한다.
-      // 주문 응답으로 키를 재구성하지 않는 이유: 장바구니 키가 `variantId` 기준으로 바뀌었는데
-      // 주문 응답(OrderItemResponse)에는 variantId가 없다. 선택 목록은 `/checkout`이 주문 생성에
-      // 사용한 것과 동일한 집합이므로 그대로 쓰는 것이 정확하고, 추가 조회도 필요 없다.
-      removeCartItems(getCheckoutSelection());
+      // 부분결제를 지원하므로 장바구니 전체를 비우지 않는다. 서버가 확정한 주문 항목의
+      // variant만 골라 걷어내고, 결제하지 않고 남겨둔 항목은 그대로 유지한다.
+      //
+      // `checkoutSelection`(sessionStorage)을 근거로 쓰지 않는 이유: 간편결제 앱 전환처럼
+      // 결제사 리다이렉트가 원래 탭 컨텍스트를 벗어나면 sessionStorage가 비어 있어
+      // 장바구니가 그대로 남는다(중복 구매를 유발했던 원래 버그의 재발). 주문 응답은
+      // 그런 경우에도 서버에서 그대로 받아올 수 있다.
+      try {
+        const order = await getOrder(numericOrderId);
+        removeCartItems(
+          order.items
+            .map((item) => item.variantId)
+            .filter((id): id is number => id != null)
+            .map(cartKeyOf),
+        );
+      } catch (err) {
+        // 조회에 실패해도 결제 자체엔 영향이 없다. 선택 목록으로 한 번 더 시도한다.
+        console.error("결제 완료 후 주문 조회 실패, 선택 목록으로 대체", err);
+        removeCartItems(getCheckoutSelection());
+      }
       clearCheckoutSelection();
     }
 

@@ -13,6 +13,8 @@ export interface OrderItemRequest {
 export interface OrderItemResponse {
   productId: number;
   productName: string;
+  /** 재고 단위 ID. variant 도입 이전에 생성된 주문 항목은 null */
+  variantId: number | null;
   quantity: number;
   size: string | null;
   unitPrice: number;
