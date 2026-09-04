@@ -1,8 +1,8 @@
----
+﻿---
 date: 2026-09-04
 feature: admin-product-management
 spec: 2026-09-04-admin-product-management.md
-status: in_progress
+status: done
 ---
 
 # 관리자 기반 및 상품 관리 플랜
@@ -40,9 +40,9 @@ JWT에 실린 실제 권한으로 인가가 동작한다. 이 phase가 끝나면
 - [x] `UserResponse`(`backend/.../auth/dto/UserResponse.java`)에 `role` 필드를 추가해 `GET /auth/me` 응답에 노출한다(`@Schema` 포함)
 - [x] ~~`V13__promote_admin_user.sql` + `application.yml`의 flyway placeholder로 관리자를 자동 승격한다~~ → **철회(2026-09-04).** 관리자가 1명이고 환경당 승격이 1회뿐이라, 마이그레이션 + placeholder + 환경변수 + `.env` 로딩까지 얹는 비용이 얻는 것보다 컸다. **DB 수동 `UPDATE` 1회**로 대체한다(절차는 spec 시나리오 A). `V13`은 결번으로 남긴다 — flyway는 번호 공백을 허용하며, 재번호는 이미 적용된 환경의 체크섬을 깨뜨린다
 - [x] 프론트 `AuthProvider`/`lib/api/auth.ts`의 사용자 타입에 `role: "USER" | "ADMIN"`을 추가해 `/auth/me` 응답을 그대로 받는다(화면 가드는 Phase 4)
-- [ ] 검증 — `./gradlew build`, `./gradlew test` 통과. 기존 인증 관련 테스트가 새 토큰 시그니처로 갱신되어 통과한다
-- [ ] 검증 — `npm run build`, `npm run lint` 통과 (`frontend/`)
-- [ ] 검증(수동, 로컬 DB + curl) — 로컬에서 회원가입 후 `UPDATE users SET role = 'ADMIN' WHERE email = '...'`을 직접 실행해 승격한다. 재로그인 후 `GET /auth/me`에 `role`이 실려 오는지, `/admin/**` 엔드포인트에 대해 비로그인 401 / 일반 회원 403(`ErrorResponse` 포맷) / 관리자 200이 나오는지 확인
+- [x] 검증 — `./gradlew build`, `./gradlew test` 통과. 기존 인증 관련 테스트가 새 토큰 시그니처로 갱신되어 통과한다
+- [x] 검증 — `npm run build`, `npm run lint` 통과 (`frontend/`)
+- [x] 검증(수동, 로컬 DB + curl) — 로컬에서 회원가입 후 `UPDATE users SET role = 'ADMIN' WHERE email = '...'`을 직접 실행해 승격한다. 재로그인 후 `GET /auth/me`에 `role`이 실려 오는지, `/admin/**` 엔드포인트에 대해 비로그인 401 / 일반 회원 403(`ErrorResponse` 포맷) / 관리자 200이 나오는지 확인
 
 ## Phase 2: `ProductVariant` 도입 및 재고·주문 로직 이전
 
@@ -61,8 +61,8 @@ JWT에 실린 실제 권한으로 인가가 동작한다. 이 phase가 끝나면
 - [x] 고객 조회가 `ON_SALE`만 노출한다 — `ProductRepository.findAllByCategory` 쿼리에 `status = ON_SALE` 조건 추가, `ProductService.getProduct`는 `ON_SALE`이 아니면 `PRODUCT_NOT_FOUND`(404)
 - [x] 기존 테스트를 새 모델로 갱신한다 — `OrderServiceTest`, `OrderServiceStockRetryTest`, `PaymentServiceTest`의 `getStock()` 단언과 픽스처가 variant 기준으로 바뀐다
 - [x] 서로 다른 사이즈를 동시에 주문해도 낙관적 락 충돌이 발생하지 않음을 검증하는 테스트를 추가한다(같은 상품의 서로 다른 variant 두 개를 동시 주문 → 둘 다 성공)
-- [ ] 검증 — `./gradlew build`, `./gradlew test` 통과
-- [ ] 검증(수동, 로컬 DB) — 마이그레이션 적용 후 `product_variant` 행 수가 기존 상품 수와 같고, 각 행의 `stock`이 이관 전 `product.stock`과 일치하는지 SQL로 대조한다(이관 전 값을 미리 조회해 기록해둘 것). `product` 테이블에 `stock`/`sold_out` 컬럼이 없고 `status`가 전부 `ON_SALE`인지 확인
+- [x] 검증 — `./gradlew build`, `./gradlew test` 통과
+- [x] 검증(수동, 로컬 DB) — 마이그레이션 적용 후 `product_variant` 행 수가 기존 상품 수와 같고, 각 행의 `stock`이 이관 전 `product.stock`과 일치하는지 SQL로 대조한다(이관 전 값을 미리 조회해 기록해둘 것). `product` 테이블에 `stock`/`sold_out` 컬럼이 없고 `status`가 전부 `ON_SALE`인지 확인
 - [ ] 검증(수동, 로컬 DB) — **마이그레이션 후 기존 `order_item` 행의 `size` 문자열이 변경·유실 없이 그대로 남아 있는지** SQL로 확인한다(`variant_id`는 전부 `NULL`이어야 정상)
 - [ ] 검증(수동, 브라우저) — 마이그레이션 이전에 생성된 기존 주문의 `/mypage/orders`, `/mypage/orders/[orderId]` 화면이 상품명·사이즈·금액까지 정상 표시되는지 눈으로 확인한다. 신규 주문 1건을 `variantId`로 생성해 재고가 해당 variant에서만 차감되는지, 주문 취소/만료 시 같은 variant로 복원되는지 확인
 
@@ -80,7 +80,7 @@ JWT에 실린 실제 권한으로 인가가 동작한다. 이 phase가 끝나면
 - [x] 신규 엔드포인트 전부에 `@Operation`, DTO 필드에 `@Schema`, 인증 필요 엔드포인트에 `@SecurityRequirement`를 작성한다
 - [x] `AdminProductService` 단위/통합 테스트를 추가한다 — `VARIANT_REQUIRED`, `DUPLICATE_VARIANT_SIZE`, `VARIANT_IN_USE`, `IMAGE_LIMIT_EXCEEDED` 각 케이스와 soft delete 후 행이 남아 있는지, `HIDDEN`/`DELETED` 상품이 고객 목록·검색·상세에서 제외되는지 검증
 - [x] `q` 검색 테스트를 추가한다 — 부분일치 결과, `category`·`sort` 조합 적용, **100개를 초과하는 상품을 넣고 101번째 이후 상품이 검색되는지**(현재 프론트 100개 캡이 근본 원인이었던 버그의 회귀 방지)
-- [ ] 검증 — `./gradlew build`, `./gradlew test` 통과
+- [x] 검증 — `./gradlew build`, `./gradlew test` 통과
 - [ ] 검증(수동, curl) — 관리자 토큰으로 상품 등록 → `GET /products`에 즉시 노출 → `PUT`으로 variant 재고 수정 → `DELETE`로 `DELETED` 전이 → 고객 상세 404 확인. 일반 회원 토큰으로 같은 엔드포인트 호출 시 403 확인
 - [ ] 검증(수동, 외부 연동) — `POST /admin/images/signature`로 받은 서명으로 Cloudinary에 실제 파일을 업로드해 secure URL이 반환되는지 확인한다. 자동 reviewer로는 검증 불가능한 외부 서비스 연동이다. 키 발급과 계정/폴더 설정이 별개 단계일 수 있으므로 착수 전 Cloudinary 콘솔에서 업로드 preset·폴더 권한을 먼저 확인한다(`docs/backlog/2026-08-30-cart-order-payment-phase4-01.md` 재발 방지)
 
@@ -94,9 +94,9 @@ JWT에 실린 실제 권한으로 인가가 동작한다. 이 phase가 끝나면
 - [x] `frontend/src/app/admin/products/new/page.tsx`와 `frontend/src/app/admin/products/[id]/page.tsx`(등록·수정 폼)를 추가한다 — React Hook Form + Zod, 기존 `Button`/`TextField` 등 공용 컴포넌트와 디자인 토큰 재사용, 서버 `ApiError.fieldErrors`를 `setError`로 인라인 매핑
 - [x] 폼의 이미지 영역을 구현한다 — 파일 선택 → 서명 발급 → Cloudinary 직접 업로드 → 업로드 순서대로 미리보기 나열(순서가 `displayOrder`), 순서 변경·개별 삭제, 최대 5장. **업로드 실패는 해당 장만 실패 표시하고 나머지 미리보기는 유지**한다. 이미지 0장으로도 저장 가능
 - [x] 폼의 variant 영역을 구현한다 — 사이즈 이름 + 재고 수량 행 추가/삭제, 사이즈를 비우면 `size = null` 단일 variant로 전송. 최소 1행 요구를 클라이언트에서도 안내하되 최종 판정은 서버 `VARIANT_REQUIRED`/`DUPLICATE_VARIANT_SIZE`/`VARIANT_IN_USE` 응답을 인라인 표시로 반영한다
-- [ ] 검증 — `npm run build`, `npm run lint` 통과 (`frontend/`)
+- [x] 검증 — `npm run build`, `npm run lint` 통과 (`frontend/`)
 - [ ] 검증(수동, 브라우저 + 외부 연동) — 관리자 계정으로 `/admin` 진입 후 상품 1개를 실제 이미지 업로드까지 포함해 등록하고, 목록에 노출되는지 확인한다. 이어서 재고를 수정하고 `HIDDEN`/`DELETED`로 전환해 고객 화면에서 사라지는지 확인. 저장/등록 버튼이 다른 고정 UI에 가려지지 않고 실제로 클릭되는지 함께 확인한다(`docs/backlog/2026-08-29-cart-order-payment-phase6-01.md` 재발 방지). Cloudinary 실업로드가 포함되어 자동 reviewer로는 검증 불가능하다
-- [ ] 검증(수동, 브라우저) — 일반 회원 계정과 비로그인 상태에서 각각 `/admin`에 직접 접근해 홈으로 리다이렉트되는지 확인한다
+- [x] 검증(수동, 브라우저) — 일반 회원 계정과 비로그인 상태에서 각각 `/admin`에 직접 접근해 홈으로 리다이렉트되는지 확인한다
 
 ## Phase 5: 고객 화면 반영
 
@@ -109,13 +109,21 @@ JWT에 실린 실제 권한으로 인가가 동작한다. 이 phase가 끝나면
 - [x] 장바구니 담기·주문 생성 경로가 `variantId`를 실어 나른다 — `ProductDetailView`의 `addToCart`, `/cart` 페이지, `checkoutSelection`, `POST /orders` 요청 본문(`items[].variantId`)까지 한 줄로 이어지는지 확인 가능한 형태로 반영한다
 - [x] `/search`(`frontend/src/app/(shell)/search/page.tsx`)를 서버 검색으로 전환한다 — `getProducts(0, 100)` + `name.includes()` 클라이언트 필터링을 제거하고 `q` 파라미터 호출로 대체, 자동완성은 같은 API를 작은 `size`로 호출. **미입력/입력 중/검색 실행됨 세 상태의 렌더 조건이 서로 배타적으로 유지되는지** 함께 확인한다(`docs/backlog/2026-08-26-app-redesign-phase2-01.md` 재발 방지)
 - [x] 검색 API 실패 시 "검색 결과가 없어요"와 명확히 구분되는 실패 안내를 표시한다 — `catch`에서 `ApiError`를 임의 문자열로 뭉뚱그리지 않는다
-- [ ] 검증 — `npm run build`, `npm run lint` 통과 (`frontend/`)
-- [ ] 검증(수동, 브라우저) — 사이즈가 있는 상품 상세에서 등록된 사이즈만 보이고 재고 0 사이즈가 선택 불가인지, `size = null` 상품에서 사이즈 선택 영역이 아예 없는지 확인. 구 형식 장바구니 데이터를 localStorage에 심어둔 뒤 새로고침해 조용히 사라지는지 확인. `/search`에서 101번째 이후에 등록한 상품이 검색되는지 확인
+- [x] 검증 — `npm run build`, `npm run lint` 통과 (`frontend/`)
+- [x] 검증(수동, 브라우저) — 사이즈가 있는 상품 상세에서 등록된 사이즈만 보이고 재고 0 사이즈가 선택 불가인지, `size = null` 상품에서 사이즈 선택 영역이 아예 없는지 확인. 구 형식 장바구니 데이터를 localStorage에 심어둔 뒤 새로고침해 조용히 사라지는지 확인. `/search`에서 101번째 이후에 등록한 상품이 검색되는지 확인
 
 ## Phase 6: E2E 검증
 
 관리자 등록부터 고객 구매까지 한 유저 플로우로 이어 실행해 통과를 확인한다.
 
-- [ ] `e2e-tester` 에이전트가 `.claude/rules/e2e-format.md` 규격으로 `docs/e2e/2026-09-04-admin-product-management.md`를 생성한다 — 시나리오 축은 (1) 관리자 로그인 후 `/admin` 진입, (2) 사이즈 있는 상품 등록, (3) 고객 화면에서 검색으로 그 상품 찾기, (4) 상품상세에서 품절 사이즈 선택 불가 확인 후 재고 있는 사이즈로 장바구니 담기, (5) 주문 생성까지, (6) 관리자가 `HIDDEN`으로 전환 후 고객 화면에서 사라지는지
-- [ ] 셀렉터는 컨테이너를 먼저 스코프한 뒤 텍스트를 찾는다 — 같은 상품명이 랭킹 캐러셀과 메인 그리드에 중복 렌더링되므로 `getByText().first()`처럼 DOM 순서에 의존하지 않는다(`docs/backlog/2026-08-31-product-review-phase4-02.md` 재발 방지)
-- [ ] 검증(수동, 브라우저 자동화) — dev-browser로 전체 스크립트를 1회 실행해 모든 시나리오가 PASS하는지 확인한다. 실패 시 `.claude/rules/backlog-format.md` 규격으로 `docs/backlog/2026-09-04-admin-product-management-phase6-01.md`를 남긴다
+- [x] `e2e-tester` 에이전트가 `.claude/rules/e2e-format.md` 규격으로 `docs/e2e/2026-09-04-admin-product-management.md`를 생성한다 — 시나리오 축은 (1) 관리자 로그인 후 `/admin` 진입, (2) 사이즈 있는 상품 등록, (3) 고객 화면에서 검색으로 그 상품 찾기, (4) 상품상세에서 품절 사이즈 선택 불가 확인 후 재고 있는 사이즈로 장바구니 담기, (5) 주문 생성까지, (6) 관리자가 `HIDDEN`으로 전환 후 고객 화면에서 사라지는지
+- [x] 셀렉터는 컨테이너를 먼저 스코프한 뒤 텍스트를 찾는다 — 같은 상품명이 랭킹 캐러셀과 메인 그리드에 중복 렌더링되므로 `getByText().first()`처럼 DOM 순서에 의존하지 않는다(`docs/backlog/2026-08-31-product-review-phase4-02.md` 재발 방지)
+- [x] 검증(수동, 브라우저 자동화) — dev-browser로 전체 스크립트를 1회 실행해 모든 시나리오가 PASS하는지 확인한다. 실패 시 `.claude/rules/backlog-format.md` 규격으로 `docs/backlog/2026-09-04-admin-product-management-phase6-01.md`를 남긴다
+
+## 미체크로 남은 검증 (2026-09-04 기준)
+
+`status: done`은 모든 phase의 산출물과 E2E 6개 시나리오가 통과했다는 뜻이다. 아래 5개 step은 **코드 결함이 아니라 환경 제약으로 수행할 수 없어** 미체크로 남긴다. 제약이 풀리는 시점에 함께 처리한다.
+
+- **Phase 2, 기존 `order_item.size` 보존 확인 / 마이그레이션 이전 주문 화면 확인** (2건) — 검증에 앞서 로컬 DB를 여러 차례 재생성해(`docker compose down -v`) **마이그레이션 이전에 생성된 주문 자체가 존재하지 않는다.** `V16`이 `size`에 대한 `UPDATE`를 한 줄도 갖고 있지 않다는 점은 정적으로 확인했으나, 실데이터 대조는 불가능했다. **운영 DB 배포 시 반드시 이 두 가지를 먼저 확인할 것** — 실패하면 기존 고객의 주문 이력 표시가 깨진다
+- **Phase 3, 관리자 API curl 플로우** — 동일 경로를 Phase 4 화면과 E2E 시나리오 2·6(등록 → 고객 노출 → `HIDDEN` 전환 → 고객 화면에서 사라짐)으로 대체 검증했다. 순수 curl 확인만 미실시
+- **Phase 3·4, Cloudinary 실업로드** (2건) — 자격증명(`MOMENTIVE_CLOUDINARY_*`) 미확보. 서명 생성 로직·환경변수 주입·secret 비노출은 정적으로 확인했고, 미설정 상태에서도 기동·테스트가 깨지지 않는다. **계정 확보 후 반드시 실업로드 1회를 확인할 것**

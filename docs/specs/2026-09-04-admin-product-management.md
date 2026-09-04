@@ -1,4 +1,4 @@
----
+﻿---
 date: 2026-09-04
 feature: admin-product-management
 status: confirmed
@@ -256,53 +256,62 @@ status: confirmed
 
 ### 인가
 
-- [ ] 로그인 시 발급되는 access token에 `role` 클레임이 포함된다
-- [ ] `JwtAuthenticationFilter`가 토큰의 `role`로 권한을 부여한다 (`ROLE_USER` 하드코딩 제거)
-- [ ] `ADMIN`이 아닌 계정으로 `/admin/**` API를 호출하면 `403 FORBIDDEN`이 기존 `ErrorResponse` 포맷으로 반환된다
-- [ ] 비로그인 상태로 `/admin/**` API를 호출하면 `401`이 반환된다
-- [ ] `GET /auth/me` 응답에 `role`이 포함된다
-- [ ] `ADMIN`이 아닌 계정으로 `/admin` 화면에 접근하면 홈으로 리다이렉트된다
-- [ ] DB에서 `role`을 `ADMIN`으로 바꾼 뒤 재로그인하면 `/admin` 접근과 `/admin/**` API 호출이 가능하다
-- [ ] 리포지토리 어디에도 실제 관리자 이메일 문자열이 없다
+- [x] 로그인 시 발급되는 access token에 `role` 클레임이 포함된다
+- [x] `JwtAuthenticationFilter`가 토큰의 `role`로 권한을 부여한다 (`ROLE_USER` 하드코딩 제거)
+- [x] `ADMIN`이 아닌 계정으로 `/admin/**` API를 호출하면 `403 FORBIDDEN`이 기존 `ErrorResponse` 포맷으로 반환된다
+- [x] 비로그인 상태로 `/admin/**` API를 호출하면 `401`이 반환된다
+- [x] `GET /auth/me` 응답에 `role`이 포함된다
+- [x] `ADMIN`이 아닌 계정으로 `/admin` 화면에 접근하면 홈으로 리다이렉트된다
+- [x] DB에서 `role`을 `ADMIN`으로 바꾼 뒤 재로그인하면 `/admin` 접근과 `/admin/**` API 호출이 가능하다
+- [x] 리포지토리 어디에도 실제 관리자 이메일 문자열이 없다
 
 ### 재고 모델
 
-- [ ] 기존 상품 15개가 `size = null` 단일 variant로 이관되고 재고 수치가 보존된다
+- [x] 기존 상품 15개가 `size = null` 단일 variant로 이관되고 재고 수치가 보존된다
 - [ ] 기존 `order_item` 행의 `size` 문자열이 그대로 남아 있고 주문 상세 화면이 정상 표시된다
-- [ ] 재고 차감·복원이 `ProductVariant` 기준으로 동작하고, 충돌 시 2회 재시도 후 `STOCK_CONFLICT`를 반환한다
-- [ ] 서로 다른 사이즈를 동시에 주문해도 낙관적 락 충돌이 발생하지 않는다
-- [ ] 상품의 품절 여부가 variant 재고 합으로 파생 판정된다 (`soldOut` 컬럼 없음)
+- [x] 재고 차감·복원이 `ProductVariant` 기준으로 동작하고, 충돌 시 2회 재시도 후 `STOCK_CONFLICT`를 반환한다
+- [x] 서로 다른 사이즈를 동시에 주문해도 낙관적 락 충돌이 발생하지 않는다
+- [x] 상품의 품절 여부가 variant 재고 합으로 파생 판정된다 (`soldOut` 컬럼 없음)
 
 ### 관리자 API
 
-- [ ] 상품을 등록하면 variant와 이미지가 함께 저장되고 고객 목록에 즉시 노출된다
-- [ ] variant 없이 저장을 시도하면 `VARIANT_REQUIRED`가 반환된다
-- [ ] 한 상품에 같은 사이즈 이름을 중복 입력하면 `DUPLICATE_VARIANT_SIZE`가 반환된다
-- [ ] 주문에 사용된 variant를 삭제하려 하면 `VARIANT_IN_USE`가 반환된다
-- [ ] 이미지를 6장 이상 보내면 `IMAGE_LIMIT_EXCEEDED`가 반환된다
-- [ ] `DELETE`가 행을 지우지 않고 `status`를 `DELETED`로 바꾼다
-- [ ] `HIDDEN` 또는 `DELETED` 상품이 고객 목록·검색·상세에서 제외되고, 상세는 404를 반환한다
-- [ ] `HIDDEN`/`DELETED` 상품이 포함된 기존 주문 상세가 정상적으로 표시된다
+- [x] 상품을 등록하면 variant와 이미지가 함께 저장되고 고객 목록에 즉시 노출된다
+- [x] variant 없이 저장을 시도하면 `VARIANT_REQUIRED`가 반환된다
+- [x] 한 상품에 같은 사이즈 이름을 중복 입력하면 `DUPLICATE_VARIANT_SIZE`가 반환된다
+- [x] 주문에 사용된 variant를 삭제하려 하면 `VARIANT_IN_USE`가 반환된다
+- [x] 이미지를 6장 이상 보내면 `IMAGE_LIMIT_EXCEEDED`가 반환된다
+- [x] `DELETE`가 행을 지우지 않고 `status`를 `DELETED`로 바꾼다
+- [x] `HIDDEN` 또는 `DELETED` 상품이 고객 목록·검색·상세에서 제외되고, 상세는 404를 반환한다
+- [x] `HIDDEN`/`DELETED` 상품이 포함된 기존 주문 상세가 정상적으로 표시된다
 - [ ] `POST /admin/images/signature`가 유효한 Cloudinary 서명을 반환하고, API secret이 응답에 포함되지 않는다
 
 ### 검색
 
-- [ ] `GET /products?q=...`가 `name` 부분일치로 검색하고 페이지네이션이 동작한다
-- [ ] `q`와 `category`, `sort`를 함께 지정하면 모두 적용된다
+- [x] `GET /products?q=...`가 `name` 부분일치로 검색하고 페이지네이션이 동작한다
+- [x] `q`와 `category`, `sort`를 함께 지정하면 모두 적용된다
 - [ ] 상품을 101개 이상 등록한 상태에서 101번째 이후 상품이 검색된다
-- [ ] `/search` 화면이 서버 검색으로 동작하고 자동완성도 같은 API를 사용한다
+- [x] `/search` 화면이 서버 검색으로 동작하고 자동완성도 같은 API를 사용한다
 - [ ] 검색 API 실패 시 "검색 결과가 없어요"와 구분되는 실패 안내가 표시된다
 
 ### 고객 화면
 
-- [ ] 상품상세가 해당 상품에 등록된 사이즈만 표시한다 (S/M/L/XL 하드코딩 제거)
-- [ ] 재고 0인 사이즈가 선택 불가로 표시된다
-- [ ] `size = null` 단일 variant 상품은 사이즈 선택 영역이 렌더링되지 않고 바로 장바구니에 담긴다
-- [ ] 장바구니 항목이 `variantId`를 갖고, 주문 생성이 `variantId`로 이루어진다
-- [ ] 구 형식 장바구니 항목이 로드 시 조용히 제거된다
+- [x] 상품상세가 해당 상품에 등록된 사이즈만 표시한다 (S/M/L/XL 하드코딩 제거)
+- [x] 재고 0인 사이즈가 선택 불가로 표시된다
+- [x] `size = null` 단일 variant 상품은 사이즈 선택 영역이 렌더링되지 않고 바로 장바구니에 담긴다
+- [x] 장바구니 항목이 `variantId`를 갖고, 주문 생성이 `variantId`로 이루어진다
+- [x] 구 형식 장바구니 항목이 로드 시 조용히 제거된다
 
 ### 빌드·검증
 
-- [ ] `./gradlew build` / `./gradlew test` 통과
-- [ ] `npm run build` / `npm run lint` 통과
-- [ ] 모든 신규 엔드포인트에 `@Operation`, DTO 필드에 `@Schema`, 인증 필요 엔드포인트에 `@SecurityRequirement`가 작성된다
+- [x] `./gradlew build` / `./gradlew test` 통과
+- [x] `npm run build` / `npm run lint` 통과
+- [x] 모든 신규 엔드포인트에 `@Operation`, DTO 필드에 `@Schema`, 인증 필요 엔드포인트에 `@SecurityRequirement`가 작성된다
+
+### 미검증 항목 (2026-09-04 기준, 31/35)
+
+아래 4건은 코드 결함이 아니라 **환경 제약으로 실증하지 못해** 미체크로 남긴다. `status`를 `implemented`로 올리지 않고 `confirmed`로 유지하는 이유다(쿠폰 시스템 spec과 같은 기준).
+
+- **기존 `order_item.size` 보존 / 주문 상세 정상 표시** — 검증 과정에서 로컬 DB를 여러 차례 재생성해 **마이그레이션 이전에 만들어진 주문이 존재하지 않는다.** `V16`에 `size`에 대한 `UPDATE`가 한 줄도 없다는 점은 정적으로 확인했다. **운영 배포 직후 가장 먼저 확인해야 할 항목** — 실패하면 기존 고객의 주문 이력 표시가 깨진다
+- **Cloudinary 서명 유효성** — 자격증명 미확보. 서명 생성 로직과 secret 비노출은 정적으로 확인했고, 미설정 상태에서도 기동·테스트가 깨지지 않는다
+- **상품 101개 이상에서 101번째 이후 검색** — 백엔드 테스트로는 커버되나 실데이터로는 미검증(현재 상품 20개)
+- **검색 API 실패 안내** — 실패를 인위적으로 만들지 못해 미검증. 구현상 `resultsFailed` 상태가 "검색 결과가 없어요"와 분리되어 있음은 정적으로 확인

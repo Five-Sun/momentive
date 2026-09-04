@@ -27,9 +27,9 @@
 - [ ] **브라우저 검증 보류** — `/checkout/success`는 Toss confirm 성공해야 도달하는데 상점 미등록으로 실결제 경로를 탈 수 없다. **상점 등록이 끝나면 Toss 실연동 검증과 같은 세션에서** 부분결제 시 결제한 항목만 사라지는지까지 확인할 것. 상품상세 문구도 육안 확인 미실시(정적 상수 한 줄이라 위험은 낮음)
 - [ ] 참고(범위 밖): 상품상세 배송 안내에 기본 배송비 3,400원 / 7만원 이상 무료 문구가 없다. FAQ에는 있으므로 4단계에서 보완 가능
 
-### 2단계 — 관리자 기능 (spec/plan 확정, 구현 대기)
+### 2단계 — 관리자 기능 (구현 완료, E2E 통과 — PR 대기)
 
-`docs/specs/2026-09-04-admin-product-management.md`(status: confirmed), `docs/plans/2026-09-04-admin-product-management.md`(status: planned). 브랜치 `feat/admin-product-management`.
+`docs/specs/2026-09-04-admin-product-management.md`(status: confirmed, AC 31/35), `docs/plans/2026-09-04-admin-product-management.md`(status: done). 브랜치 `feat/admin-product-management`.
 
 **그릴링 결과 범위를 2개로 쪼갰다.** 이번 spec(A)은 **관리자 기반 + 상품 관리**만 다루고, **주문 배송상태·송장과 쿠폰 발급은 후속 spec(B)**으로 분리했다. A가 B의 선행(인가 체계가 없으면 B도 못 만듦)이고, A만 끝나도 "신상품을 재배포 없이 등록한다"는 운영 병목이 실제로 풀리기 때문이다.
 
@@ -38,13 +38,19 @@
 **주요 결정** — `/admin`은 같은 Next.js 앱의 `(shell)` 밖 라우트 / JWT `role` 클레임 + `hasRole("ADMIN")` / `ProductVariant` 도입(사이즈 없는 상품도 `size = null` 단일 variant로 통일) / `soldOut`을 `status` enum으로 대체하고 품절은 재고 합에서 파생 / Cloudinary signed upload 최대 5장 / 검색은 `name` LIKE만 / **관리자 승격은 DB 수동 `UPDATE` 1회**(자동화를 검토했으나 관리자가 1명·환경당 1회뿐이라 마이그레이션+환경변수+`.env` 비용이 더 컸다. 리포지토리가 public이라 이메일을 커밋하지 않는 목적도 함께 달성)
 
 - [x] Phase 1: 인가 기반 (JWT role 클레임, `hasRole`, `/auth/me`에 role). 승격은 DB 수동 `UPDATE` — `docker exec -it backend-db-1 psql -U momentive -d momentive -c "UPDATE users SET role='ADMIN' WHERE email='<이메일>';"` 후 재로그인. **`docker compose down -v` 하면 다시 해야 한다**
-- [ ] Phase 2: `ProductVariant` 도입 + 데이터 이관 + 재고/주문 로직 이전 — **이미 배포된 주문 데이터를 건드리는 유일한 구간이라 독립 phase로 격리.** `V14`~`V16`
-- [ ] Phase 3: 관리자 API (상품 CRUD, Cloudinary 서명, `GET /products`에 `q` 추가)
-- [ ] Phase 4: 관리자 화면 2개 + `/admin/layout.tsx` 접근 보호
-- [ ] Phase 5: 고객 화면 반영 (상품상세 variant 연동, `/search` 서버 검색 전환, `CartItem`에 `variantId`)
-- [ ] Phase 6: E2E 검증
-- [ ] **착수 전 필요**: Cloudinary 계정과 `CLOUD_NAME`/`API_KEY`/`API_SECRET` — 없으면 Phase 3의 서명 발급 검증과 Phase 4의 실업로드에서 막힌다
-- [ ] **`chore/admin-login-seed`는 폐기 결정.** Mac에만 있을 가능성이 큰 브랜치로, 이번 spec이 채택한 승격 방식(계정을 새로 만들지 않고 기존 계정의 role만 올림)과 방식이 다르고 마이그레이션 재번호 비용이 새로 쓰는 것보다 크다. Mac에서 발견하면 삭제할 것
+- [x] Phase 2: `ProductVariant` 도입 + 데이터 이관 + 재고/주문 로직 이전 (`V14`~`V16`). **SQL로 이관 결과 실측 확인** — `product`에 `stock`/`sold_out` 컬럼 없음, 시드 15개 → variant 15개 전부 `size NULL`, 재고 100×12·0×3으로 원래 `sold_out` 3건과 정확히 일치
+- [x] Phase 3: 관리자 API (상품 CRUD, Cloudinary 서명, `GET /products`에 `q` 추가). 구현 중 실제 결함 1건 발견·수정 — `updateProduct`가 flush 전에 DTO를 조립해 `PUT` 응답의 신규 variant/image `id`가 전부 `null`로 나가던 문제(`docs/backlog/2026-09-04-admin-product-management-phase3-01.md`)
+- [x] Phase 4: 관리자 화면 2개 + `/admin/layout.tsx` 접근 보호
+- [x] Phase 5: 고객 화면 반영 (상품상세 variant 연동, `/search` 서버 검색 전환, `CartItem`에 `variantId`)
+- [x] Phase 6: E2E 검증 — `docs/e2e/2026-09-04-admin-product-management.md` **시나리오 6개 전부 PASS**
+- [x] `./gradlew build test` 122 tests 실패 0, `npm run build`/`lint` 통과 (리뷰어가 셸 도구 없이 못 돌려 직접 재실행함)
+- [x] **`chore/admin-login-seed` 폐기 결정.** 이번 spec의 승격 방식(계정을 새로 만들지 않고 기존 계정의 role만 올림)과 다르고 마이그레이션 재번호 비용이 새로 쓰는 것보다 크다. Mac에서 발견하면 삭제할 것
+- [ ] **Cloudinary 자격증명 미확보** — `CLOUD_NAME`/`API_KEY`/`API_SECRET`. 서명 생성 로직·secret 비노출은 정적 확인했고 미설정 상태에서도 기동·테스트가 정상이다. **계정 확보 후 실업로드 1회 확인 필요**
+- [ ] **운영 배포 직후 최우선 확인** — 기존 `order_item.size` 보존과 마이그레이션 이전 주문의 상세 화면 표시. 로컬은 DB를 여러 번 재생성해 이전 주문이 없어 실증하지 못했다. `V16`에 `size` `UPDATE`가 없다는 점만 정적 확인된 상태이고, **실패하면 기존 고객의 주문 이력 표시가 깨진다**
+
+#### 구현 중 발견한 별건 (별도 처리 필요)
+
+- [ ] **로그인 폼이 하이드레이션 전 제출되면 비밀번호가 URL에 남는다** — `<form>`에 `method`가 없어 React 핸들러가 붙기 전 제출되면 네이티브 GET이 되고 `/login?email=...&password=...`로 이동한다. 브라우저 히스토리에 평문 비밀번호가 남는다. dev 서버에서 실제로 재현됐고(E2E 케이스에 대기를 넣어 우회), 느린 회선의 실서비스에서도 가능하다. 4단계나 별도 fix로 처리 — 제출 버튼을 하이드레이션 전까지 `disabled`로 두는 방식이 간단하다
 
 #### 후속 spec(B)로 분리된 항목
 

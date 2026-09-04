@@ -9,13 +9,14 @@ plan: 2026-09-04-admin-product-management.md
 
 관리자 등록 → 고객 검색 → 사이즈별 품절 확인 → 장바구니 → 주문 생성 → 판매 중단까지를 한 유저 플로우(한 탭)로 이어 검증한다. 이미지 업로드는 Cloudinary 자격증명이 없는 환경이므로 **이미지 0장**으로 등록한다(스펙 시나리오 B의 "이미지가 0장이어도 저장은 가능하다" 예외 경로가 곧 검증 대상이 된다).
 
-**스크립트 상단 상수 두 개는 실행 환경에 맞춰 확인이 필요하다.** `ADMIN_EMAIL`은 DB에서 `role`을 `ADMIN`으로 수동 승격한 계정의 이메일이어야 하고, `ADMIN_PASSWORD`는 그 계정의 비밀번호여야 한다. 이 값이 실제 로컬 DB의 관리자 계정과 다르면 시나리오 1이 "사전조건 미충족"으로 즉시 중단되며, 이는 코드 결함이 아니다.
+**실행 전 로컬에 E2E 전용 관리자 계정을 준비해야 한다.** 스크립트 상단의 `ADMIN_EMAIL`(`admin@momentive.local`)로 회원가입한 뒤 `UPDATE users SET role='ADMIN' WHERE email='admin@momentive.local';`로 승격한다. **실제 운영 관리자 이메일은 이 파일에 넣지 않는다** — 리포지토리가 public이며, 그것이 승격을 마이그레이션으로 자동화하지 않은 이유이기도 하다. 이 값이 실제 로컬 DB의 관리자 계정과 다르면 시나리오 1이 "사전조건 미충족"으로 즉시 중단되며, 이는 코드 결함이 아니다.
 
 **뷰포트**: 스크립트 시작 시 1440x900(데스크톱)으로 고정한다. 상품상세·장바구니·체크아웃의 CTA는 데스크톱 폭에서 하단 고정 바(`lg:hidden`)가 숨겨지고 우측/본문 CTA만 남으므로, 같은 텍스트의 버튼이 DOM에 둘 존재한다. 그래서 CTA는 전부 `button:visible`로 좁혀 잡는다.
 
 **셀렉터 노트 (CSS 셀렉터 fallback 사용, 컴포넌트 구조 변경 시 갱신 필요)**
 - 상품 카드는 이름 텍스트가 랭킹 캐러셀·메인 그리드에 중복 렌더링될 수 있으므로 `getByText().first()`를 쓰지 않고, `ProductGridItem`이 감싸는 링크의 `a[href="/products/{id}"]`로 **상품 id를 기준으로** 특정한다.
 - 관리자 폼의 variant 행은 사이즈/재고 label이 행마다 반복되므로 `getByLabel`을 쓸 수 없다. `TextField`가 `id = name`으로 id를 붙이는 구조(`frontend/src/components/forms/TextField.tsx`)를 근거로 `[id="variants.0.size"]` 형태의 속성 셀렉터를 쓴다.
+- 로그인 폼의 비밀번호도 `getByLabel("비밀번호")`가 입력창과 "비밀번호 표시" 토글 버튼을 함께 잡아 strict mode 위반이 된다. `#password`로 특정한다.
 
 ## 시나리오 1: 관리자 로그인 후 `/admin` 진입
 
@@ -69,13 +70,17 @@ plan: 2026-09-04-admin-product-management.md
 
 ```javascript
 // ============================================================
-// 실행 환경에 맞춰 확인이 필요한 값
-//   ADMIN_EMAIL   : DB에서 role을 ADMIN으로 수동 승격한 계정
-//   ADMIN_PASSWORD: 그 계정의 비밀번호
-// 값이 실제 로컬 DB의 관리자 계정과 다르면 시나리오 1에서 "사전조건 미충족"으로 중단된다.
+// 로컬 E2E 전용 관리자 계정. 실제 운영 관리자 이메일을 여기 넣지 않는다
+// (리포지토리가 public이며, 그것이 승격을 마이그레이션으로 자동화하지 않은 이유이기도 하다).
+//
+// 실행 전 로컬에서 아래 두 가지를 준비한다.
+//   1) 이 이메일/비밀번호로 회원가입
+//   2) docker exec -it backend-db-1 psql -U momentive -d momentive \
+//        -c "UPDATE users SET role='ADMIN' WHERE email='admin@momentive.local';"
+// 준비가 안 되어 있으면 시나리오 1에서 "사전조건 미충족"으로 중단된다(코드 결함 아님).
 // ============================================================
-const ADMIN_EMAIL = "byseungje@gmail.com";
-const ADMIN_PASSWORD = "testpass1";
+const ADMIN_EMAIL = "admin@momentive.local";
+const ADMIN_PASSWORD = "momentive1234";
 
 const page = await browser.getPage("admin-product-management");
 await page.setViewportSize({ width: 1440, height: 900 });
@@ -104,7 +109,7 @@ async function fail(scenario, message, shot) {
 // ============================================================
 // 시나리오 1: 관리자 로그인 후 /admin 진입
 // ============================================================
-await page.goto("http://localhost:3000/login", { waitUntil: "domcontentloaded" });
+await page.goto("http://localhost:3000/login", { waitUntil: "load" });
 
 // 이전 세션이 남긴 장바구니를 비워 뒤 시나리오의 주문 구성이 흔들리지 않게 한다.
 await page.evaluate(() => {
@@ -112,8 +117,15 @@ await page.evaluate(() => {
   window.sessionStorage.removeItem("momentive:checkout-selection");
 });
 
-await page.getByLabel("이메일").fill(ADMIN_EMAIL);
-await page.getByLabel("비밀번호").fill(ADMIN_PASSWORD);
+// 하이드레이션이 끝나기 전에 클릭하면 React의 onSubmit이 아직 안 붙어 폼이 네이티브 GET으로
+// 전송되고(비밀번호가 쿼리스트링에 실린 채 /login에 머문다) 로그인이 조용히 실패한다.
+// dev 서버는 하이드레이션이 느리므로 명시적으로 기다린다.
+await page.waitForTimeout(6000);
+
+// `getByLabel("비밀번호")`는 입력창과 "비밀번호 표시" 토글 버튼을 함께 잡아 strict mode에
+// 걸린다. `TextField`/`PasswordField`가 `id = name`으로 id를 붙이므로 id 셀렉터를 쓴다.
+await page.locator("#email").fill(ADMIN_EMAIL);
+await page.locator("#password").fill(ADMIN_PASSWORD);
 await page.getByRole("button", { name: "로그인" }).click();
 
 await page.waitForURL("**/mypage", { timeout: 10000 }).catch(async () => {
@@ -216,10 +228,15 @@ console.log("PASS: 시나리오 2 (productId=" + productId + ")");
 // ============================================================
 // 시나리오 3: 고객 화면에서 검색으로 새 상품 찾기
 // ============================================================
-await page.goto("http://localhost:3000/search", { waitUntil: "domcontentloaded" });
+await page.goto("http://localhost:3000/search", { waitUntil: "load" });
 
-const searchBox = page.getByPlaceholder("브랜드, 상품 검색");
+// 데스크톱 폭에서는 `TopNav`의 검색창과 `/search` 페이지의 입력창이 같은 placeholder를 쓴다.
+// `main` 안으로 스코프해 페이지 자체의 입력창만 잡는다.
+const searchBox = page.getByRole("main").getByPlaceholder("브랜드, 상품 검색");
 await searchBox.waitFor({ state: "visible", timeout: 10000 });
+// 하이드레이션 전에는 onChange/onKeyDown이 붙지 않아 입력이 React 상태에 반영되지 않고
+// Enter가 무시된다(검색이 조용히 실행되지 않음). 로그인과 동일한 이유로 기다린다.
+await page.waitForTimeout(6000);
 await searchBox.fill(PRODUCT_NAME);
 await searchBox.press("Enter");
 
@@ -316,12 +333,20 @@ await checkoutButton.waitFor({ state: "visible", timeout: 5000 });
 await checkoutButton.click();
 await page.waitForURL("**/checkout", { timeout: 10000 });
 
-const recipientInput = page.getByLabel("받는 사람");
-if (await recipientInput.isVisible().catch(() => false)) {
+// 배송지 폼은 `getAddresses()` 응답이 온 뒤에야 렌더링된다(저장된 배송지가 없으면
+// `showNewAddressForm`이 true가 된다). 대기 없이 isVisible()을 보면 false로 읽혀
+// 폼을 비운 채 제출하게 되고, 검증 에러만 뜬 채 주문이 생성되지 않는다.
+const recipientInput = page.locator("#recipient");
+const hasNewAddressForm = await recipientInput
+  .waitFor({ state: "visible", timeout: 10000 })
+  .then(() => true)
+  .catch(() => false);
+
+if (hasNewAddressForm) {
   await recipientInput.fill("E2E 수령인");
-  await page.getByLabel("연락처").fill("01012345678");
-  await page.getByLabel("우편번호").fill("12345");
-  await page.getByLabel("주소", { exact: true }).fill("서울시 테스트구 테스트로 1");
+  await page.locator("#phone").fill("01012345678");
+  await page.locator("#zipcode").fill("12345");
+  await page.locator("#address1").fill("서울시 테스트구 테스트로 1");
 }
 
 const payButton = page.locator("button:visible", { hasText: "결제하기" });
@@ -384,9 +409,10 @@ if (!hiddenRowText.includes("숨김")) {
 }
 
 // 고객 검색에서 사라졌는지
-await page.goto("http://localhost:3000/search", { waitUntil: "domcontentloaded" });
-const searchBox6 = page.getByPlaceholder("브랜드, 상품 검색");
+await page.goto("http://localhost:3000/search", { waitUntil: "load" });
+const searchBox6 = page.getByRole("main").getByPlaceholder("브랜드, 상품 검색");
 await searchBox6.waitFor({ state: "visible", timeout: 10000 });
+await page.waitForTimeout(6000);
 await searchBox6.fill(PRODUCT_NAME);
 await searchBox6.press("Enter");
 
