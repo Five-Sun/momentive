@@ -12,32 +12,44 @@
 
 | 단계 | 내용 | 브랜치 | spec |
 |---|---|---|---|
-| 1 | 장바구니 미비움 + 배송비 문구 정정 | `fix/checkout-cart-and-shipping-notice` | 불필요(버그 수정) |
-| 2 | 관리자 기능 — 상품 CRUD · 검색 API · 재고 모델 · 배송상태/송장 · 쿠폰 발급 | `feat/admin-*` | `/grillme` 필수 |
+| ~~1~~ | ~~장바구니 미비움 + 배송비 문구 정정~~ | ~~`fix/checkout-cart-and-shipping-notice`~~ | 완료 (PR #17) |
+| 2 | 관리자 기반 + 상품 관리 (A) | `feat/admin-product-management` | `2026-09-04-admin-product-management` |
+| 2-B | 주문 배송상태/송장 · 쿠폰 발급 (B) | 미정 | `/grillme` 필요 |
 | 3 | 배송조회 | `feat/delivery-tracking` | `/grillme` |
 | 4 | 화면 품질 정리 | `feat/*` | 규모 보고 판단 |
 | 5 | 잔여 항목 | — | — |
 
-### 1단계 — 실 고객 영향 버그 (진행 예정)
+### 1단계 — 실 고객 영향 버그 (완료, PR #17 머지)
 
-지금 운영 중인 서비스에서 실제로 고객이 겪는 문제. 작고 독립적이라 spec 없이 바로 수정한다.
+- [x] **결제 성공 후 장바구니 비우기** — `checkout/success/page.tsx`가 `confirmOrder` 성공 후 장바구니를 전혀 건드리지 않아 결제를 마쳐도 상품이 남고 **중복 구매를 유발**했다. 부분결제를 지원하므로 전체를 비우지 않고, `getOrder`로 서버가 확정한 항목만 받아 키를 되돌려 제거한다. 키 포맷을 `cartKeyOf(productId, size)`로 추출하고 `removeCartItems`/`clearCheckoutSelection`을 추가했다. **confirm과 장바구니 정리를 분리**해, 정리 실패가 이미 확정된 결제를 실패 화면으로 보내지 않게 했다
+- [x] **배송비 안내 문구 정정** — `ProductDetailView.tsx`의 제주/도서산간 추가 배송비 3,000원 → 4,000원(`ShippingFeePolicy.java:12`, 고객센터 FAQ와 일치)
+- [x] `npm run build` / `npm run lint` 통과
+- [ ] **브라우저 검증 보류** — `/checkout/success`는 Toss confirm 성공해야 도달하는데 상점 미등록으로 실결제 경로를 탈 수 없다. **상점 등록이 끝나면 Toss 실연동 검증과 같은 세션에서** 부분결제 시 결제한 항목만 사라지는지까지 확인할 것. 상품상세 문구도 육안 확인 미실시(정적 상수 한 줄이라 위험은 낮음)
+- [ ] 참고(범위 밖): 상품상세 배송 안내에 기본 배송비 3,400원 / 7만원 이상 무료 문구가 없다. FAQ에는 있으므로 4단계에서 보완 가능
 
-- [ ] **결제 성공 후 장바구니 비우기** — `frontend/src/app/(shell)/checkout/success/page.tsx`가 `confirmOrder` 성공 후 장바구니를 건드리지 않는다. `removeFromCart` 호출부는 `cart/page.tsx:47`(X 버튼)이 유일. 결제를 마쳐도 상품이 장바구니에 남아 **중복 구매를 유발**한다. 주문에 포함된 항목만 제거해야 하며(부분결제 지원), `checkoutSelection`도 함께 정리한다
-- [ ] **배송비 안내 문구 정정** — `frontend/src/components/commerce/ProductDetailView.tsx:42`가 "제주/도서산간 추가 배송비 3,000원"인데 실제 정책은 4,000원(`backend/.../ShippingFeePolicy.java:12`, 고객센터 FAQ). 상품상세에서 3,000원으로 안내받고 결제창에서 4,000원이 붙는 상태. 배송비 정책 작업(PR #13) 때 이 문구가 누락됐다
-- [ ] `npm run build` / `npm run lint` 통과 확인
-- [ ] 브라우저로 결제 완료 → 장바구니 비었는지, 상품상세 문구 4,000원인지 확인
+### 2단계 — 관리자 기능 (spec/plan 확정, 구현 대기)
 
-### 2단계 — 관리자 기능 (`/grillme`부터)
+`docs/specs/2026-09-04-admin-product-management.md`(status: confirmed), `docs/plans/2026-09-04-admin-product-management.md`(status: planned). 브랜치 `feat/admin-product-management`.
 
-**착수 전 확인**: `chore/admin-login-seed` 브랜치가 이 머신에도 origin에도 없다(2026-09-03 확인). Mac에만 커밋된 채 남아있을 가능성이 크고 admin 로그인 + `V9__seed_admin_user.sql`을 포함한다 — 이번 작업과 정면으로 겹치므로 **Mac 상태를 먼저 확인하거나 버리고 새로 갈지 결정**한다. 살릴 경우 마이그레이션이 이미 `V12`까지 찼으므로 `V13`으로 재번호해야 한다.
+**그릴링 결과 범위를 2개로 쪼갰다.** 이번 spec(A)은 **관리자 기반 + 상품 관리**만 다루고, **주문 배송상태·송장과 쿠폰 발급은 후속 spec(B)**으로 분리했다. A가 B의 선행(인가 체계가 없으면 B도 못 만듦)이고, A만 끝나도 "신상품을 재배포 없이 등록한다"는 운영 병목이 실제로 풀리기 때문이다.
 
-그릴링에서 함께 다룰 범위(개별 spec으로 쪼갤지는 세션 중 판단):
+**그릴링에서 확인한 사실 3가지** — `Role.ADMIN`은 enum 값으로만 존재하고 참조 0건인 죽은 코드이며 ADMIN을 만들 경로가 없다 / JWT가 권한을 싣지 않고 `JwtAuthenticationFilter:38`이 `ROLE_USER`를 하드코딩해 인가를 바닥부터 세워야 한다 / `Product.stock`은 단일 정수라 사이즈 개념이 데이터에 아예 없다.
 
-- [ ] **상품 CRUD** — `ProductController`는 `GET` 2개뿐이고 상품 데이터는 `V2__seed_product.sql` 15개 시드가 전부. 실 운영 중인데 신상품 등록·재입고에 매번 마이그레이션 + 재배포가 필요하다. `User.role`의 `ADMIN` enum은 있으나 부여 경로도 검사 지점도 0건인 미사용 스캐폴딩
-- [ ] **상품 검색 API** — 현재 백엔드에 검색이 없다. 프론트가 100개를 받아 클라이언트에서 거르는 구조라, 상품 등록이 열리는 순간 바로 터진다(아래 점검 5번). 관리자 기능과 같은 범위에서 처리해야 한다
-- [ ] **재고 모델 결정** — 사이즈별 재고를 둘지 상품 단위로 둘지. 관리자 화면 설계 전에 정해야 데이터 모델을 두 번 갈아엎지 않는다(아래 점검 6번)
+**주요 결정** — `/admin`은 같은 Next.js 앱의 `(shell)` 밖 라우트 / JWT `role` 클레임 + `hasRole("ADMIN")` / `ProductVariant` 도입(사이즈 없는 상품도 `size = null` 단일 variant로 통일) / `soldOut`을 `status` enum으로 대체하고 품절은 재고 합에서 파생 / Cloudinary signed upload 최대 5장 / 검색은 `name` LIKE만 / 관리자 승격은 flyway placeholder + 환경변수 `MOMENTIVE_ADMIN_EMAIL`(**리포지토리가 public이라 실제 이메일을 커밋하지 않는다**)
+
+- [ ] Phase 1: 인가 기반 (JWT role 클레임, `hasRole`, `/auth/me`에 role, `V13` 승격 마이그레이션)
+- [ ] Phase 2: `ProductVariant` 도입 + 데이터 이관 + 재고/주문 로직 이전 — **이미 배포된 주문 데이터를 건드리는 유일한 구간이라 독립 phase로 격리.** `V14`~`V16`
+- [ ] Phase 3: 관리자 API (상품 CRUD, Cloudinary 서명, `GET /products`에 `q` 추가)
+- [ ] Phase 4: 관리자 화면 2개 + `/admin/layout.tsx` 접근 보호
+- [ ] Phase 5: 고객 화면 반영 (상품상세 variant 연동, `/search` 서버 검색 전환, `CartItem`에 `variantId`)
+- [ ] Phase 6: E2E 검증
+- [ ] **착수 전 필요**: Cloudinary 계정과 `CLOUD_NAME`/`API_KEY`/`API_SECRET` — 없으면 Phase 3의 서명 발급 검증과 Phase 4의 실업로드에서 막힌다
+- [ ] **`chore/admin-login-seed`는 폐기 결정.** Mac에만 있을 가능성이 큰 브랜치로, 이번 spec이 채택한 승격 방식(계정을 새로 만들지 않고 기존 계정의 role만 올림)과 방식이 다르고 마이그레이션 재번호 비용이 새로 쓰는 것보다 크다. Mac에서 발견하면 삭제할 것
+
+#### 후속 spec(B)로 분리된 항목
+
 - [ ] **주문 배송상태 · 송장 관리** — 3단계 배송조회의 선행 조건. `OrderStatus`는 현재 `PENDING/PAID/FAILED/CANCELLED` 4종뿐
-- [ ] **쿠폰 발급** — 현재 flyway 시드가 유일한 발급 경로. 관리자 발급이 생기면 아래 "쿠폰 AC 미검증"도 함께 해소된다
+- [ ] **쿠폰 발급 API** — 현재 flyway 시드가 유일한 발급 경로. 생기면 "쿠폰 AC 7개 미검증"도 함께 해소된다
 
 ### 3단계 — 배송조회
 
