@@ -22,7 +22,7 @@ status: confirmed
 
 ### In Scope
 
-- **관리자 인가 기반** — JWT에 `role` 클레임 추가, `JwtAuthenticationFilter`가 실제 권한 부여, `/admin/**`에 `hasRole("ADMIN")`, `/auth/me` 응답에 `role` 노출, 환경변수 기반 관리자 승격 마이그레이션
+- **관리자 인가 기반** — JWT에 `role` 클레임 추가, `JwtAuthenticationFilter`가 실제 권한 부여, `/admin/**`에 `hasRole("ADMIN")`, `/auth/me` 응답에 `role` 노출
 - **`ProductVariant` 도입** — 사이즈별 재고 모델 신설, 기존 상품 15개 이관, 재고 차감·복원 및 낙관적 락을 variant 기준으로 이전
 - **`Product` 판매 상태 모델** — `soldOut` boolean을 `status` enum(`ON_SALE`/`HIDDEN`/`DELETED`)으로 전환, 품절은 재고 합에서 파생 판정
 - **관리자 API** — 상품 CRUD(목록·상세·등록·수정·soft delete), Cloudinary 업로드 서명 발급
@@ -35,7 +35,8 @@ status: confirmed
 - **주문 배송상태·송장 관리** — 후속 spec(B)에서 다룬다. `OrderStatus`는 현행 4종(`PENDING`/`PAID`/`FAILED`/`CANCELLED`) 유지
 - **쿠폰 발급 API** — 후속 spec(B). 쿠폰은 계속 flyway 시드로만 정의된다
 - **재고 일괄 조정 화면** — 목록에서 여러 상품 재고를 표로 수정하는 화면. 상품이 수십 개로 늘어 실제로 불편해지면 별도 spec
-- **관리자 승격 API·권한 관리 화면** — 승격은 마이그레이션으로만. 공격 표면을 늘리지 않는다
+- **관리자 승격 API·권한 관리 화면** — 승격은 DB에서 수동으로만 한다. 공격 표면을 늘리지 않는다
+- **관리자 승격 자동화(마이그레이션·환경변수)** — 관리자가 1명이고 승격이 환경당 1회뿐이라, 마이그레이션 + flyway placeholder + 환경변수 + `.env` 로딩까지 얹는 비용이 얻는 것보다 컸다. 수동 `UPDATE` 한 줄로 대체한다
 - **비밀번호 변경 API** — 관리자 계정도 일반 회원가입 계정이므로 기존 제약을 그대로 따른다
 - **Cloudinary 고아 파일 정리** — 상품에서 이미지를 빼도 원본은 남긴다
 - **기존 `order_item`의 variant 소급 매핑** — 과거 주문의 `size` 문자열이 어느 variant인지 알 방법이 없다
@@ -46,14 +47,20 @@ status: confirmed
 
 ## 사용자 시나리오
 
-### A. 관리자 승격 (최초 1회)
+### A. 관리자 승격 (환경당 최초 1회, 수동)
 
 1. 운영자가 평소처럼 일반 회원가입으로 계정을 만든다
-2. 배포 환경에 환경변수 `MOMENTIVE_ADMIN_EMAIL`을 그 이메일로 설정한다
-3. 배포 시 flyway가 승격 마이그레이션을 실행해 해당 계정의 `role`을 `ADMIN`으로 올린다
-4. 다시 로그인하면(새 access token에 `role` 클레임이 실린다) `/admin` 접근이 가능해진다
-   - **예외**: 해당 이메일의 계정이 아직 없으면 마이그레이션은 조용히 no-op이다. 회원가입을 먼저 해야 한다
+2. 해당 환경의 DB에 직접 접속해 그 계정의 `role`을 한 번 올린다
+
+   ```sql
+   UPDATE users SET role = 'ADMIN' WHERE email = '<운영자 이메일>';
+   ```
+
+   로컬은 `docker exec -it backend-db-1 psql -U momentive -d momentive`, 배포 환경은 Railway DB 콘솔을 쓴다.
+
+3. 다시 로그인하면(새 access token에 `role` 클레임이 실린다) `/admin` 접근이 가능해진다
    - **예외**: 이미 로그인 상태라면 기존 access token에 `role`이 없어 최대 30분간 관리자로 인식되지 않는다. 로그아웃 후 재로그인하면 즉시 반영된다
+   - **주의**: 로컬 DB를 `docker compose down -v`로 갈아엎으면 승격도 함께 사라진다. 회원가입 후 위 `UPDATE`를 다시 실행해야 한다 — 이 프로젝트에서 DB 리셋이 잦다는 점을 감안한 의도적 트레이드오프다(자동화 비용보다 수동 한 줄이 싸다고 판단)
 
 ### B. 상품 등록
 
@@ -237,9 +244,10 @@ status: confirmed
 
 #### 마이그레이션 (현재 `V12`까지 사용됨)
 
+관리자 승격용 마이그레이션은 두지 않는다(시나리오 A 참고). `V13`은 결번으로 남긴다 — flyway는 번호 공백을 허용하며, 재번호는 이미 적용된 환경의 체크섬을 깨뜨린다.
+
 | 파일 | 내용 |
 |---|---|
-| `V13__promote_admin_user.sql` | `UPDATE users SET role = 'ADMIN' WHERE email = '${adminEmail}'`. 값은 flyway placeholder로 주입하며 **실제 이메일은 리포지토리에 남기지 않는다**(리포지토리가 public). `application.yml`의 `spring.flyway.placeholders.adminEmail`이 환경변수 `MOMENTIVE_ADMIN_EMAIL`을 참조 |
 | `V14__create_product_variant.sql` | `product_variant` 테이블 생성, 기존 상품 15개를 `size = null` 단일 variant로 이관하며 `product.stock` 값을 그대로 옮김. 이후 `product.stock` 제거 |
 | `V15__replace_product_sold_out_with_status.sql` | `product.status` 추가, `sold_out = TRUE`였던 행은 재고 0으로 이미 이관되었으므로 전부 `ON_SALE`로 두고 `sold_out` 제거 |
 | `V16__add_variant_id_to_order_item.sql` | `order_item.variant_id` nullable 추가 |
@@ -254,8 +262,8 @@ status: confirmed
 - [ ] 비로그인 상태로 `/admin/**` API를 호출하면 `401`이 반환된다
 - [ ] `GET /auth/me` 응답에 `role`이 포함된다
 - [ ] `ADMIN`이 아닌 계정으로 `/admin` 화면에 접근하면 홈으로 리다이렉트된다
-- [ ] `V13` 마이그레이션이 환경변수로 주입된 이메일의 계정을 `ADMIN`으로 승격하며, 해당 계정이 없으면 오류 없이 no-op이다
-- [ ] 마이그레이션 SQL 파일과 `application.yml` 어디에도 실제 이메일 문자열이 없다
+- [ ] DB에서 `role`을 `ADMIN`으로 바꾼 뒤 재로그인하면 `/admin` 접근과 `/admin/**` API 호출이 가능하다
+- [ ] 리포지토리 어디에도 실제 관리자 이메일 문자열이 없다
 
 ### 재고 모델
 

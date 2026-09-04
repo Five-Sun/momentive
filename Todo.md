@@ -35,9 +35,9 @@
 
 **그릴링에서 확인한 사실 3가지** — `Role.ADMIN`은 enum 값으로만 존재하고 참조 0건인 죽은 코드이며 ADMIN을 만들 경로가 없다 / JWT가 권한을 싣지 않고 `JwtAuthenticationFilter:38`이 `ROLE_USER`를 하드코딩해 인가를 바닥부터 세워야 한다 / `Product.stock`은 단일 정수라 사이즈 개념이 데이터에 아예 없다.
 
-**주요 결정** — `/admin`은 같은 Next.js 앱의 `(shell)` 밖 라우트 / JWT `role` 클레임 + `hasRole("ADMIN")` / `ProductVariant` 도입(사이즈 없는 상품도 `size = null` 단일 variant로 통일) / `soldOut`을 `status` enum으로 대체하고 품절은 재고 합에서 파생 / Cloudinary signed upload 최대 5장 / 검색은 `name` LIKE만 / 관리자 승격은 flyway placeholder + 환경변수 `MOMENTIVE_ADMIN_EMAIL`(**리포지토리가 public이라 실제 이메일을 커밋하지 않는다**)
+**주요 결정** — `/admin`은 같은 Next.js 앱의 `(shell)` 밖 라우트 / JWT `role` 클레임 + `hasRole("ADMIN")` / `ProductVariant` 도입(사이즈 없는 상품도 `size = null` 단일 variant로 통일) / `soldOut`을 `status` enum으로 대체하고 품절은 재고 합에서 파생 / Cloudinary signed upload 최대 5장 / 검색은 `name` LIKE만 / **관리자 승격은 DB 수동 `UPDATE` 1회**(자동화를 검토했으나 관리자가 1명·환경당 1회뿐이라 마이그레이션+환경변수+`.env` 비용이 더 컸다. 리포지토리가 public이라 이메일을 커밋하지 않는 목적도 함께 달성)
 
-- [ ] Phase 1: 인가 기반 (JWT role 클레임, `hasRole`, `/auth/me`에 role, `V13` 승격 마이그레이션)
+- [x] Phase 1: 인가 기반 (JWT role 클레임, `hasRole`, `/auth/me`에 role). 승격은 DB 수동 `UPDATE` — `docker exec -it backend-db-1 psql -U momentive -d momentive -c "UPDATE users SET role='ADMIN' WHERE email='<이메일>';"` 후 재로그인. **`docker compose down -v` 하면 다시 해야 한다**
 - [ ] Phase 2: `ProductVariant` 도입 + 데이터 이관 + 재고/주문 로직 이전 — **이미 배포된 주문 데이터를 건드리는 유일한 구간이라 독립 phase로 격리.** `V14`~`V16`
 - [ ] Phase 3: 관리자 API (상품 CRUD, Cloudinary 서명, `GET /products`에 `q` 추가)
 - [ ] Phase 4: 관리자 화면 2개 + `/admin/layout.tsx` 접근 보호

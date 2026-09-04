@@ -38,12 +38,11 @@ JWT에 실린 실제 권한으로 인가가 동작한다. 이 phase가 끝나면
 - [x] `SecurityConfig`(`backend/.../common/config/SecurityConfig.java`)에 `.requestMatchers("/admin/**").hasRole("ADMIN")`을 `anyRequest().authenticated()` 앞에 추가한다
 - [x] 403이 기존 `ErrorResponse` 포맷으로 나가도록 `AccessDeniedHandler` 구현체를 추가하고(`AuthEntryPoint`와 같은 패키지, `ErrorCode.FORBIDDEN` 사용) `exceptionHandling`에 등록한다 — `backend/CLAUDE.md`의 "401/403도 동일한 `ErrorResponse`로 직렬화" 컨벤션
 - [x] `UserResponse`(`backend/.../auth/dto/UserResponse.java`)에 `role` 필드를 추가해 `GET /auth/me` 응답에 노출한다(`@Schema` 포함)
-- [x] `V13__promote_admin_user.sql`을 추가한다 — `UPDATE users SET role = 'ADMIN' WHERE email = '${adminEmail}'`. 계정이 없으면 0행 갱신으로 조용히 no-op이어야 하며, 파일에 실제 이메일 문자열이 없어야 한다
-- [x] `application.yml`에 `spring.flyway.placeholders.adminEmail: ${MOMENTIVE_ADMIN_EMAIL:}`을 추가한다 — 환경변수 미설정 시에도 기동이 깨지지 않도록 기본값을 빈 문자열로 둔다. 파일에 실제 이메일이 없어야 한다
+- [x] ~~`V13__promote_admin_user.sql` + `application.yml`의 flyway placeholder로 관리자를 자동 승격한다~~ → **철회(2026-09-04).** 관리자가 1명이고 환경당 승격이 1회뿐이라, 마이그레이션 + placeholder + 환경변수 + `.env` 로딩까지 얹는 비용이 얻는 것보다 컸다. **DB 수동 `UPDATE` 1회**로 대체한다(절차는 spec 시나리오 A). `V13`은 결번으로 남긴다 — flyway는 번호 공백을 허용하며, 재번호는 이미 적용된 환경의 체크섬을 깨뜨린다
 - [x] 프론트 `AuthProvider`/`lib/api/auth.ts`의 사용자 타입에 `role: "USER" | "ADMIN"`을 추가해 `/auth/me` 응답을 그대로 받는다(화면 가드는 Phase 4)
 - [ ] 검증 — `./gradlew build`, `./gradlew test` 통과. 기존 인증 관련 테스트가 새 토큰 시그니처로 갱신되어 통과한다
 - [ ] 검증 — `npm run build`, `npm run lint` 통과 (`frontend/`)
-- [ ] 검증(수동, 로컬 DB + curl) — 로컬에서 회원가입 후 `MOMENTIVE_ADMIN_EMAIL`을 그 이메일로 두고 재기동해 flyway가 `V13`을 적용, `users.role`이 `ADMIN`으로 바뀌는지 확인. 존재하지 않는 이메일로도 마이그레이션이 오류 없이 지나가는지 확인. 재로그인 후 `GET /auth/me`에 `role`이 실려 오는지, 임시 `/admin` 엔드포인트에 대해 비로그인 401 / 일반 회원 403(`ErrorResponse` 포맷) / 관리자 200이 나오는지 확인
+- [ ] 검증(수동, 로컬 DB + curl) — 로컬에서 회원가입 후 `UPDATE users SET role = 'ADMIN' WHERE email = '...'`을 직접 실행해 승격한다. 재로그인 후 `GET /auth/me`에 `role`이 실려 오는지, `/admin/**` 엔드포인트에 대해 비로그인 401 / 일반 회원 403(`ErrorResponse` 포맷) / 관리자 200이 나오는지 확인
 
 ## Phase 2: `ProductVariant` 도입 및 재고·주문 로직 이전
 

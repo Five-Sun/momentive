@@ -1,4 +1,4 @@
----
+﻿---
 date: 2026-09-04
 feature: admin-product-management
 spec: 2026-09-04-admin-product-management.md
@@ -9,7 +9,7 @@ plan: 2026-09-04-admin-product-management.md
 
 관리자 등록 → 고객 검색 → 사이즈별 품절 확인 → 장바구니 → 주문 생성 → 판매 중단까지를 한 유저 플로우(한 탭)로 이어 검증한다. 이미지 업로드는 Cloudinary 자격증명이 없는 환경이므로 **이미지 0장**으로 등록한다(스펙 시나리오 B의 "이미지가 0장이어도 저장은 가능하다" 예외 경로가 곧 검증 대상이 된다).
 
-**스크립트 상단 상수 두 개는 실행 환경에 맞춰 확인이 필요하다.** `ADMIN_EMAIL`은 백엔드 기동 시 `MOMENTIVE_ADMIN_EMAIL`로 주입돼 `V13` 마이그레이션이 `role = 'ADMIN'`으로 승격한 계정의 이메일이어야 하고, `ADMIN_PASSWORD`는 그 계정의 비밀번호여야 한다. 이 값이 실제 로컬 DB의 관리자 계정과 다르면 시나리오 1이 "사전조건 미충족"으로 즉시 중단되며, 이는 코드 결함이 아니다.
+**스크립트 상단 상수 두 개는 실행 환경에 맞춰 확인이 필요하다.** `ADMIN_EMAIL`은 DB에서 `role`을 `ADMIN`으로 수동 승격한 계정의 이메일이어야 하고, `ADMIN_PASSWORD`는 그 계정의 비밀번호여야 한다. 이 값이 실제 로컬 DB의 관리자 계정과 다르면 시나리오 1이 "사전조건 미충족"으로 즉시 중단되며, 이는 코드 결함이 아니다.
 
 **뷰포트**: 스크립트 시작 시 1440x900(데스크톱)으로 고정한다. 상품상세·장바구니·체크아웃의 CTA는 데스크톱 폭에서 하단 고정 바(`lg:hidden`)가 숨겨지고 우측/본문 CTA만 남으므로, 같은 텍스트의 버튼이 DOM에 둘 존재한다. 그래서 CTA는 전부 `button:visible`로 좁혀 잡는다.
 
@@ -21,7 +21,7 @@ plan: 2026-09-04-admin-product-management.md
 
 스펙 사용자 시나리오 A-4("다시 로그인하면 `/admin` 접근이 가능해진다")와 수용 기준 "인가" 항목을 검증한다. `AdminGuard`(`frontend/src/app/admin/AdminGuard.tsx`)가 `user.role === "ADMIN"`일 때만 하위 화면을 렌더하므로, 관리자 목록 화면이 실제로 그려지는지로 판정한다.
 
-**사전조건**: `MOMENTIVE_ADMIN_EMAIL`로 승격된 관리자 계정이 로컬 DB에 존재하고, 그 이메일/비밀번호가 스크립트 상단 상수와 일치해야 한다. 백엔드가 `V13` 적용 이후 코드로 기동돼 있어야 한다(access token에 `role` 클레임이 실려야 함).
+**사전조건**: `UPDATE users SET role = 'ADMIN' WHERE email = '...'`으로 승격한 관리자 계정이 로컬 DB에 존재하고, 그 이메일/비밀번호가 스크립트 상단 상수와 일치해야 한다. 승격 이후 재로그인해야 access token에 `role` 클레임이 실린다.
 
 **판정 기준**: `/login`에서 관리자 계정으로 로그인해 `/mypage`로 이동한 뒤 `/admin`에 진입하면 "상품 관리" 제목과 "상품 등록" 버튼이 보이고, `AdminGuard`의 차단 문구 "관리자만 접근할 수 있는 화면이에요"가 보이지 않는다.
 
@@ -70,7 +70,7 @@ plan: 2026-09-04-admin-product-management.md
 ```javascript
 // ============================================================
 // 실행 환경에 맞춰 확인이 필요한 값
-//   ADMIN_EMAIL   : 백엔드 기동 시 MOMENTIVE_ADMIN_EMAIL로 주입돼 V13이 ADMIN으로 승격한 계정
+//   ADMIN_EMAIL   : DB에서 role을 ADMIN으로 수동 승격한 계정
 //   ADMIN_PASSWORD: 그 계정의 비밀번호
 // 값이 실제 로컬 DB의 관리자 계정과 다르면 시나리오 1에서 "사전조건 미충족"으로 중단된다.
 // ============================================================
@@ -121,7 +121,7 @@ await page.waitForURL("**/mypage", { timeout: 10000 }).catch(async () => {
   const path = await saveScreenshot(buf, "admin-product-management-scenario-1-login-failed");
   throw new Error(
     `시나리오 1 사전조건 미충족: 관리자 계정(${ADMIN_EMAIL}) 로그인에 실패했다. ` +
-      `MOMENTIVE_ADMIN_EMAIL로 승격된 계정과 비밀번호가 스크립트 상수와 일치하는지 확인이 필요하다 (스크린샷: ${path})`,
+      `ADMIN으로 승격한 계정과 비밀번호가 스크립트 상수와 일치하는지 확인이 필요하다 (스크린샷: ${path})`,
   );
 });
 
@@ -136,7 +136,7 @@ if (guardBlocked) {
   const path = await saveScreenshot(buf, "admin-product-management-scenario-1-guard-blocked");
   throw new Error(
     `시나리오 1 사전조건 미충족: 로그인은 됐으나 AdminGuard가 차단했다(role !== ADMIN). ` +
-      `V13 승격 적용 여부와 재로그인(access token의 role 클레임) 여부 확인이 필요하다 (스크린샷: ${path})`,
+      `role 수동 승격 여부와 재로그인(access token의 role 클레임) 여부 확인이 필요하다 (스크린샷: ${path})`,
   );
 }
 

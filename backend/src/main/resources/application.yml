@@ -9,11 +9,6 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
-  flyway:
-    placeholders:
-      # 관리자로 승격할 계정 이메일. 리포지토리가 public이라 실제 값은 남기지 않고 환경변수로만 주입한다.
-      # 미설정 시 빈 문자열이 되어 V13 마이그레이션이 0행 갱신(no-op)으로 지나간다.
-      adminEmail: ${MOMENTIVE_ADMIN_EMAIL:}
 
 server:
   port: 8081
