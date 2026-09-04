@@ -1,5 +1,6 @@
 package com.momentive.backend.common.config;
 
+import com.momentive.backend.auth.security.AuthAccessDeniedHandler;
 import com.momentive.backend.auth.security.AuthCookieProvider;
 import com.momentive.backend.auth.security.AuthEntryPoint;
 import com.momentive.backend.auth.security.JwtAuthenticationFilter;
@@ -23,6 +24,7 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthCookieProvider authCookieProvider;
     private final AuthEntryPoint authEntryPoint;
+    private final AuthAccessDeniedHandler authAccessDeniedHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -35,11 +37,14 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {})
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(handler -> handler.authenticationEntryPoint(authEntryPoint))
+                .exceptionHandling(handler -> handler
+                        .authenticationEntryPoint(authEntryPoint)
+                        .accessDeniedHandler(authAccessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/health", "/auth/signup", "/auth/login", "/auth/logout", "/auth/refresh").permitAll()
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, authCookieProvider),
                         UsernamePasswordAuthenticationFilter.class);

@@ -3,29 +3,56 @@ import { readJSON, writeJSON } from "./safeStorage";
 const KEY = "momentive:cart";
 
 export interface CartItem {
-  /** `${productId}-${size}` — 사이즈별로 별도 라인아이템을 구분하기 위한 키 */
+  /** `variant-${variantId}` — 재고 단위(사이즈)별로 라인아이템을 구분하기 위한 키 */
   key: string;
+  /** 상품 ID */
   id: number;
+  /** 재고 단위 ID. 주문 생성(`POST /orders`)이 이 값을 그대로 실어 보낸다 */
+  variantId: number;
   title: string;
-  size: string;
+  /** 표시용 사이즈 스냅샷. 사이즈가 없는 상품은 null */
+  size: string | null;
   unitPrice: number;
   qty: number;
 }
 
 /**
- * 라인아이템 키를 만드는 유일한 지점. 주문 응답(OrderItemResponse)처럼 장바구니 밖에서 온
- * 데이터로도 같은 키를 재구성할 수 있어야 하므로, 포맷을 여기 한 곳에만 둔다.
+ * 라인아이템 키를 만드는 유일한 지점. 재고 단위(variant)가 곧 라인아이템이므로 `variantId`
+ * 하나로 키가 결정된다. 포맷을 여기 한 곳에만 둔다.
  */
-export function cartKeyOf(productId: number, size: string | null): string {
-  return `${productId}-${size ?? ""}`;
+export function cartKeyOf(variantId: number): string {
+  return `variant-${variantId}`;
+}
+
+/**
+ * `variantId`가 없는 구 형식 항목을 걸러낸다. 그런 항목은 어느 재고 단위인지 알 수 없어
+ * 주문 생성 시 재고 검증이 불가능하므로, 유령 항목으로 남기지 않고 조용히 버린다.
+ */
+function isCartItem(value: unknown): value is CartItem {
+  if (typeof value !== "object" || value === null) return false;
+  const item = value as Record<string, unknown>;
+  return (
+    typeof item.key === "string" &&
+    typeof item.id === "number" &&
+    typeof item.variantId === "number" &&
+    typeof item.title === "string" &&
+    (typeof item.size === "string" || item.size === null) &&
+    typeof item.unitPrice === "number" &&
+    typeof item.qty === "number"
+  );
 }
 
 export function getCart(): CartItem[] {
-  return readJSON<CartItem[]>(KEY, []);
+  const raw = readJSON<unknown[]>(KEY, []);
+  if (!Array.isArray(raw)) return [];
+  const items = raw.filter(isCartItem);
+  // 버려진 항목이 있으면 저장소에도 반영해, 매번 다시 걸러내지 않도록 한다.
+  if (items.length !== raw.length) writeJSON(KEY, items);
+  return items;
 }
 
 export function addToCart(item: Omit<CartItem, "key" | "qty">, qty = 1): CartItem[] {
-  const key = cartKeyOf(item.id, item.size);
+  const key = cartKeyOf(item.variantId);
   const current = getCart();
   const existing = current.find((c) => c.key === key);
   const next = existing

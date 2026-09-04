@@ -35,4 +35,12 @@ public class ProductImage {
         this.url = url;
         this.displayOrder = displayOrder;
     }
+
+    /**
+     * 노출 순서만 갱신한다. 같은 URL이 그대로 남는 수정에서 행을 다시 만들지 않고
+     * 순서만 바꿔, 이미지 id가 수정 전후로 유지되게 하기 위한 진입점이다.
+     */
+    public void updateDisplayOrder(int displayOrder) {
+        this.displayOrder = displayOrder;
+    }
 }

@@ -91,7 +91,7 @@ public class AuthService {
     }
 
     private AuthResult issueAuthResult(User user) {
-        String accessToken = jwtTokenProvider.createAccessToken(user.getId());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getRole());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
         RefreshToken entity = RefreshToken.issue(

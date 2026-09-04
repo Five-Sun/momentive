@@ -153,8 +153,8 @@ export default function CheckoutPage() {
     try {
       const items: OrderItemRequest[] = selectedItems.map((item) => ({
         productId: item.id,
+        variantId: item.variantId,
         quantity: item.qty,
-        size: item.size || null,
       }));
 
       const userCouponId =
@@ -331,7 +331,7 @@ export default function CheckoutPage() {
                   <div className="flex flex-1 flex-col gap-1">
                     <span className="text-body-sm text-ink">{item.title}</span>
                     <span className="text-caption text-muted">
-                      사이즈 {item.size} · 수량 {item.qty}개
+                      {item.size ? `사이즈 ${item.size} · ` : ""}수량 {item.qty}개
                     </span>
                     <span className="text-body-sm text-ink">
                       {formatWon(item.unitPrice * item.qty)}

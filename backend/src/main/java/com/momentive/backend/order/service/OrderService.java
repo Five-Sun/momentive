@@ -22,7 +22,8 @@ import com.momentive.backend.order.repository.OrderRepository;
 import com.momentive.backend.order.scheduler.OrderExpirationScheduler;
 import com.momentive.backend.payment.service.OrderExpirationService;
 import com.momentive.backend.product.domain.Product;
-import com.momentive.backend.product.repository.ProductRepository;
+import com.momentive.backend.product.domain.ProductVariant;
+import com.momentive.backend.product.repository.ProductVariantRepository;
 import jakarta.persistence.OptimisticLockException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,7 +42,7 @@ public class OrderService {
     private static final int MAX_COUPON_RETRY = 2;
 
     private final OrderRepository orderRepository;
-    private final ProductRepository productRepository;
+    private final ProductVariantRepository productVariantRepository;
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
     private final UserCouponRepository userCouponRepository;
@@ -59,9 +60,10 @@ public class OrderService {
         Order order = Order.createPending(user, address, 0);
         int itemsSubtotal = 0;
         for (OrderItemRequest itemRequest : request.items()) {
-            Product product = deductStockWithRetry(itemRequest.productId(), itemRequest.quantity());
+            ProductVariant variant = deductStockWithRetry(itemRequest);
+            Product product = variant.getProduct();
             int unitPrice = product.getDiscountPrice() != null ? product.getDiscountPrice() : product.getPrice();
-            OrderItem item = OrderItem.create(order, product, itemRequest.quantity(), itemRequest.size(), unitPrice);
+            OrderItem item = OrderItem.create(order, product, variant, itemRequest.quantity(), unitPrice);
             order.addItem(item);
             itemsSubtotal += item.getSubtotal();
         }
@@ -130,16 +132,36 @@ public class OrderService {
     private void assertAllInStock(List<OrderItemRequest> items) {
         Map<String, String> outOfStock = new LinkedHashMap<>();
         for (OrderItemRequest itemRequest : items) {
-            Product product = productRepository.findById(itemRequest.productId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-            if (product.getStock() < itemRequest.quantity()) {
-                outOfStock.put(String.valueOf(product.getId()),
-                        product.getName() + "의 재고가 부족합니다. (재고 " + product.getStock() + "개)");
+            ProductVariant variant = findVariant(itemRequest);
+            if (!variant.hasEnoughStock(itemRequest.quantity())) {
+                // 같은 상품의 서로 다른 사이즈가 동시에 부족할 수 있으므로 키는 variantId로 둔다.
+                // (productId를 키로 쓰면 뒤 항목이 앞 항목의 안내 문구를 덮어써 정보가 사라진다.)
+                outOfStock.put(String.valueOf(variant.getId()), outOfStockMessage(variant));
             }
         }
         if (!outOfStock.isEmpty()) {
             throw new CustomException(ErrorCode.OUT_OF_STOCK, outOfStock);
         }
+    }
+
+    private String outOfStockMessage(ProductVariant variant) {
+        String name = variant.getProduct().getName();
+        String label = variant.getSize() == null ? name : name + "(" + variant.getSize() + ")";
+        return label + "의 재고가 부족합니다. (재고 " + variant.getStock() + "개)";
+    }
+
+    /**
+     * 요청의 variantId로 재고 단위를 찾는다. 없는 variant이거나 요청한 상품에 속하지 않는
+     * variant면 존재하지 않는 조합으로 보고 {@code PRODUCT_NOT_FOUND}로 거부한다
+     * (다른 상품의 variant를 섞어 보내면 차감 대상과 결제 단가가 어긋난다).
+     */
+    private ProductVariant findVariant(OrderItemRequest itemRequest) {
+        ProductVariant variant = productVariantRepository.findById(itemRequest.variantId())
+                .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+        if (!variant.belongsTo(itemRequest.productId())) {
+            throw new CustomException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+        return variant;
     }
 
     public List<OrderSummaryResponse> getOrders(Long userId) {
@@ -188,16 +210,17 @@ public class OrderService {
     /**
      * 재고 검증 후 차감을 낙관적 락 하에 최초 시도 + 최대 2회까지 재시도한다(총 최대 3회 시도).
      * 재고 부족은 재시도로 해결되지 않으므로 즉시 OUT_OF_STOCK으로 실패시킨다.
+     *
+     * <p>락 단위가 {@link ProductVariant}이므로 같은 상품이라도 사이즈가 다르면 서로 충돌하지 않는다.
      */
-    private Product deductStockWithRetry(Long productId, int quantity) {
+    private ProductVariant deductStockWithRetry(OrderItemRequest itemRequest) {
         int retryCount = 0;
         while (true) {
             try {
-                Product product = productRepository.findById(productId)
-                        .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-                product.deductStock(quantity);
-                productRepository.saveAndFlush(product);
-                return product;
+                ProductVariant variant = findVariant(itemRequest);
+                variant.deductStock(itemRequest.quantity());
+                productVariantRepository.saveAndFlush(variant);
+                return variant;
             } catch (ObjectOptimisticLockingFailureException | OptimisticLockException e) {
                 retryCount++;
                 if (retryCount > MAX_STOCK_RETRY) {

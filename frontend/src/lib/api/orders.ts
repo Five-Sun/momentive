@@ -5,8 +5,9 @@ export type OrderStatus = "PENDING" | "PAID" | "FAILED" | "CANCELLED";
 
 export interface OrderItemRequest {
   productId: number;
+  /** 재고 단위(사이즈) ID. 사이즈가 없는 상품도 단일 variant의 ID를 보낸다 (서버 `@NotNull`) */
+  variantId: number;
   quantity: number;
-  size: string | null;
 }
 
 export interface OrderItemResponse {

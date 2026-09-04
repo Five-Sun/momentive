@@ -30,6 +30,14 @@ export interface ProductImage {
   displayOrder: number;
 }
 
+/** 재고 단위. 사이즈가 없는 상품은 `size`가 null인 단일 항목으로 내려온다. */
+export interface ProductVariant {
+  variantId: number;
+  size: string | null;
+  stock: number;
+  soldOut: boolean;
+}
+
 export interface ProductDetail {
   id: number;
   name: string;
@@ -39,6 +47,7 @@ export interface ProductDetail {
   soldOut: boolean;
   category: Category;
   images: ProductImage[];
+  variants: ProductVariant[];
   averageRating: number | null;
   reviewCount: number;
 }
@@ -46,16 +55,19 @@ export interface ProductDetail {
 export interface GetProductsOptions {
   category?: Category;
   sort?: ProductSort;
+  /** 상품명 부분일치 검색어. 서버가 필터링하므로 클라이언트에서 다시 거르지 않는다. */
+  q?: string;
 }
 
 export async function getProducts(
   page = 0,
   size = 20,
-  { category, sort }: GetProductsOptions = {}
+  { category, sort, q }: GetProductsOptions = {}
 ): Promise<ProductListResponse> {
   const params = new URLSearchParams({ page: String(page), size: String(size) });
   if (category) params.set("category", category);
   if (sort) params.set("sort", sort);
+  if (q) params.set("q", q);
 
   const res = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
     cache: "no-store",

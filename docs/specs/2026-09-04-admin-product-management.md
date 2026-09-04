@@ -144,6 +144,7 @@ status: confirmed
 | `VARIANT_REQUIRED` | 400 | variant가 0개 |
 | `DUPLICATE_VARIANT_SIZE` | 400 | 한 상품 안에 같은 사이즈 이름 중복 |
 | `VARIANT_IN_USE` | 400 | 주문에 사용된 variant 삭제 시도 |
+| `VARIANT_NOT_FOUND` | 400 | 요청한 `variantId`가 해당 상품에 존재하지 않음 (구현 중 보강) |
 | `IMAGE_LIMIT_EXCEEDED` | 400 | 이미지 5장 초과 |
 
 #### 관리자 — 이미지 업로드 서명

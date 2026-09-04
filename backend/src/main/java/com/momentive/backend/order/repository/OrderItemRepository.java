@@ -11,4 +11,10 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
      * 해당 상품을 포함해 주문한 적이 있는지 확인한다. (리뷰 작성 자격 판단)
      */
     boolean existsByOrder_User_IdAndOrder_StatusAndProduct_Id(Long userId, OrderStatus status, Long productId);
+
+    /**
+     * 관리자 상품 수정 시 variant 삭제 가능 여부 판단용: 해당 variant가 주문에 사용된 적이 있는지 확인한다.
+     * 사용된 적이 있으면 행을 지울 수 없으므로 {@code VARIANT_IN_USE}로 거부한다.
+     */
+    boolean existsByVariant_Id(Long variantId);
 }

@@ -28,7 +28,12 @@ public enum ErrorCode {
     COUPON_ALREADY_REGISTERED(HttpStatus.BAD_REQUEST, "이미 등록한 쿠폰입니다."),
     USER_COUPON_NOT_FOUND(HttpStatus.BAD_REQUEST, "보유하지 않은 쿠폰입니다."),
     USER_COUPON_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "사용할 수 없는 쿠폰입니다."),
-    COUPON_MIN_ORDER_AMOUNT_NOT_MET(HttpStatus.BAD_REQUEST, "최소 주문금액을 충족하지 않는 쿠폰입니다.");
+    COUPON_MIN_ORDER_AMOUNT_NOT_MET(HttpStatus.BAD_REQUEST, "최소 주문금액을 충족하지 않는 쿠폰입니다."),
+    VARIANT_REQUIRED(HttpStatus.BAD_REQUEST, "사이즈·재고를 최소 1개 이상 입력해야 합니다."),
+    DUPLICATE_VARIANT_SIZE(HttpStatus.BAD_REQUEST, "같은 사이즈 이름을 중복해서 등록할 수 없습니다."),
+    VARIANT_IN_USE(HttpStatus.BAD_REQUEST, "이미 주문에 사용된 사이즈는 삭제할 수 없습니다. 재고를 0으로 두세요."),
+    VARIANT_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 상품에 존재하지 않는 사이즈입니다."),
+    IMAGE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "이미지는 최대 5장까지 등록할 수 있습니다.");
 
     private final HttpStatus status;
     private final String message;

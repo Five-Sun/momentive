@@ -6,7 +6,8 @@ import jakarta.validation.constraints.Positive;
 
 public record OrderItemRequest(
         @Schema(description = "상품 ID") @NotNull Long productId,
-        @Schema(description = "주문 수량") @NotNull @Positive Integer quantity,
-        @Schema(description = "옵션(사이즈)") String size
+        @Schema(description = "재고 단위(사이즈) ID. 사이즈가 없는 상품도 단일 variant의 ID를 보낸다")
+        @NotNull Long variantId,
+        @Schema(description = "주문 수량") @NotNull @Positive Integer quantity
 ) {
 }

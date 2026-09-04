@@ -4,9 +4,9 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/core/Button";
-import { confirmOrder, getOrder } from "@/lib/api/orders";
-import { cartKeyOf, removeCartItems } from "@/lib/storage/cart";
-import { clearCheckoutSelection } from "@/lib/storage/checkoutSelection";
+import { confirmOrder } from "@/lib/api/orders";
+import { removeCartItems } from "@/lib/storage/cart";
+import { clearCheckoutSelection, getCheckoutSelection } from "@/lib/storage/checkoutSelection";
 
 interface ConfirmedResult {
   orderId: number;
@@ -46,15 +46,12 @@ function CheckoutSuccessContent() {
       // 실패 화면으로 보내면 안 되므로 confirm과 분리해 처리한다.
       setResult({ orderId: numericOrderId });
 
-      try {
-        // 부분결제를 지원하므로 장바구니 전체를 비우지 않는다. 서버가 확정한 주문 항목만
-        // 키로 되돌려 제거해, 결제하지 않고 남겨둔 항목은 그대로 유지한다.
-        const order = await getOrder(numericOrderId);
-        removeCartItems(order.items.map((item) => cartKeyOf(item.productId, item.size)));
-      } catch (err) {
-        // 정리에 실패해도 주문 자체엔 영향이 없다. 원인 파악용으로 남기기만 한다.
-        console.error("결제 완료 후 장바구니 정리 실패", err);
-      }
+      // 부분결제를 지원하므로 장바구니 전체를 비우지 않는다. 결제 대상으로 선택했던 항목의
+      // 키만 걷어내, 결제하지 않고 남겨둔 항목은 그대로 유지한다.
+      // 주문 응답으로 키를 재구성하지 않는 이유: 장바구니 키가 `variantId` 기준으로 바뀌었는데
+      // 주문 응답(OrderItemResponse)에는 variantId가 없다. 선택 목록은 `/checkout`이 주문 생성에
+      // 사용한 것과 동일한 집합이므로 그대로 쓰는 것이 정확하고, 추가 조회도 필요 없다.
+      removeCartItems(getCheckoutSelection());
       clearCheckoutSelection();
     }
 
