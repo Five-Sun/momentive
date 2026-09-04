@@ -14,3 +14,8 @@ export function setCheckoutSelection(keys: string[]): void {
 export function getCheckoutSelection(): string[] {
   return readSessionJSON<string[]>(KEY, []);
 }
+
+/** 결제가 끝나 선택 목록이 더 이상 유효하지 않을 때 비운다. */
+export function clearCheckoutSelection(): void {
+  writeSessionJSON(KEY, []);
+}
