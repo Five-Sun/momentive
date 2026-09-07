@@ -12,7 +12,7 @@ import { Rating } from "@/components/commerce/Rating";
 import { ReviewCard } from "@/components/commerce/ReviewCard";
 import { ReviewForm, type ReviewFormValues } from "@/components/commerce/ReviewForm";
 import { SizeSelector } from "@/components/commerce/SizeSelector";
-import { getProduct, type ProductDetail } from "@/lib/api/products";
+import { getProduct, type ProductDetail, type ProductVariant } from "@/lib/api/products";
 import {
   createReview,
   deleteReview,
@@ -28,7 +28,8 @@ import { isWishlisted, toggleWishlist } from "@/lib/storage/wishlist";
 import { addToCart } from "@/lib/storage/cart";
 import { recordRecentlyViewed } from "@/lib/storage/recentlyViewed";
 
-const SIZES = ["S", "M", "L", "XL"];
+/** `size`가 실제로 있는 variant. 사이즈 선택 UI는 이 항목들만 대상으로 한다. */
+type SizedVariant = ProductVariant & { size: string };
 
 const SIZE_GUIDE: [string, string][] = [
   ["S", "3~5kg · 등길이 25cm"],
@@ -53,7 +54,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
   const router = useRouter();
   const { user } = useAuth();
   const [favorited, setFavorited] = useState(false);
-  const [size, setSize] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [openPanel, setOpenPanel] = useState<"guide" | "delivery" | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("장바구니에 담았어요");
@@ -174,13 +175,31 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
   const hasDiscount = !product.soldOut && product.discountPrice != null;
   const unitPrice = hasDiscount ? product.discountPrice! : product.price;
 
+  const sizedVariants = product.variants.filter(
+    (variant): variant is SizedVariant => variant.size !== null
+  );
+  // 사이즈가 있는 variant가 하나도 없으면(= `size = null` 단일 variant 상품) 사이즈 선택
+  // 영역과 사이즈 가이드 링크를 아예 렌더링하지 않는다.
+  const showSizeSelector = sizedVariants.length > 0;
+  const selectedVariant = showSizeSelector
+    ? (sizedVariants.find((variant) => variant.size === selectedSize) ?? null)
+    : (product.variants[0] ?? null);
+  const canAddToCart =
+    !product.soldOut && selectedVariant !== null && !selectedVariant.soldOut;
+
   function handleToggleWishlist() {
     setFavorited(toggleWishlist(product.id).includes(product.id));
   }
 
   function handleAddToCart() {
-    if (!size || product.soldOut) return;
-    addToCart({ id: product.id, title: product.name, size, unitPrice });
+    if (!canAddToCart || !selectedVariant) return;
+    addToCart({
+      id: product.id,
+      variantId: selectedVariant.variantId,
+      title: product.name,
+      size: selectedVariant.size,
+      unitPrice,
+    });
     showToast("장바구니에 담았어요");
   }
 
@@ -238,31 +257,42 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
 
           <div className="bg-hairline my-1.5 h-px" />
 
-          <div className="flex items-center justify-between">
-            <span className="text-title-sm text-ink">사이즈</span>
-            <button
-              onClick={() => setOpenPanel(openPanel === "guide" ? null : "guide")}
-              className="text-caption text-brand-pink-active underline"
-            >
-              사이즈 가이드
-            </button>
-          </div>
-          <div className={product.soldOut ? "pointer-events-none opacity-50" : undefined}>
-            <SizeSelector sizes={SIZES} selected={size ?? ""} onSelect={setSize} />
-          </div>
-          {openPanel === "guide" && (
-            <div className="bg-surface-soft rounded-sm flex flex-col gap-1.5 p-3.5">
-              <span className="text-caption text-ink font-bold">반려견 체형별 사이즈</span>
-              {SIZE_GUIDE.map(([s, d]) => (
-                <div key={s} className="text-body-sm text-body flex justify-between">
-                  <span>{s}</span>
-                  <span className="text-muted">{d}</span>
+          {showSizeSelector && (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-title-sm text-ink">사이즈</span>
+                <button
+                  onClick={() => setOpenPanel(openPanel === "guide" ? null : "guide")}
+                  className="text-caption text-brand-pink-active underline"
+                >
+                  사이즈 가이드
+                </button>
+              </div>
+              <div className={product.soldOut ? "pointer-events-none opacity-50" : undefined}>
+                <SizeSelector
+                  sizes={sizedVariants.map((variant) => variant.size)}
+                  selected={selectedSize ?? ""}
+                  disabledSizes={sizedVariants
+                    .filter((variant) => variant.soldOut)
+                    .map((variant) => variant.size)}
+                  onSelect={setSelectedSize}
+                />
+              </div>
+              {openPanel === "guide" && (
+                <div className="bg-surface-soft rounded-sm flex flex-col gap-1.5 p-3.5">
+                  <span className="text-caption text-ink font-bold">반려견 체형별 사이즈</span>
+                  {SIZE_GUIDE.map(([s, d]) => (
+                    <div key={s} className="text-body-sm text-body flex justify-between">
+                      <span>{s}</span>
+                      <span className="text-muted">{d}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+              )}
 
-          <div className="bg-hairline my-1.5 h-px" />
+              <div className="bg-hairline my-1.5 h-px" />
+            </>
+          )}
 
           <span className="text-title-sm text-ink">상품 설명</span>
           <p className="text-body text-ink m-0">{product.description}</p>
@@ -272,11 +302,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
               {favorited ? "위시 완료" : "위시 담기"}
             </Button>
             <div className="flex-1">
-              <Button
-                variant="primary"
-                disabled={!size || product.soldOut}
-                onClick={handleAddToCart}
-              >
+              <Button variant="primary" disabled={!canAddToCart} onClick={handleAddToCart}>
                 장바구니 담기
               </Button>
             </div>
@@ -380,11 +406,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
           {favorited ? "위시 완료" : "위시 담기"}
         </Button>
         <div className="flex-1">
-          <Button
-            variant="primary"
-            disabled={!size || product.soldOut}
-            onClick={handleAddToCart}
-          >
+          <Button variant="primary" disabled={!canAddToCart} onClick={handleAddToCart}>
             장바구니 담기
           </Button>
         </div>

@@ -159,7 +159,7 @@
 | `ProductImage` | `commerce/ProductImage.tsx` | 상품 이미지 플레이스홀더 렌더링 | 실제 상품 사진 미도입 구간의 공통 플레이스홀더 |
 | `ProductDetailView` | `commerce/ProductDetailView.tsx` | 상품상세 전체 뷰(이미지·정보·CTA·리뷰) | `/products/[id]`의 데스크톱 좌 이미지 sticky / 우 정보 2단 레이아웃 분기 지점 |
 | `Rating` | `commerce/Rating.tsx` | 별 아이콘 + 굵은 평점 + 흐린 리뷰 수, 인라인 컴팩트 | 실제 집계 평점만 사용. 하드코딩 평점을 넣지 않는다 |
-| `SizeSelector` | `commerce/SizeSelector.tsx` | 정사각형에 가까운 `rounded-[10px]`(radius-sm) 버튼, selected 시 ink 배경+2px 보더 | 상품상세 사이즈 선택 |
+| `SizeSelector` | `commerce/SizeSelector.tsx` | 정사각형에 가까운 `rounded-[10px]`(radius-sm) 버튼, selected 시 ink 배경+2px 보더. `disabledSizes`에 든 사이즈는 hairline-soft 보더 + surface-soft 배경 + muted-soft 취소선으로 비활성 표시 | 상품상세 사이즈 선택. 사이즈 목록은 상품의 실제 variant에서 오고, 재고 0인 사이즈를 `disabledSizes`로 넘긴다 |
 | `FilterSheet` | `commerce/FilterSheet.tsx` | 바텀시트형 정렬/필터 | `/search` 정렬 바텀시트. 데스크톱에서도 유지(삭제하지 않음) |
 | `ReviewCard` | `commerce/ReviewCard.tsx` | 리뷰 행, 선택적 사진 그리드 | 상품상세 리뷰 목록 |
 | `ReviewForm` | `commerce/ReviewForm.tsx` | 리뷰 작성/수정 폼 | 리뷰 작성·수정 플로우 |

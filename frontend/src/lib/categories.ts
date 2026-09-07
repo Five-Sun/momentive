@@ -9,6 +9,10 @@ export const CATEGORY_LIST: { key: Category; label: string; description: string 
 
 export const CATEGORY_KEYS = CATEGORY_LIST.map((c) => c.key);
 
+export const CATEGORY_LABEL = Object.fromEntries(
+  CATEGORY_LIST.map((c) => [c.key, c.label]),
+) as Record<Category, string>;
+
 export function isCategory(value: string | null): value is Category {
   return value != null && (CATEGORY_KEYS as string[]).includes(value);
 }

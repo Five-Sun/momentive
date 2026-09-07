@@ -3,6 +3,7 @@ package com.momentive.backend.auth;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.momentive.backend.auth.domain.Role;
 import com.momentive.backend.auth.dto.AuthResult;
 import com.momentive.backend.auth.dto.LoginRequest;
 import com.momentive.backend.auth.dto.SignupRequest;
@@ -143,5 +144,6 @@ class AuthServiceTest {
 
         assertThat(response.email()).isEqualTo("me@momentive.com");
         assertThat(response.nickname()).isEqualTo("몽이");
+        assertThat(response.role()).isEqualTo(Role.USER);
     }
 }

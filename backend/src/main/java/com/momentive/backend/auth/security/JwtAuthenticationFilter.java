@@ -32,10 +32,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         Optional<String> accessToken = authCookieProvider.getAccessToken(request);
-        accessToken.flatMap(jwtTokenProvider::parseAccessTokenSubject)
-                .ifPresent(userId -> {
+        accessToken.flatMap(jwtTokenProvider::parseAccessToken)
+                .ifPresent(payload -> {
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userId, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+                            payload.userId(), null,
+                            List.of(new SimpleGrantedAuthority("ROLE_" + payload.role().name())));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 });
         filterChain.doFilter(request, response);

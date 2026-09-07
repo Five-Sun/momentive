@@ -109,8 +109,13 @@ class OrderCouponServiceTest {
         return userRepository.save(User.createUser(email, "hash", "몽이"));
     }
 
+    /**
+     * 사이즈가 없는 상품은 {@code size = null}인 단일 variant로 표현한다.
+     */
     private Product createProduct(String name, int price, int stock) {
-        return productRepository.save(new Product(name, "desc", price, null, false, Category.ACCESSORY, stock));
+        Product product = new Product(name, "desc", price, null, Category.ACCESSORY);
+        product.addVariant(null, stock);
+        return productRepository.save(product);
     }
 
     private AddressRequest newAddressRequest() {
@@ -126,9 +131,10 @@ class OrderCouponServiceTest {
         return userCouponRepository.save(UserCoupon.register(user, coupon));
     }
 
-    private OrderCreateRequest requestWithCoupon(Long productId, int quantity, Long userCouponId) {
+    private OrderCreateRequest requestWithCoupon(Product product, int quantity, Long userCouponId) {
         return new OrderCreateRequest(
-                List.of(new OrderItemRequest(productId, quantity, null)), null, newAddressRequest(), userCouponId);
+                List.of(new OrderItemRequest(product.getId(), product.getVariants().get(0).getId(), quantity)),
+                null, newAddressRequest(), userCouponId);
     }
 
     @Test
@@ -139,7 +145,7 @@ class OrderCouponServiceTest {
         UserCoupon userCoupon = registerCoupon(user, coupon);
 
         OrderResponse response = orderService.createOrder(user.getId(),
-                requestWithCoupon(product.getId(), 2, userCoupon.getId()));
+                requestWithCoupon(product, 2, userCoupon.getId()));
 
         assertThat(response.itemsSubtotal()).isEqualTo(20000);
         assertThat(response.discountAmount()).isEqualTo(3000);
@@ -160,7 +166,7 @@ class OrderCouponServiceTest {
         UserCoupon userCoupon = registerCoupon(user, coupon);
 
         OrderResponse response = orderService.createOrder(user.getId(),
-                requestWithCoupon(product.getId(), 1, userCoupon.getId()));
+                requestWithCoupon(product, 1, userCoupon.getId()));
 
         assertThat(response.itemsSubtotal()).isEqualTo(100000);
         assertThat(response.discountAmount()).isEqualTo(10000);
@@ -174,7 +180,7 @@ class OrderCouponServiceTest {
         UserCoupon userCoupon = registerCoupon(user, coupon);
 
         OrderResponse response = orderService.createOrder(user.getId(),
-                requestWithCoupon(product.getId(), 1, userCoupon.getId()));
+                requestWithCoupon(product, 1, userCoupon.getId()));
 
         assertThat(response.itemsSubtotal()).isEqualTo(2000);
         assertThat(response.discountAmount()).isEqualTo(2000);
@@ -189,7 +195,7 @@ class OrderCouponServiceTest {
         UserCoupon userCoupon = registerCoupon(user, coupon);
 
         OrderResponse response = orderService.createOrder(user.getId(),
-                requestWithCoupon(product.getId(), 1, userCoupon.getId()));
+                requestWithCoupon(product, 1, userCoupon.getId()));
 
         // 상품금액이 70,000원(무료배송 임계값)이므로 쿠폰 적용 후 60,000원이 되어도 배송비는 0이어야 한다.
         assertThat(response.itemsSubtotal()).isEqualTo(70000);
@@ -207,7 +213,7 @@ class OrderCouponServiceTest {
         UserCoupon userCoupon = registerCoupon(owner, coupon);
 
         assertThatThrownBy(() -> orderService.createOrder(other.getId(),
-                requestWithCoupon(product.getId(), 1, userCoupon.getId())))
+                requestWithCoupon(product, 1, userCoupon.getId())))
                 .isInstanceOf(CustomException.class)
                 .extracting(ex -> ((CustomException) ex).getErrorCode())
                 .isEqualTo(ErrorCode.USER_COUPON_NOT_FOUND);
@@ -219,10 +225,10 @@ class OrderCouponServiceTest {
         Product product = createProduct("사료", 10000, 5);
         Coupon coupon = createCoupon("ALREADYUSED", DiscountType.FIXED, 1000, null, 0);
         UserCoupon userCoupon = registerCoupon(user, coupon);
-        orderService.createOrder(user.getId(), requestWithCoupon(product.getId(), 1, userCoupon.getId()));
+        orderService.createOrder(user.getId(), requestWithCoupon(product, 1, userCoupon.getId()));
 
         assertThatThrownBy(() -> orderService.createOrder(user.getId(),
-                requestWithCoupon(product.getId(), 1, userCoupon.getId())))
+                requestWithCoupon(product, 1, userCoupon.getId())))
                 .isInstanceOf(CustomException.class)
                 .extracting(ex -> ((CustomException) ex).getErrorCode())
                 .isEqualTo(ErrorCode.USER_COUPON_NOT_AVAILABLE);
@@ -241,7 +247,7 @@ class OrderCouponServiceTest {
         });
 
         assertThatThrownBy(() -> orderService.createOrder(user.getId(),
-                requestWithCoupon(product.getId(), 1, userCoupon.getId())))
+                requestWithCoupon(product, 1, userCoupon.getId())))
                 .isInstanceOf(CustomException.class)
                 .extracting(ex -> ((CustomException) ex).getErrorCode())
                 .isEqualTo(ErrorCode.USER_COUPON_NOT_AVAILABLE);
@@ -255,7 +261,7 @@ class OrderCouponServiceTest {
         UserCoupon userCoupon = registerCoupon(user, coupon);
 
         assertThatThrownBy(() -> orderService.createOrder(user.getId(),
-                requestWithCoupon(product.getId(), 1, userCoupon.getId())))
+                requestWithCoupon(product, 1, userCoupon.getId())))
                 .isInstanceOf(CustomException.class)
                 .extracting(ex -> ((CustomException) ex).getErrorCode())
                 .isEqualTo(ErrorCode.COUPON_MIN_ORDER_AMOUNT_NOT_MET);
@@ -268,7 +274,7 @@ class OrderCouponServiceTest {
         Coupon coupon = createCoupon("RESTOREFAIL", DiscountType.FIXED, 1000, null, 0);
         UserCoupon userCoupon = registerCoupon(user, coupon);
         OrderResponse pending = orderService.createOrder(user.getId(),
-                requestWithCoupon(product.getId(), 1, userCoupon.getId()));
+                requestWithCoupon(product, 1, userCoupon.getId()));
         fakePaymentGatewayClient.forceFailure(true);
 
         assertThatThrownBy(() -> paymentService.confirmOrder(user.getId(), pending.orderId(),
@@ -287,7 +293,7 @@ class OrderCouponServiceTest {
         Coupon coupon = createCoupon("RESTOREEXPIRE", DiscountType.FIXED, 1000, null, 0);
         UserCoupon userCoupon = registerCoupon(user, coupon);
         OrderResponse pending = orderService.createOrder(user.getId(),
-                requestWithCoupon(product.getId(), 1, userCoupon.getId()));
+                requestWithCoupon(product, 1, userCoupon.getId()));
 
         transactionTemplate.executeWithoutResult(status -> {
             Order order = orderRepository.findById(pending.orderId()).orElseThrow();
@@ -311,7 +317,7 @@ class OrderCouponServiceTest {
         Coupon coupon = createCoupon("RESTORECANCEL", DiscountType.FIXED, 1000, null, 0);
         UserCoupon userCoupon = registerCoupon(user, coupon);
         OrderResponse pending = orderService.createOrder(user.getId(),
-                requestWithCoupon(product.getId(), 1, userCoupon.getId()));
+                requestWithCoupon(product, 1, userCoupon.getId()));
         paymentService.confirmOrder(user.getId(), pending.orderId(),
                 new OrderConfirmRequest("payKey", "toss-order", pending.totalAmount()));
 
@@ -327,9 +333,7 @@ class OrderCouponServiceTest {
         User user = createUser("coupon-no-coupon@momentive.com");
         Product product = createProduct("사료", 10000, 5);
 
-        OrderResponse response = orderService.createOrder(user.getId(),
-                new OrderCreateRequest(List.of(new OrderItemRequest(product.getId(), 1, null)), null,
-                        newAddressRequest(), null));
+        OrderResponse response = orderService.createOrder(user.getId(), requestWithCoupon(product, 1, null));
 
         assertThat(response.discountAmount()).isEqualTo(0);
         assertThat(response.couponName()).isNull();

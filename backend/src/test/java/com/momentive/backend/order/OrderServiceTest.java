@@ -19,7 +19,9 @@ import com.momentive.backend.order.repository.OrderRepository;
 import com.momentive.backend.order.service.OrderService;
 import com.momentive.backend.product.domain.Category;
 import com.momentive.backend.product.domain.Product;
+import com.momentive.backend.product.domain.ProductVariant;
 import com.momentive.backend.product.repository.ProductRepository;
+import com.momentive.backend.product.repository.ProductVariantRepository;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -43,6 +45,9 @@ class OrderServiceTest {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
 
     @Autowired
     private AddressRepository addressRepository;
@@ -81,8 +86,25 @@ class OrderServiceTest {
         return userRepository.save(User.createUser(email, "hash", "몽이"));
     }
 
+    /**
+     * 사이즈가 없는 상품은 {@code size = null}인 단일 variant로 표현한다.
+     */
     private Product createProduct(String name, int price, int stock) {
-        return productRepository.save(new Product(name, "desc", price, null, false, Category.ACCESSORY, stock));
+        Product product = new Product(name, "desc", price, null, Category.ACCESSORY);
+        product.addVariant(null, stock);
+        return productRepository.save(product);
+    }
+
+    private Long variantIdOf(Product product) {
+        return product.getVariants().get(0).getId();
+    }
+
+    private int stockOf(Long variantId) {
+        return productVariantRepository.findById(variantId).orElseThrow().getStock();
+    }
+
+    private OrderItemRequest itemRequest(Product product, int quantity) {
+        return new OrderItemRequest(product.getId(), variantIdOf(product), quantity);
     }
 
     private AddressRequest newAddressRequest() {
@@ -95,7 +117,7 @@ class OrderServiceTest {
         Product product = createProduct("사료", 10000, 5);
 
         OrderCreateRequest request = new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 2, "M")),
+                List.of(itemRequest(product, 2)),
                 null,
                 newAddressRequest(),
                 null
@@ -110,8 +132,7 @@ class OrderServiceTest {
         assertThat(response.items()).hasSize(1);
         assertThat(response.address().isDefault()).isTrue();
 
-        Product reloaded = productRepository.findById(product.getId()).orElseThrow();
-        assertThat(reloaded.getStock()).isEqualTo(3);
+        assertThat(stockOf(variantIdOf(product))).isEqualTo(3);
     }
 
     @Test
@@ -120,7 +141,7 @@ class OrderServiceTest {
         Product product = createProduct("사료", 70000, 5);
 
         OrderCreateRequest request = new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 1, null)),
+                List.of(itemRequest(product, 1)),
                 null,
                 newAddressRequest(),
                 null
@@ -141,7 +162,7 @@ class OrderServiceTest {
         AddressRequest jejuAddress =
                 new AddressRequest("몽이", "010-1111-2222", "63000", "제주시", "101호", true);
         OrderCreateRequest request = new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 1, null)),
+                List.of(itemRequest(product, 1)),
                 null,
                 jejuAddress,
                 null
@@ -160,7 +181,7 @@ class OrderServiceTest {
         Product product = createProduct("사료", 10000, 1);
 
         OrderCreateRequest request = new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 2, null)),
+                List.of(itemRequest(product, 2)),
                 null,
                 newAddressRequest(),
                 null
@@ -171,8 +192,7 @@ class OrderServiceTest {
                 .extracting(ex -> ((CustomException) ex).getErrorCode())
                 .isEqualTo(ErrorCode.OUT_OF_STOCK);
 
-        Product reloaded = productRepository.findById(product.getId()).orElseThrow();
-        assertThat(reloaded.getStock()).isEqualTo(1);
+        assertThat(stockOf(variantIdOf(product))).isEqualTo(1);
         assertThat(orderRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId())).isEmpty();
     }
 
@@ -181,12 +201,12 @@ class OrderServiceTest {
         User user = createUser("order3@momentive.com");
         Product product = createProduct("사료", 10000, 5);
         Long addressId = orderService.createOrder(user.getId(), new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest(), null
+                List.of(itemRequest(product, 1)), null, newAddressRequest(), null
         )).address().id();
 
         Product product2 = createProduct("간식", 5000, 5);
         OrderResponse response = orderService.createOrder(user.getId(), new OrderCreateRequest(
-                List.of(new OrderItemRequest(product2.getId(), 1, null)), addressId, null, null
+                List.of(itemRequest(product2, 1)), addressId, null, null
         ));
 
         assertThat(response.address().id()).isEqualTo(addressId);
@@ -198,7 +218,7 @@ class OrderServiceTest {
         Product product = createProduct("사료", 10000, 5);
 
         OrderCreateRequest request = new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 1, null)), null, null, null
+                List.of(itemRequest(product, 1)), null, null, null
         );
 
         assertThatThrownBy(() -> orderService.createOrder(user.getId(), request))
@@ -214,7 +234,7 @@ class OrderServiceTest {
         Product product = createProduct("사료", 10000, 5);
 
         OrderResponse order = orderService.createOrder(owner.getId(), new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest(), null
+                List.of(itemRequest(product, 1)), null, newAddressRequest(), null
         ));
 
         assertThatThrownBy(() -> orderService.getOrder(other.getId(), order.orderId()))
@@ -234,11 +254,58 @@ class OrderServiceTest {
     }
 
     @Test
-    void concurrent_orders_on_same_product_only_one_succeeds() throws InterruptedException {
+    void concurrent_orders_on_same_variant_only_one_succeeds() throws InterruptedException {
         User userA = createUser("concurrentA@momentive.com");
         User userB = createUser("concurrentB@momentive.com");
         Product product = createProduct("한정판 사료", 10000, 1);
 
+        OrderCreateRequest request = new OrderCreateRequest(
+                List.of(itemRequest(product, 1)), null, newAddressRequest(), null);
+        ConcurrentResult result = runConcurrently(
+                () -> orderService.createOrder(userA.getId(), request),
+                () -> orderService.createOrder(userB.getId(), request));
+
+        assertThat(result.successCount()).isEqualTo(1);
+        assertThat(result.failureCount()).isEqualTo(1);
+        assertThat(stockOf(variantIdOf(product))).isEqualTo(0);
+    }
+
+    /**
+     * 재고 락 단위가 Product에서 ProductVariant로 옮겨진 결과, 같은 상품이라도 사이즈가 다르면
+     * 서로 다른 행을 갱신하므로 낙관적 락 충돌이 발생하지 않아야 한다(spec 수용 기준 "재고 모델").
+     */
+    @Test
+    void concurrent_orders_on_different_variants_of_same_product_both_succeed() throws InterruptedException {
+        User userA = createUser("variantA@momentive.com");
+        User userB = createUser("variantB@momentive.com");
+
+        Product product = new Product("겨울 패딩", "desc", 10000, null, Category.OUTER);
+        ProductVariant small = product.addVariant("S", 1);
+        ProductVariant medium = product.addVariant("M", 1);
+        productRepository.save(product);
+
+        OrderCreateRequest smallRequest = new OrderCreateRequest(
+                List.of(new OrderItemRequest(product.getId(), small.getId(), 1)), null, newAddressRequest(), null);
+        OrderCreateRequest mediumRequest = new OrderCreateRequest(
+                List.of(new OrderItemRequest(product.getId(), medium.getId(), 1)), null, newAddressRequest(), null);
+
+        ConcurrentResult result = runConcurrently(
+                () -> orderService.createOrder(userA.getId(), smallRequest),
+                () -> orderService.createOrder(userB.getId(), mediumRequest));
+
+        assertThat(result.successCount()).isEqualTo(2);
+        assertThat(result.failureCount()).isEqualTo(0);
+        assertThat(stockOf(small.getId())).isEqualTo(0);
+        assertThat(stockOf(medium.getId())).isEqualTo(0);
+    }
+
+    private record ConcurrentResult(int successCount, int failureCount) {
+    }
+
+    /**
+     * 두 주문을 같은 순간에 시작시켜(startLatch) 성공/실패 건수를 센다.
+     */
+    private ConcurrentResult runConcurrently(Runnable first, Runnable second) throws InterruptedException {
         int threadCount = 2;
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         CountDownLatch readyLatch = new CountDownLatch(threadCount);
@@ -246,44 +313,26 @@ class OrderServiceTest {
         AtomicInteger successCount = new AtomicInteger();
         AtomicInteger failureCount = new AtomicInteger();
 
-        Runnable task = () -> {
-            try {
-                readyLatch.countDown();
-                startLatch.await();
-                orderService.createOrder(userA.getId(), new OrderCreateRequest(
-                        List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest(), null));
-                successCount.incrementAndGet();
-            } catch (CustomException e) {
-                failureCount.incrementAndGet();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        };
-
-        executor.submit(task);
-        executor.submit(() -> {
-            try {
-                readyLatch.countDown();
-                startLatch.await();
-                orderService.createOrder(userB.getId(), new OrderCreateRequest(
-                        List.of(new OrderItemRequest(product.getId(), 1, null)), null, newAddressRequest(), null));
-                successCount.incrementAndGet();
-            } catch (CustomException e) {
-                failureCount.incrementAndGet();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
+        for (Runnable order : List.of(first, second)) {
+            executor.submit(() -> {
+                try {
+                    readyLatch.countDown();
+                    startLatch.await();
+                    order.run();
+                    successCount.incrementAndGet();
+                } catch (CustomException e) {
+                    failureCount.incrementAndGet();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            });
+        }
 
         readyLatch.await();
         startLatch.countDown();
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
 
-        assertThat(successCount.get()).isEqualTo(1);
-        assertThat(failureCount.get()).isEqualTo(1);
-
-        Product reloaded = productRepository.findById(product.getId()).orElseThrow();
-        assertThat(reloaded.getStock()).isEqualTo(0);
+        return new ConcurrentResult(successCount.get(), failureCount.get());
     }
 }

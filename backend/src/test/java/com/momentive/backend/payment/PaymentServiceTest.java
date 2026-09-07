@@ -25,6 +25,7 @@ import com.momentive.backend.payment.service.PaymentService;
 import com.momentive.backend.product.domain.Category;
 import com.momentive.backend.product.domain.Product;
 import com.momentive.backend.product.repository.ProductRepository;
+import com.momentive.backend.product.repository.ProductVariantRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -58,6 +59,9 @@ class PaymentServiceTest {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
 
     @Autowired
     private AddressRepository addressRepository;
@@ -103,8 +107,21 @@ class PaymentServiceTest {
         return userRepository.save(User.createUser(email, "hash", "몽이"));
     }
 
+    /**
+     * 사이즈가 없는 상품은 {@code size = null}인 단일 variant로 표현한다.
+     */
     private Product createProduct(String name, int price, int stock) {
-        return productRepository.save(new Product(name, "desc", price, null, false, Category.ACCESSORY, stock));
+        Product product = new Product(name, "desc", price, null, Category.ACCESSORY);
+        product.addVariant(null, stock);
+        return productRepository.save(product);
+    }
+
+    private Long variantIdOf(Product product) {
+        return product.getVariants().get(0).getId();
+    }
+
+    private int stockOf(Product product) {
+        return productVariantRepository.findById(variantIdOf(product)).orElseThrow().getStock();
     }
 
     private AddressRequest newAddressRequest() {
@@ -113,7 +130,8 @@ class PaymentServiceTest {
 
     private OrderResponse createPendingOrder(User user, Product product, int quantity) {
         return orderService.createOrder(user.getId(), new OrderCreateRequest(
-                List.of(new OrderItemRequest(product.getId(), quantity, null)), null, newAddressRequest(), null));
+                List.of(new OrderItemRequest(product.getId(), variantIdOf(product), quantity)),
+                null, newAddressRequest(), null));
     }
 
     @Test
@@ -132,8 +150,7 @@ class PaymentServiceTest {
         assertThat(reloaded.getTossPaymentKey()).isEqualTo("payKey-1");
 
         // 결제 성공 시 재고는 이미 주문 생성 시점에 선점됐으므로 추가로 복원되지 않아야 한다.
-        Product reloadedProduct = productRepository.findById(product.getId()).orElseThrow();
-        assertThat(reloadedProduct.getStock()).isEqualTo(3);
+        assertThat(stockOf(product)).isEqualTo(3);
     }
 
     @Test
@@ -152,8 +169,7 @@ class PaymentServiceTest {
         Order reloaded = orderRepository.findById(pending.orderId()).orElseThrow();
         assertThat(reloaded.getStatus()).isEqualTo(OrderStatus.FAILED);
 
-        Product reloadedProduct = productRepository.findById(product.getId()).orElseThrow();
-        assertThat(reloadedProduct.getStock()).isEqualTo(5);
+        assertThat(stockOf(product)).isEqualTo(5);
     }
 
     @Test
@@ -184,8 +200,32 @@ class PaymentServiceTest {
 
         assertThat(response.status()).isEqualTo(OrderStatus.CANCELLED);
 
-        Product reloadedProduct = productRepository.findById(product.getId()).orElseThrow();
-        assertThat(reloadedProduct.getStock()).isEqualTo(5);
+        assertThat(stockOf(product)).isEqualTo(5);
+    }
+
+    /**
+     * variant 도입(V16) 이전에 생성된 주문 행은 {@code variant_id}가 NULL이다.
+     * 복원 대상에서 건너뛰어야 하며, NPE로 취소 자체가 깨져선 안 된다.
+     */
+    @Test
+    void cancelOrder_skips_stock_restore_for_legacy_items_without_variant() {
+        User user = createUser("cancel-legacy@momentive.com");
+        Product product = createProduct("사료", 10000, 5);
+        OrderResponse pending = createPendingOrder(user, product, 2);
+        paymentService.confirmOrder(user.getId(), pending.orderId(),
+                new OrderConfirmRequest("payKey-legacy", "toss-order-legacy", pending.totalAmount()));
+
+        // 구 주문 행(variant_id = NULL)을 재현한다.
+        transactionTemplate.executeWithoutResult(status -> {
+            Order order = orderRepository.findById(pending.orderId()).orElseThrow();
+            order.getItems().forEach(item -> ReflectionTestUtils.setField(item, "variant", null));
+        });
+
+        OrderStatusResponse response = paymentService.cancelOrder(user.getId(), pending.orderId());
+
+        assertThat(response.status()).isEqualTo(OrderStatus.CANCELLED);
+        // 매핑할 variant가 없으므로 재고는 복원되지 않고 차감된 상태로 남는다.
+        assertThat(stockOf(product)).isEqualTo(3);
     }
 
     @Test
@@ -217,7 +257,6 @@ class PaymentServiceTest {
         Order reloaded = orderRepository.findById(pending.orderId()).orElseThrow();
         assertThat(reloaded.getStatus()).isEqualTo(OrderStatus.FAILED);
 
-        Product reloadedProduct = productRepository.findById(product.getId()).orElseThrow();
-        assertThat(reloadedProduct.getStock()).isEqualTo(5);
+        assertThat(stockOf(product)).isEqualTo(5);
     }
 }

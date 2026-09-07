@@ -6,8 +6,8 @@ import com.momentive.backend.coupon.domain.UserCoupon;
 import com.momentive.backend.order.domain.Order;
 import com.momentive.backend.order.domain.OrderItem;
 import com.momentive.backend.order.repository.OrderRepository;
-import com.momentive.backend.product.domain.Product;
-import com.momentive.backend.product.repository.ProductRepository;
+import com.momentive.backend.product.domain.ProductVariant;
+import com.momentive.backend.product.repository.ProductVariantRepository;
 import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -28,7 +28,7 @@ class OrderPaymentTransactionSupport {
     private static final int MAX_STOCK_RETRY = 2;
 
     private final OrderRepository orderRepository;
-    private final ProductRepository productRepository;
+    private final ProductVariantRepository productVariantRepository;
 
     @Transactional
     Order assertPendingAndOwned(Long userId, Long orderId, Integer amount) {
@@ -88,21 +88,27 @@ class OrderPaymentTransactionSupport {
 
     private void restoreStockWithRetry(Order order) {
         for (OrderItem item : order.getItems()) {
-            restoreStockWithRetry(item.getProduct().getId(), item.getQuantity());
+            ProductVariant variant = item.getVariant();
+            // variant 도입(V16) 이전에 생성된 주문 행은 매핑할 variant가 없다(소급 매핑은 spec Out of Scope).
+            // 어차피 이미 종결된 과거 주문이므로 복원 대상에서 건너뛴다.
+            if (variant == null) {
+                continue;
+            }
+            restoreStockWithRetry(variant.getId(), item.getQuantity());
         }
     }
 
     /**
      * 재고 원복도 @Version 낙관적 락 대상이므로 차감과 동일한 재시도 정책(최초 시도 + 최대 2회)을 적용한다.
      */
-    private void restoreStockWithRetry(Long productId, int quantity) {
+    private void restoreStockWithRetry(Long variantId, int quantity) {
         int retryCount = 0;
         while (true) {
             try {
-                Product product = productRepository.findById(productId)
+                ProductVariant variant = productVariantRepository.findById(variantId)
                         .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-                product.restoreStock(quantity);
-                productRepository.saveAndFlush(product);
+                variant.restoreStock(quantity);
+                productVariantRepository.saveAndFlush(variant);
                 return;
             } catch (ObjectOptimisticLockingFailureException | OptimisticLockException e) {
                 retryCount++;

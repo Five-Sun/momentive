@@ -82,7 +82,9 @@ class ReviewServiceTest {
     }
 
     private Product createProduct(String name) {
-        return productRepository.save(new Product(name, "desc", 10000, null, false, Category.ACCESSORY, 10));
+        Product product = new Product(name, "desc", 10000, null, Category.ACCESSORY);
+        product.addVariant(null, 10);
+        return productRepository.save(product);
     }
 
     /**
@@ -91,7 +93,7 @@ class ReviewServiceTest {
     private void createPaidOrder(User user, Product product) {
         Address address = addressRepository.save(Address.create(user, "몽이", "010-1111-2222", "12345", "서울시 강남구", null, true));
         Order order = Order.createPending(user, address, product.getPrice());
-        order.addItem(OrderItem.create(order, product, 1, null, product.getPrice()));
+        order.addItem(OrderItem.create(order, product, product.getVariants().get(0), 1, product.getPrice()));
         order.markAsPaid("payment-key");
         orderRepository.save(order);
     }

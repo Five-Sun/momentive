@@ -121,7 +121,12 @@ export default function StyleGuidePage() {
       </Section>
 
       <Section title="SizeSelector">
-        <SizeSelector sizes={["XS", "S", "M", "L", "XL"]} selected={size} onSelect={setSize} />
+        <SizeSelector
+          sizes={["XS", "S", "M", "L", "XL"]}
+          selected={size}
+          disabledSizes={["XL"]}
+          onSelect={setSize}
+        />
       </Section>
 
       <Section title="ProductCard">

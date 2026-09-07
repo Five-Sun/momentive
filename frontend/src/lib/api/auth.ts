@@ -1,9 +1,12 @@
 import { apiFetch } from "./client";
 
+export type UserRole = "USER" | "ADMIN";
+
 export interface AuthUser {
   id: number;
   email: string;
   nickname: string;
+  role: UserRole;
 }
 
 export interface SignupRequest {

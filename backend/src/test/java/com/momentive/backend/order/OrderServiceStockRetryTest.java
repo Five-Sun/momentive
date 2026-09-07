@@ -22,7 +22,8 @@ import com.momentive.backend.order.service.OrderService;
 import com.momentive.backend.payment.service.OrderExpirationService;
 import com.momentive.backend.product.domain.Category;
 import com.momentive.backend.product.domain.Product;
-import com.momentive.backend.product.repository.ProductRepository;
+import com.momentive.backend.product.domain.ProductVariant;
+import com.momentive.backend.product.repository.ProductVariantRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,7 +44,7 @@ class OrderServiceStockRetryTest {
     @Mock
     private OrderRepository orderRepository;
     @Mock
-    private ProductRepository productRepository;
+    private ProductVariantRepository productVariantRepository;
     @Mock
     private AddressRepository addressRepository;
     @Mock
@@ -60,10 +61,11 @@ class OrderServiceStockRetryTest {
     private User user;
     private Address address;
     private Product product;
+    private ProductVariant variant;
 
     private void setUp() {
         orderService = new OrderService(
-                orderRepository, productRepository, addressRepository, userRepository, userCouponRepository,
+                orderRepository, productVariantRepository, addressRepository, userRepository, userCouponRepository,
                 addressService, orderExpirationService);
 
         user = User.createUser("retry@momentive.com", "hash", "재시도");
@@ -72,25 +74,27 @@ class OrderServiceStockRetryTest {
         address = Address.create(user, "재시도", "010-0000-0000", "12345", "서울시", null, true);
         ReflectionTestUtils.setField(address, "id", 10L);
 
-        product = new Product("사료", "desc", 10000, null, false, Category.ACCESSORY, 5);
+        product = new Product("사료", "desc", 10000, null, Category.ACCESSORY);
         ReflectionTestUtils.setField(product, "id", 100L);
+        variant = product.addVariant(null, 5);
+        ReflectionTestUtils.setField(variant, "id", 200L);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(addressRepository.findById(10L)).thenReturn(Optional.of(address));
-        when(productRepository.findById(100L)).thenReturn(Optional.of(product));
+        when(productVariantRepository.findById(200L)).thenReturn(Optional.of(variant));
     }
 
     private OrderCreateRequest newRequest() {
-        return new OrderCreateRequest(java.util.List.of(new OrderItemRequest(100L, 1, null)), 10L, null, null);
+        return new OrderCreateRequest(java.util.List.of(new OrderItemRequest(100L, 200L, 1)), 10L, null, null);
     }
 
     @Test
     void succeeds_on_third_attempt_after_two_optimistic_lock_failures() {
         setUp();
-        doThrow(new ObjectOptimisticLockingFailureException(Product.class, 100L))
-                .doThrow(new ObjectOptimisticLockingFailureException(Product.class, 100L))
+        doThrow(new ObjectOptimisticLockingFailureException(ProductVariant.class, 200L))
+                .doThrow(new ObjectOptimisticLockingFailureException(ProductVariant.class, 200L))
                 .doAnswer(invocation -> invocation.getArgument(0))
-                .when(productRepository).saveAndFlush(any());
+                .when(productVariantRepository).saveAndFlush(any());
 
         OrderResponse response = orderService.createOrder(1L, newRequest());
 
@@ -100,14 +104,15 @@ class OrderServiceStockRetryTest {
     @Test
     void fails_with_stock_conflict_after_exhausting_initial_attempt_plus_two_retries() {
         setUp();
-        doThrow(new ObjectOptimisticLockingFailureException(Product.class, 100L))
-                .when(productRepository).saveAndFlush(any());
+        doThrow(new ObjectOptimisticLockingFailureException(ProductVariant.class, 200L))
+                .when(productVariantRepository).saveAndFlush(any());
 
         assertThatThrownBy(() -> orderService.createOrder(1L, newRequest()))
                 .isInstanceOf(CustomException.class)
                 .extracting(ex -> ((CustomException) ex).getErrorCode())
                 .isEqualTo(ErrorCode.STOCK_CONFLICT);
 
-        org.mockito.Mockito.verify(productRepository, org.mockito.Mockito.times(3)).saveAndFlush(any());
+        // 최초 1회 + 재시도 2회 = 총 3회 시도 (docs/backlog/2026-08-29-cart-order-payment-phase1-01.md)
+        org.mockito.Mockito.verify(productVariantRepository, org.mockito.Mockito.times(3)).saveAndFlush(any());
     }
 }

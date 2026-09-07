@@ -148,7 +148,9 @@ export default function CartPage() {
                           <X className="h-4 w-4" />
                         </button>
                       </div>
-                      <span className="text-caption text-muted">사이즈 {item.size}</span>
+                      {item.size && (
+                        <span className="text-caption text-muted">사이즈 {item.size}</span>
+                      )}
                       <div className="flex items-center justify-between">
                         <div className="border-hairline flex items-center gap-3 rounded-full border px-2 py-1">
                           <button
