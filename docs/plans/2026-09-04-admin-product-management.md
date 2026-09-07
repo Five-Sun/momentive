@@ -63,7 +63,7 @@ JWT에 실린 실제 권한으로 인가가 동작한다. 이 phase가 끝나면
 - [x] 서로 다른 사이즈를 동시에 주문해도 낙관적 락 충돌이 발생하지 않음을 검증하는 테스트를 추가한다(같은 상품의 서로 다른 variant 두 개를 동시 주문 → 둘 다 성공)
 - [x] 검증 — `./gradlew build`, `./gradlew test` 통과
 - [x] 검증(수동, 로컬 DB) — 마이그레이션 적용 후 `product_variant` 행 수가 기존 상품 수와 같고, 각 행의 `stock`이 이관 전 `product.stock`과 일치하는지 SQL로 대조한다(이관 전 값을 미리 조회해 기록해둘 것). `product` 테이블에 `stock`/`sold_out` 컬럼이 없고 `status`가 전부 `ON_SALE`인지 확인
-- [ ] 검증(수동, 로컬 DB) — **마이그레이션 후 기존 `order_item` 행의 `size` 문자열이 변경·유실 없이 그대로 남아 있는지** SQL로 확인한다(`variant_id`는 전부 `NULL`이어야 정상)
+- [x] 검증(수동, 로컬 DB) — **마이그레이션 후 기존 `order_item` 행의 `size` 문자열이 변경·유실 없이 그대로 남아 있는지** SQL로 확인한다(`variant_id`는 전부 `NULL`이어야 정상). 2026-09-07: 로컬에 실제 마이그레이션 이전 주문이 없어, 정상 주문 생성 후 `variant_id`만 수동으로 `NULL`로 갱신해 동일한 모양을 재현 — `size` 값 보존, `variant_id NULL` 확인(검증 후 테스트 데이터 삭제)
 - [ ] 검증(수동, 브라우저) — 마이그레이션 이전에 생성된 기존 주문의 `/mypage/orders`, `/mypage/orders/[orderId]` 화면이 상품명·사이즈·금액까지 정상 표시되는지 눈으로 확인한다. 신규 주문 1건을 `variantId`로 생성해 재고가 해당 variant에서만 차감되는지, 주문 취소/만료 시 같은 variant로 복원되는지 확인
 
 ## Phase 3: 관리자 상품 API 및 상품 검색

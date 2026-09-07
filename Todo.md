@@ -29,7 +29,7 @@
 
 ### 2단계 — 관리자 기능 (구현 완료, E2E 통과 — PR 대기)
 
-`docs/specs/2026-09-04-admin-product-management.md`(status: confirmed, AC 31/35), `docs/plans/2026-09-04-admin-product-management.md`(status: done). 브랜치 `feat/admin-product-management`.
+`docs/specs/2026-09-04-admin-product-management.md`(status: confirmed, AC 35/35 — 2026-09-07 나머지 4건 재검증 완료), `docs/plans/2026-09-04-admin-product-management.md`(status: done). 브랜치 `feat/admin-product-management`.
 
 **그릴링 결과 범위를 2개로 쪼갰다.** 이번 spec(A)은 **관리자 기반 + 상품 관리**만 다루고, **주문 배송상태·송장과 쿠폰 발급은 후속 spec(B)**으로 분리했다. A가 B의 선행(인가 체계가 없으면 B도 못 만듦)이고, A만 끝나도 "신상품을 재배포 없이 등록한다"는 운영 병목이 실제로 풀리기 때문이다.
 
@@ -45,8 +45,8 @@
 - [x] Phase 6: E2E 검증 — `docs/e2e/2026-09-04-admin-product-management.md` **시나리오 6개 전부 PASS**
 - [x] `./gradlew build test` 122 tests 실패 0, `npm run build`/`lint` 통과 (리뷰어가 셸 도구 없이 못 돌려 직접 재실행함)
 - [x] **`chore/admin-login-seed` 폐기 결정.** 이번 spec의 승격 방식(계정을 새로 만들지 않고 기존 계정의 role만 올림)과 다르고 마이그레이션 재번호 비용이 새로 쓰는 것보다 크다. Mac에서 발견하면 삭제할 것
-- [ ] **Cloudinary 자격증명 미확보** — `CLOUD_NAME`/`API_KEY`/`API_SECRET`. 서명 생성 로직·secret 비노출은 정적 확인했고 미설정 상태에서도 기동·테스트가 정상이다. **계정 확보 후 실업로드 1회 확인 필요**
-- [ ] **운영 배포 직후 최우선 확인** — 기존 `order_item.size` 보존과 마이그레이션 이전 주문의 상세 화면 표시. 로컬은 DB를 여러 번 재생성해 이전 주문이 없어 실증하지 못했다. `V16`에 `size` `UPDATE`가 없다는 점만 정적 확인된 상태이고, **실패하면 기존 고객의 주문 이력 표시가 깨진다**
+- [x] **Cloudinary 자격증명 확보 및 실업로드 검증 완료(2026-09-07)** — 계정 가입 후 `CLOUD_NAME`/`API_KEY`/`API_SECRET` 확보, `POST /admin/images/signature` → 실제 Cloudinary 업로드까지 end-to-end 성공 확인(`secure_url` 반환, secret 미노출). 검증용 업로드 파일은 삭제
+- [x] **`order_item.size` 보존 / 주문 상세 표시 검증(2026-09-07, 시뮬레이션)** — 로컬에 실제 마이그레이션 이전 주문이 없어, 정상 주문 생성 후 `variant_id`만 수동으로 `NULL`로 갱신해 동일한 모양(size 보존, variant_id 없음)을 재현. API·마이페이지 목록/상세 화면 모두 정상 표시 확인(검증 후 테스트 데이터 삭제). **단, 시뮬레이션이라 운영 배포 직후 실제 과거 주문이 있다면 한 번 더 눈으로 확인 권장**
 
 #### 구현 중 발견한 별건 (별도 처리 필요)
 
@@ -133,7 +133,7 @@
 
 - [ ] **Toss 결제위젯 실연동** — 클라이언트 키가 결제위젯 API(`widget-groups/keys`)에서 401. Toss 개발자센터에 계정만 만들고 상점(스토어) 등록(사업자 정보 필요)을 하지 않은 것이 원인으로 추정. 사업자 등록 확인 후 재검증 필요. 상세: `docs/backlog/2026-08-30-cart-order-payment-phase4-01.md`. **사용자 측 외부 조치 대기 중** — 상점 등록이 끝나면 위젯 렌더링~confirm 성공~`PAID` 취소까지 마무리 검증
 - [ ] **쿠폰 spec AC 7개 미검증** — `docs/specs/2026-09-01-coupon-system.md`가 `status: confirmed`로 남아 있다(13/20 체크). 미체크분은 백엔드 테스트로만 커버되거나(복원 3경로, 할인액 초과, 서버 재검증) 환경 제약(Toss confirm, V11 이전 주문 재현 불가)이다. **만료 쿠폰 시드가 없어 이 영역이 계속 회귀 검증 사각지대**로 남는 것이 핵심 문제 — 2단계 관리자 발급 API가 생기면 함께 해소
-- [ ] **`chore/admin-login-seed` 브랜치 행방** — 이 머신에도 origin에도 없다(2026-09-03 확인). admin 로그인 + `V9__seed_admin_user.sql` 포함. Mac에 커밋만 되고 푸시 안 된 상태로 추정. 2단계 착수 전 확인 필요, 살릴 경우 `V13`으로 재번호
+- [x] **`chore/admin-login-seed` 브랜치 행방 — 조사 불필요로 결론** — 2단계(admin-product-management) Phase 1에서 이 브랜치의 접근(마이그레이션 기반 자동 승격)과 다른 방식(DB 수동 `UPDATE` 1회)으로 확정하며 폐기 결정함. 되살려 쓸 일이 없어 행방을 더 찾을 필요가 없어졌다. Mac에 남아 있다면 발견 시 삭제만 하면 됨
 
 ### 반복적으로 발목을 잡은 환경 이슈 (참고)
 
