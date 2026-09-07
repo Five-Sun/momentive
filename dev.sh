@@ -221,6 +221,15 @@ echo "[1/3] DB(docker compose) 기동..."
 (cd "$BACKEND_DIR" && docker compose up -d)
 
 echo "[2/3] 백엔드(Spring Boot) 기동... (로그: $BACKEND_LOG)"
+if [ ! -f "$BACKEND_DIR/.env" ] && [ -f "$BACKEND_DIR/.env.example" ]; then
+  cp "$BACKEND_DIR/.env.example" "$BACKEND_DIR/.env"
+fi
+if [ -f "$BACKEND_DIR/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$BACKEND_DIR/.env"
+  set +a
+fi
 (cd "$BACKEND_DIR" && $GRADLE_CMD bootRun --console=plain) > "$BACKEND_LOG" 2>&1 &
 
 echo "  백엔드 준비 대기 중 (http://localhost:$BACKEND_PORT/health)..."
