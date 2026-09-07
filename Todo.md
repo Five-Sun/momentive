@@ -14,7 +14,7 @@
 |---|---|---|---|
 | ~~1~~ | ~~장바구니 미비움 + 배송비 문구 정정~~ | ~~`fix/checkout-cart-and-shipping-notice`~~ | 완료 (PR #17) |
 | 2 | 관리자 기반 + 상품 관리 (A) | `feat/admin-product-management` | `2026-09-04-admin-product-management` |
-| 2-B | 주문 배송상태·송장 관리 (쿠폰 발급은 범위 제외) | 미정 | `/grillme` 진행 중 |
+| 2-B | 주문 배송상태·송장 관리 (쿠폰 발급은 범위 제외) | `feat/order-shipping-management` | `2026-09-07-order-shipping-management` |
 | 3 | 배송조회 | `feat/delivery-tracking` | `/grillme` |
 | 4 | 화면 품질 정리 | `feat/*` | 규모 보고 판단 |
 | 5 | 잔여 항목 | — | — |
@@ -27,7 +27,7 @@
 - [ ] **브라우저 검증 보류** — `/checkout/success`는 Toss confirm 성공해야 도달하는데 상점 미등록으로 실결제 경로를 탈 수 없다. **상점 등록이 끝나면 Toss 실연동 검증과 같은 세션에서** 부분결제 시 결제한 항목만 사라지는지까지 확인할 것. 상품상세 문구도 육안 확인 미실시(정적 상수 한 줄이라 위험은 낮음)
 - [ ] 참고(범위 밖): 상품상세 배송 안내에 기본 배송비 3,400원 / 7만원 이상 무료 문구가 없다. FAQ에는 있으므로 4단계에서 보완 가능
 
-### 2단계 — 관리자 기능 (구현 완료, E2E 통과 — [PR #18](https://github.com/Five-Sun/momentive/pull/18) 오픈)
+### 2단계 — 관리자 기능 (완료, [PR #18](https://github.com/Five-Sun/momentive/pull/18) `develop` 머지)
 
 `docs/specs/2026-09-04-admin-product-management.md`(status: confirmed, AC 35/35 — 2026-09-07 나머지 4건 재검증 완료), `docs/plans/2026-09-04-admin-product-management.md`(status: done). 브랜치 `feat/admin-product-management`.
 
@@ -54,30 +54,20 @@
 
 #### 후속 spec(B)로 분리된 항목
 
-- [ ] **주문 배송상태 · 송장 관리** — 3단계 배송조회의 선행 조건. `OrderStatus`는 현재 `PENDING/PAID/FAILED/CANCELLED` 4종뿐. **그릴링 진행 중 (아래 2-B단계 참고)**
+- [ ] **주문 배송상태 · 송장 관리** — 3단계 배송조회의 선행 조건. **spec 확정 + plan 작성 완료, 구현 착수 전 (아래 2-B단계 참고)**
 - [ ] **쿠폰 발급 API** — 2026-09-07 그릴링에서 범위 제외 결정. 관리자 도메인이 갓 생긴 시점에 미리 만들 필요가 없다고 판단(운영하며 실제로 필요해지면 별도 세션에서 재검토). 현재 flyway 시드가 유일한 발급 경로이며, 생기면 "쿠폰 AC 7개 미검증"도 함께 해소된다
 
-### 2-B단계 — 주문 배송상태·송장 관리 (그릴링 진행 중, 2026-09-07)
+### 2-B단계 — 주문 배송상태·송장 관리 (spec 확정 + plan 작성 완료, 2026-09-07)
 
-`/grillme` 세션 진행 중. 스펙 파일은 아직 작성 전(사용자 확정 전까지 미작성 원칙). 아래는 지금까지 확정된 설계와 남은 질문 요약.
+`docs/specs/2026-09-07-order-shipping-management.md`(status: confirmed, AC 17개), `docs/plans/2026-09-07-order-shipping-management.md`(status: planned, 5 Phase·34 step). 브랜치 `feat/order-shipping-management`(`develop` 최신 — PR #18 머지 이후 기준으로 분기).
 
-**범위 조정** — 원래 2단계 그릴링 결과 "주문 배송상태/송장 + 쿠폰 발급"이 하나의 후속 spec(B)로 묶여 있었으나, 쿠폰 발급은 이번 라운드에서 완전히 제외하고 배송상태·송장 관리만 별도 spec으로 진행하기로 함(위 "쿠폰 발급 API" 항목 참고).
+**범위 조정** — 원래 2단계 그릴링 결과 "주문 배송상태/송장 + 쿠폰 발급"이 하나의 후속 spec(B)로 묶여 있었으나, 쿠폰 발급은 완전히 범위 제외하고 배송상태·송장 관리만 별도 spec으로 확정했다(위 "쿠폰 발급 API" 항목 참고).
 
-**확정된 사항 (Round 1~2)**
-- `shippingStatus`: "배송준비중 → 배송중 → 배송완료" 3단계, `Order` 엔티티에 새 필드로 직접 추가(별도 `Shipping` 엔티티 아님), 기존 `OrderStatus`와 독립
-- 송장 정보는 택배사명 + 송장번호 수동 텍스트 입력만. 실제 택배사 API 연동 없음
-- 상태 변경은 관리자 수동 조작만. 자동/스케줄 전환 없음
-- 주문이 `PAID`로 전환되는 순간 `shippingStatus`가 "배송준비중"으로 자동 초기화
-- 관리자 주문 목록/상세 화면 신설(첫 관리자용 전체 주문 조회) — 페이지네이션 + 상태 필터(기본 `PAID`만, 전체보기 옵션). 날짜 범위·이메일 검색은 이번 범위 제외
-- 고객용 `mypage/orders/[orderId]` 상세 화면에 배송상태 뱃지 + 송장번호를 이번 spec에서 함께 노출(3단계 "배송조회"는 별도의 실시간 조회 경험으로 남겨둠)
-- 배송상태 변경에 대한 알림(이메일/푸시) 없음 — 관련 인프라 자체가 아직 없음
+**주요 결정** — `shippingStatus`(배송준비중/배송중/배송완료)는 `Order` 엔티티에 새 필드로 직접 추가(별도 엔티티 아님) / 송장은 택배사명(드롭다운+기타)+송장번호 수동 텍스트 입력만, 실제 택배사 API 연동 없음 / 상태 변경은 관리자 수동만, 순서 제약 없이 자유 전환(되돌리기 허용) / `PAID` 전환 시 `shippingStatus` 자동 "배송준비중" 초기화 / "배송중"·"배송완료" 전환 시 택배사·송장번호 필수 / 관리자가 고객 주문을 대신 취소 가능(기존 `PaymentService.cancelOrder`/`OrderPaymentTransactionSupport` 로직 재사용, 소유자 검증만 우회) / 배송상태 관리 대상은 `PAID` 주문만(목록에는 전체 노출, 액션만 제한) / 관리자 주문 목록/상세 화면 신설(페이지네이션+상태필터, 기본 `PAID`만) / 고객 `mypage/orders/[orderId]`에 배송상태 뱃지+송장번호 노출 / 알림(이메일/푸시) 없음
 
-**Round 3 질문 (사용자 답변 대기 중)**
-1. 택배사명 입력: 드롭다운(+기타) vs 자유텍스트
-2. "배송중" 전환 시 송장번호 입력 필수 여부
-3. 배송상태 되돌리기(역방향 전환) 허용 여부
-4. 관리자가 고객 주문을 대신 취소/환불할 수 있게 할지 (관리자 주문 화면이 이번에 처음 생기므로 새로 검토)
-5. 배송상태 관리 대상 주문 범위(`PAID`만 vs 전체 노출 후 액션만 제한)
+**plan Phase 구성** — Phase 1: 배송 도메인모델+마이그레이션(`V17`) / Phase 2: 관리자 주문 API+고객 응답 확장 / Phase 3: 관리자 화면(`/admin/orders`) / Phase 4: 고객 화면 확장(`mypage/orders/[orderId]`) / Phase 5: E2E 검증
+
+- [ ] Phase 1~5 구현 착수 전 — 다음 세션에서 `plan-runner` 또는 phase별 수동 진행으로 이어갈 것
 
 ### 3단계 — 배송조회
 
