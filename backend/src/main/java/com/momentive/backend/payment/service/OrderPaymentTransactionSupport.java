@@ -66,6 +66,22 @@ class OrderPaymentTransactionSupport {
     @Transactional
     Order cancelOrder(Long userId, Long orderId) {
         Order order = getOwnedOrder(userId, orderId);
+        return doCancelOrder(order);
+    }
+
+    /**
+     * 관리자 대신 취소. 고객 취소와 달리 주문 소유자 검증을 건너뛰고 {@code orderId}만으로 조회한다
+     * (관리자는 주문 소유자가 아니므로). 취소 가능 여부({@link Order#isCancellable()}) 기준과
+     * 재고·쿠폰 복원 로직은 고객 취소와 동일하게 {@link #doCancelOrder}를 공유한다.
+     */
+    @Transactional
+    Order cancelOrderAsAdmin(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+        return doCancelOrder(order);
+    }
+
+    private Order doCancelOrder(Order order) {
         if (!order.isCancellable()) {
             throw new CustomException(ErrorCode.ORDER_NOT_CANCELLABLE);
         }

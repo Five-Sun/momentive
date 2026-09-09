@@ -240,6 +240,24 @@ class PaymentServiceTest {
                 .isEqualTo(ErrorCode.ORDER_NOT_CANCELLABLE);
     }
 
+    /**
+     * 관리자 컨텍스트는 주문 소유자가 아니므로, {@code cancelOrder(userId, ...)}처럼 소유자 검증을
+     * 거치지 않고 orderId만으로 취소가 성공해야 한다(plan Phase 2: 관리자 대신 취소).
+     */
+    @Test
+    void cancelOrderAsAdmin_succeeds_without_owner_context_and_restores_stock() {
+        User owner = createUser("cancel-as-admin-owner@momentive.com");
+        Product product = createProduct("사료", 10000, 5);
+        OrderResponse pending = createPendingOrder(owner, product, 2);
+        paymentService.confirmOrder(owner.getId(), pending.orderId(),
+                new OrderConfirmRequest("payKey-admin-cancel", "toss-order-admin-cancel", pending.totalAmount()));
+
+        OrderStatusResponse response = paymentService.cancelOrderAsAdmin(pending.orderId());
+
+        assertThat(response.status()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(stockOf(product)).isEqualTo(5);
+    }
+
     @Test
     void expireOrder_transitions_pending_order_to_failed_and_restores_stock() {
         User user = createUser("expire@momentive.com");

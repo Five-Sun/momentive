@@ -33,7 +33,9 @@ public enum ErrorCode {
     DUPLICATE_VARIANT_SIZE(HttpStatus.BAD_REQUEST, "같은 사이즈 이름을 중복해서 등록할 수 없습니다."),
     VARIANT_IN_USE(HttpStatus.BAD_REQUEST, "이미 주문에 사용된 사이즈는 삭제할 수 없습니다. 재고를 0으로 두세요."),
     VARIANT_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 상품에 존재하지 않는 사이즈입니다."),
-    IMAGE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "이미지는 최대 5장까지 등록할 수 있습니다.");
+    IMAGE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "이미지는 최대 5장까지 등록할 수 있습니다."),
+    SHIPPING_INFO_REQUIRED(HttpStatus.BAD_REQUEST, "배송중/배송완료로 변경하려면 택배사와 송장번호를 입력해야 합니다."),
+    ORDER_SHIPPING_NOT_APPLICABLE(HttpStatus.BAD_REQUEST, "결제 완료된 주문만 배송상태를 관리할 수 있습니다.");
 
     private final HttpStatus status;
     private final String message;
