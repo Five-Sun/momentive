@@ -50,4 +50,13 @@ public class PaymentService {
         Order cancelled = transactionSupport.cancelOrder(userId, orderId);
         return OrderStatusResponse.from(cancelled);
     }
+
+    /**
+     * 관리자가 주문 소유자 대신 취소한다(예: 전화로 취소를 요청받은 경우). 소유자 검증은 건너뛰고
+     * 취소 가능 여부·재고/쿠폰 복원 로직은 고객 취소와 동일하게 적용한다.
+     */
+    public OrderStatusResponse cancelOrderAsAdmin(Long orderId) {
+        Order cancelled = transactionSupport.cancelOrderAsAdmin(orderId);
+        return OrderStatusResponse.from(cancelled);
+    }
 }

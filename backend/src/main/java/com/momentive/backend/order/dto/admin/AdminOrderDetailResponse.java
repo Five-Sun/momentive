@@ -1,15 +1,21 @@
-package com.momentive.backend.order.dto;
+package com.momentive.backend.order.dto.admin;
 
 import com.momentive.backend.address.dto.AddressResponse;
 import com.momentive.backend.order.domain.Order;
 import com.momentive.backend.order.domain.OrderStatus;
 import com.momentive.backend.order.domain.ShippingStatus;
+import com.momentive.backend.order.dto.OrderItemResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record OrderResponse(
+/**
+ * 관리자 주문 상세. 고객용 {@code OrderResponse}에 상당하는 정보에 주문자 이메일/닉네임을 더한다.
+ */
+public record AdminOrderDetailResponse(
         @Schema(description = "주문 ID") Long orderId,
+        @Schema(description = "주문자 이메일") String userEmail,
+        @Schema(description = "주문자 닉네임") String userNickname,
         @Schema(description = "주문 상태") OrderStatus status,
         @Schema(description = "상품 금액 합계(배송비 제외)") Integer itemsSubtotal,
         @Schema(description = "배송비") Integer shippingFee,
@@ -24,9 +30,11 @@ public record OrderResponse(
         @Schema(description = "주문 생성 일시") LocalDateTime createdAt
 ) {
 
-    public static OrderResponse from(Order order) {
-        return new OrderResponse(
+    public static AdminOrderDetailResponse from(Order order) {
+        return new AdminOrderDetailResponse(
                 order.getId(),
+                order.getUser().getEmail(),
+                order.getUser().getNickname(),
                 order.getStatus(),
                 order.getItemsSubtotal(),
                 order.getShippingFee(),

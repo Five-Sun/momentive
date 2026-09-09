@@ -2,6 +2,8 @@ package com.momentive.backend.order.domain;
 
 import com.momentive.backend.address.domain.Address;
 import com.momentive.backend.auth.domain.User;
+import com.momentive.backend.common.exception.CustomException;
+import com.momentive.backend.common.exception.ErrorCode;
 import com.momentive.backend.coupon.domain.UserCoupon;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -62,6 +64,16 @@ public class Order {
     private Address address;
 
     private String tossPaymentKey;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private ShippingStatus shippingStatus;
+
+    @Column(length = 50)
+    private String courier;
+
+    @Column(length = 100)
+    private String trackingNumber;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -134,6 +146,7 @@ public class Order {
     public void markAsPaid(String tossPaymentKey) {
         this.status = OrderStatus.PAID;
         this.tossPaymentKey = tossPaymentKey;
+        this.shippingStatus = ShippingStatus.PREPARING;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -144,6 +157,30 @@ public class Order {
 
     public void markAsCancelled() {
         this.status = OrderStatus.CANCELLED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 관리자가 배송상태·택배사·송장번호를 갱신한다. 결제 완료(PAID) 주문에만 허용되며,
+     * SHIPPING/DELIVERED로 전환하려면 택배사·송장번호가 모두 있어야 한다. PREPARING으로
+     * 되돌릴 때는 인자로 넘어온 courier/trackingNumber를 무시하고 기존 값을 그대로 유지한다
+     * (재입력 없이 다시 SHIPPING으로 돌아갈 수 있게). 상태 전이 순서 제약은 없다.
+     */
+    public void updateShipping(ShippingStatus newStatus, String courier, String trackingNumber) {
+        if (this.status != OrderStatus.PAID) {
+            throw new CustomException(ErrorCode.ORDER_SHIPPING_NOT_APPLICABLE);
+        }
+        if (newStatus == ShippingStatus.PREPARING) {
+            this.shippingStatus = ShippingStatus.PREPARING;
+            this.updatedAt = LocalDateTime.now();
+            return;
+        }
+        if (courier == null || courier.isBlank() || trackingNumber == null || trackingNumber.isBlank()) {
+            throw new CustomException(ErrorCode.SHIPPING_INFO_REQUIRED);
+        }
+        this.shippingStatus = newStatus;
+        this.courier = courier;
+        this.trackingNumber = trackingNumber;
         this.updatedAt = LocalDateTime.now();
     }
 }

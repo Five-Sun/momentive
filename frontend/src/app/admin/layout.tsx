@@ -20,9 +20,19 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="bg-canvas flex min-h-screen flex-col">
         <header className="border-hairline bg-surface-card border-b">
           <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-6">
-            <Link href="/admin" className="text-title text-ink">
-              모멘티브 관리자
-            </Link>
+            <div className="flex items-center gap-6">
+              <Link href="/admin" className="text-title text-ink">
+                모멘티브 관리자
+              </Link>
+              <nav className="flex items-center gap-4">
+                <Link href="/admin" className="text-body-sm text-body">
+                  상품 관리
+                </Link>
+                <Link href="/admin/orders" className="text-body-sm text-body">
+                  주문 관리
+                </Link>
+              </nav>
+            </div>
             <Link href="/" className="text-body-sm text-muted underline">
               고객 화면으로
             </Link>

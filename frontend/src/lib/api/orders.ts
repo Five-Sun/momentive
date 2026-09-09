@@ -3,6 +3,9 @@ import type { AddressRequest, AddressResponse } from "./addresses";
 
 export type OrderStatus = "PENDING" | "PAID" | "FAILED" | "CANCELLED";
 
+/** 결제 완료 이전이거나 취소·실패한 주문에는 배송상태 자체가 없다(`OrderResponse.shippingStatus`가 null). */
+export type ShippingStatus = "PREPARING" | "SHIPPING" | "DELIVERED";
+
 export interface OrderItemRequest {
   productId: number;
   /** 재고 단위(사이즈) ID. 사이즈가 없는 상품도 단일 variant의 ID를 보낸다 (서버 `@NotNull`) */
@@ -37,6 +40,9 @@ export interface OrderResponse {
   totalAmount: number;
   items: OrderItemResponse[];
   address: AddressResponse;
+  shippingStatus: ShippingStatus | null;
+  courier: string | null;
+  trackingNumber: string | null;
   createdAt: string;
 }
 

@@ -15,6 +15,7 @@ import {
   type MyReview,
 } from "@/lib/api/reviews";
 import { ApiError } from "@/lib/api/client";
+import { SHIPPING_STATUS_LABEL, SHIPPING_STATUS_TONE } from "@/lib/shippingStatus";
 
 function formatWon(amount: number) {
   return `${amount.toLocaleString("ko-KR")}원`;
@@ -176,6 +177,19 @@ export default function OrderDetailPage() {
             <span className="text-caption text-muted">{formatDateTime(order.createdAt)}</span>
             <Badge label={STATUS_LABEL[order.status]} tone={STATUS_TONE[order.status]} />
           </div>
+          {/* 취소는 shippingStatus를 초기화하지 않으므로(관리자가 마지막 배송 단계를 볼 수 있어야 함),
+              고객 화면에서는 status도 함께 확인해야 취소된 주문에 옛 배송상태가 남지 않는다. */}
+          {order.shippingStatus && order.status === "PAID" && (
+            <div className="flex items-center justify-between">
+              <span className="text-caption text-muted">
+                {order.trackingNumber ? `${order.courier} ${order.trackingNumber}` : ""}
+              </span>
+              <Badge
+                label={SHIPPING_STATUS_LABEL[order.shippingStatus]}
+                tone={SHIPPING_STATUS_TONE[order.shippingStatus]}
+              />
+            </div>
+          )}
         </section>
 
         <section className="flex flex-col gap-3">
