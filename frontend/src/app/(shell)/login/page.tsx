@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -19,10 +19,19 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+const subscribeToHydration = () => () => {};
+const getClientHydrationState = () => true;
+const getServerHydrationState = () => false;
+
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [formError, setFormError] = useState<string | null>(null);
+  const isHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationState,
+    getServerHydrationState,
+  );
 
   const {
     register,
@@ -55,7 +64,7 @@ export default function LoginPage() {
           <div className="bg-brand-pink-tint text-error text-body-sm mb-4 rounded-md px-4 py-3">{formError}</div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form method="post" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <TextField
             label="이메일"
             type="email"
@@ -70,7 +79,7 @@ export default function LoginPage() {
             {...register("password")}
           />
 
-          <Button type="submit" fullWidth disabled={isSubmitting}>
+          <Button type="submit" fullWidth disabled={!isHydrated || isSubmitting}>
             로그인
           </Button>
         </form>
