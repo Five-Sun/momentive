@@ -49,6 +49,7 @@ export interface OrderResponse {
 export interface OrderSummaryResponse {
   orderId: number;
   status: OrderStatus;
+  shippingStatus: ShippingStatus | null;
   totalAmount: number;
   createdAt: string;
   itemsSummary: string;

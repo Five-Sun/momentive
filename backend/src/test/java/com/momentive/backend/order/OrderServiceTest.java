@@ -12,11 +12,16 @@ import com.momentive.backend.common.exception.CustomException;
 import com.momentive.backend.common.exception.ErrorCode;
 import com.momentive.backend.coupon.repository.UserCouponRepository;
 import com.momentive.backend.order.domain.OrderStatus;
+import com.momentive.backend.order.domain.ShippingStatus;
 import com.momentive.backend.order.dto.OrderCreateRequest;
+import com.momentive.backend.order.dto.OrderConfirmRequest;
 import com.momentive.backend.order.dto.OrderItemRequest;
 import com.momentive.backend.order.dto.OrderResponse;
+import com.momentive.backend.order.dto.OrderSummaryResponse;
 import com.momentive.backend.order.repository.OrderRepository;
 import com.momentive.backend.order.service.OrderService;
+import com.momentive.backend.payment.FakePaymentGatewayClient;
+import com.momentive.backend.payment.service.PaymentService;
 import com.momentive.backend.product.domain.Category;
 import com.momentive.backend.product.domain.Product;
 import com.momentive.backend.product.domain.ProductVariant;
@@ -33,12 +38,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
 @SpringBootTest
+@Import(FakePaymentGatewayClient.Config.class)
 class OrderServiceTest {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private PaymentService paymentService;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -251,6 +261,29 @@ class OrderServiceTest {
                 .isInstanceOf(CustomException.class)
                 .extracting(ex -> ((CustomException) ex).getErrorCode())
                 .isEqualTo(ErrorCode.ORDER_NOT_FOUND);
+    }
+
+    @Test
+    void getOrders_includes_shipping_status_for_paid_orders_and_null_for_pending_orders() {
+        User user = createUser("order-list-shipping@momentive.com");
+        Product product = createProduct("사료", 10000, 5);
+        OrderResponse paid = orderService.createOrder(user.getId(), new OrderCreateRequest(
+                List.of(itemRequest(product, 1)), null, newAddressRequest(), null));
+        OrderResponse pending = orderService.createOrder(user.getId(), new OrderCreateRequest(
+                List.of(itemRequest(product, 1)), null, newAddressRequest(), null));
+        paymentService.confirmOrder(user.getId(), paid.orderId(), new OrderConfirmRequest(
+                "payKey-" + paid.orderId(), "toss-order-" + paid.orderId(), paid.totalAmount()));
+
+        List<OrderSummaryResponse> responses = orderService.getOrders(user.getId());
+
+        assertThat(responses).extracting(OrderSummaryResponse::orderId)
+                .containsExactlyInAnyOrder(pending.orderId(), paid.orderId());
+        assertThat(responses).filteredOn(response -> response.orderId().equals(paid.orderId()))
+                .extracting(OrderSummaryResponse::shippingStatus)
+                .containsExactly(ShippingStatus.PREPARING);
+        assertThat(responses).filteredOn(response -> response.orderId().equals(pending.orderId()))
+                .extracting(OrderSummaryResponse::shippingStatus)
+                .containsExactly((ShippingStatus) null);
     }
 
     @Test
