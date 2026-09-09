@@ -2,12 +2,14 @@ package com.momentive.backend.order.dto;
 
 import com.momentive.backend.order.domain.Order;
 import com.momentive.backend.order.domain.OrderStatus;
+import com.momentive.backend.order.domain.ShippingStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
 public record OrderSummaryResponse(
         @Schema(description = "주문 ID") Long orderId,
         @Schema(description = "주문 상태") OrderStatus status,
+        @Schema(description = "배송상태") ShippingStatus shippingStatus,
         @Schema(description = "총 결제 금액") Integer totalAmount,
         @Schema(description = "주문 생성 일시") LocalDateTime createdAt,
         @Schema(description = "주문 상품 요약 텍스트") String itemsSummary
@@ -17,6 +19,7 @@ public record OrderSummaryResponse(
         return new OrderSummaryResponse(
                 order.getId(),
                 order.getStatus(),
+                order.getShippingStatus(),
                 order.getTotalAmount(),
                 order.getCreatedAt(),
                 buildItemsSummary(order)
