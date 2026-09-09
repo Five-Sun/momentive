@@ -15,7 +15,7 @@
 | ~~1~~ | ~~장바구니 미비움 + 배송비 문구 정정~~ | ~~`fix/checkout-cart-and-shipping-notice`~~ | 완료 (PR #17) |
 | 2 | 관리자 기반 + 상품 관리 (A) | `feat/admin-product-management` | `2026-09-04-admin-product-management` |
 | 2-B | 주문 배송상태·송장 관리 (쿠폰 발급은 범위 제외) | `feat/order-shipping-management` | 완료 ([PR #19](https://github.com/Five-Sun/momentive/pull/19)) |
-| 3 | 배송조회 | `feat/delivery-tracking` | `/grillme` |
+| 3 | 배송조회 | `feat/delivery-tracking` | 완료 ([PR #21](https://github.com/Five-Sun/momentive/pull/21)) |
 | 4 | 화면 품질 정리 | `feat/*` | 규모 보고 판단 |
 | 5 | 잔여 항목 | — | — |
 
@@ -75,9 +75,16 @@
 - [ ] **`V17` 백필 미검증** — E2E 준비 중 로컬 DB를 `docker compose down -v`로 초기화해, 백필 대상이 될 "마이그레이션 이전 이미 PAID였던 주문"이 로컬에 없어졌다. 운영 배포 직후 한 번 더 확인 권장(`admin-product-management`의 `order_item.size` 항목과 동일한 성격)
 - [ ] 관리자 목록 페이지네이션 미확인 — 로컬 주문이 1건뿐이라 여러 페이지 상태를 재현하지 못함(컨트롤은 기존 상품 목록과 동일 패턴이라 리스크는 낮음)
 
-### 3단계 — 배송조회
+### 3단계 — 배송조회 (완료, [PR #21](https://github.com/Five-Sun/momentive/pull/21))
 
-- [ ] 마이페이지 메뉴 5개 중 유일하게 남은 무동작 항목(`mypage/page.tsx:16`). 2단계에서 배송상태·송장이 생긴 뒤 착수한다. 송장을 넣을 관리자 수단 없이 먼저 만들면 주문마다 DB를 직접 건드려야 해서 반쪽이 된다
+`docs/specs/2026-09-09-delivery-tracking.md`(status: confirmed, AC 8/8), `docs/plans/2026-09-09-delivery-tracking.md`(status: done). 브랜치 `feat/delivery-tracking`.
+
+**주요 결정** — 별도 화면 신설 없이 기존 `/mypage/orders`에 "배송조회" 메뉴와 "주문내역" 버튼 진입점을 통합 / 택배사 실시간 조회 연동 없음(수동 입력 텍스트 그대로) / 목록에 표시하는 주문 범위는 배송완료·취소 포함 전체(필터링 없음) / 정렬 변경 없음(생성일 최신순 유지)
+
+- [x] Phase 1: `GET /orders`(`OrderSummaryResponse`)에 `shippingStatus` 추가, `Order` 값 그대로 pass-through
+- [x] Phase 2: 목록 카드에 배송상태 뱃지 추가(`PAID` + `shippingStatus` 있을 때만 노출, 주문상세와 동일 컴포넌트/조건 재사용), "배송조회" 메뉴를 `/mypage/orders`로 연결
+- [x] Phase 3: 실 스택 기동 후 PENDING/PAID+PREPARING/PAID+SHIPPING/PAID+DELIVERED/CANCELLED/FAILED 6가지 상태 조합 재현 검증. 취소 주문(DB에 옛 `shippingStatus` 남아있는 케이스)에서 뱃지가 정확히 숨겨지는 핵심 엣지케이스 확인
+- [x] `./gradlew build/test`, `npm run build/lint` 통과
 
 ### 4단계 — 화면 품질 정리
 
