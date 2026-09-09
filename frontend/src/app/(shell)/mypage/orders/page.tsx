@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/core/Badge";
 import { Toast } from "@/components/feedback/Toast";
 import { getOrders, type OrderStatus, type OrderSummaryResponse } from "@/lib/api/orders";
+import { SHIPPING_STATUS_LABEL, SHIPPING_STATUS_TONE } from "@/lib/shippingStatus";
 
 function formatWon(amount: number) {
   return `${amount.toLocaleString("ko-KR")}원`;
@@ -87,6 +88,14 @@ export default function MyOrdersPage() {
                   <span className="text-caption text-muted">{formatDateTime(order.createdAt)}</span>
                   <Badge label={STATUS_LABEL[order.status]} tone={STATUS_TONE[order.status]} />
                 </div>
+                {order.shippingStatus && order.status === "PAID" && (
+                  <div className="flex justify-end">
+                    <Badge
+                      label={SHIPPING_STATUS_LABEL[order.shippingStatus]}
+                      tone={SHIPPING_STATUS_TONE[order.shippingStatus]}
+                    />
+                  </div>
+                )}
                 <span className="text-body-sm text-ink">{order.itemsSummary}</span>
                 <span className="text-price text-ink">{formatWon(order.totalAmount)}</span>
               </button>

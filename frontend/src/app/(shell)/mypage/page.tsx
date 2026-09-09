@@ -16,7 +16,7 @@ export default function MyPage() {
   // { icon: Coins, label: "적립금", onClick: () => router.push("/mypage/points") }를
   // 쿠폰함 다음 자리에 복원한다 (lucide-react의 Coins 아이콘 import도 함께).
   const MENU_ITEMS = [
-    { icon: Truck, label: "배송조회", onClick: () => {} },
+    { icon: Truck, label: "배송조회", onClick: () => router.push("/mypage/orders") },
     { icon: Ticket, label: "쿠폰함", onClick: () => router.push("/mypage/coupons") },
     { icon: PawPrint, label: "반려견 프로필 관리", onClick: () => router.push("/mypage/pets") },
     { icon: Headset, label: "고객센터", onClick: () => router.push("/mypage/support") },
