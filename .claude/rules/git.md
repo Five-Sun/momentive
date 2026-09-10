@@ -64,3 +64,7 @@ docs: spec-format 규칙 추가
 - 병합 방식은 **Squash merge** — `develop` 로그는 브랜치당 커밋 1개로 정리됨
 - PR 병합 후 작업 브랜치는 삭제한다
 - `develop → main` 반영은 배포 시점에 별도로 진행 (릴리즈 PR 또는 직접 병합) — `main`에 대한 직접 `git push`는 금지
+
+## PR 단위
+
+한 기능(spec 1개)의 spec/plan 문서, 구현 코드, `Todo.md` 반영은 **하나의 PR로 묶는다.** 문서만 별도 PR, 구현만 별도 PR, `Todo.md` 체크 반영만 별도 PR처럼 쪼개지 않는다 — PR이 과도하게 잘게 쪼개져 추적 비용만 커진다. 같은 feature-slug로 묶이는 변경은 같은 브랜치·같은 PR에서 함께 커밋한다.
