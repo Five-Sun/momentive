@@ -15,9 +15,14 @@ public class AuthCookieProvider {
     public static final String REFRESH_TOKEN_COOKIE = "refresh_token";
 
     private final boolean secure;
+    private final String sameSite;
 
-    public AuthCookieProvider(@Value("${momentive.cookie.secure}") boolean secure) {
+    public AuthCookieProvider(
+            @Value("${momentive.cookie.secure}") boolean secure,
+            @Value("${momentive.cookie.same-site}") String sameSite
+    ) {
         this.secure = secure;
+        this.sameSite = sameSite;
     }
 
     public void setAccessTokenCookie(HttpServletResponse response, String token, long maxAgeSeconds) {
@@ -45,7 +50,7 @@ public class AuthCookieProvider {
         ResponseCookie cookie = ResponseCookie.from(name, value)
                 .httpOnly(true)
                 .secure(secure)
-                .sameSite("Lax")
+                .sameSite(sameSite)
                 .path("/")
                 .maxAge(maxAgeSeconds)
                 .build();
