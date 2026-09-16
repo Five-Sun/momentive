@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthProvider";
 
@@ -16,18 +16,40 @@ import { useAuth } from "@/lib/auth/AuthProvider";
  */
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
+  const { loadCurrentUser } = useAuth();
+  const [status, setStatus] = useState<"checking" | "authorized" | "unauthorized">("checking");
 
   useEffect(() => {
-    if (!isAdmin) router.replace("/");
-  }, [isAdmin, router]);
+    let cancelled = false;
 
-  if (!isAdmin) {
+    loadCurrentUser()
+      .then((user) => {
+        if (cancelled) return;
+        if (user.role === "ADMIN") {
+          setStatus("authorized");
+          return;
+        }
+        setStatus("unauthorized");
+        router.replace("/");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setStatus("unauthorized");
+        router.replace("/");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadCurrentUser, router]);
+
+  if (status === "checking") {
     return (
-      <p className="text-body text-muted py-20 text-center">관리자만 접근할 수 있는 화면이에요</p>
+      <p className="text-body text-muted py-20 text-center">관리자 권한을 확인하는 중이에요</p>
     );
   }
+
+  if (status === "unauthorized") return null;
 
   return <>{children}</>;
 }
