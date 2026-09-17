@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AuthProvider } from "@/lib/auth/AuthProvider";
-import { fetchServerUser } from "@/lib/auth/serverUser";
 import { AdminGuard } from "./AdminGuard";
 
 /**
@@ -12,11 +11,9 @@ import { AdminGuard } from "./AdminGuard";
  *
  * 접근 보호는 `AdminGuard` 하나로 여기서만 수행하고 하위 페이지에는 복붙하지 않는다.
  */
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const initialUser = await fetchServerUser();
-
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider initialUser={initialUser}>
+    <AuthProvider initialUser={null}>
       <div className="bg-canvas flex min-h-screen flex-col">
         <header className="border-hairline bg-surface-card border-b">
           <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-6">

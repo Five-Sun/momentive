@@ -8,6 +8,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   login: (request: LoginRequest) => Promise<AuthUser>;
   signup: (request: SignupRequest) => Promise<AuthUser>;
+  loadCurrentUser: () => Promise<AuthUser>;
   logout: () => Promise<void>;
 }
 
@@ -37,12 +38,18 @@ export function AuthProvider({ initialUser, children }: AuthProviderProps) {
     return createdUser;
   }, []);
 
+  const loadCurrentUser = useCallback(async () => {
+    const currentUser = await authApi.me();
+    setUser(currentUser);
+    return currentUser;
+  }, []);
+
   const logout = useCallback(async () => {
     await authApi.logout();
     setUser(null);
   }, []);
 
-  return <AuthContext.Provider value={{ user, login, signup, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, login, signup, loadCurrentUser, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {
