@@ -8,13 +8,15 @@
 - `backend/CLAUDE.md`, `frontend/CLAUDE.md` — 도메인별 컨벤션
 
 ## 작업 흐름
-1. `/grillme`로 첫 스펙 작성 (`.claude/skills/grilling/SKILL.md`) → `docs/specs/`
-2. 스펙 확정 후 `.claude/agents/planner.md`(`write-plan` skill)로 phase/step 플랜 작성 → `docs/plans/`
-3. 구현 → `.claude/agents/backend-reviewer.md`/`frontend-reviewer.md`(`review-phase` skill)로 phase 검증
-4. 마지막 코드 phase 통과 시 `.claude/agents/e2e-tester.md`(`verify-e2e` skill)로 브라우저 E2E 검증
-5. 여러 phase를 한 번에 자동 순회하려면 `.claude/agents/plan-runner.md` 사용 (Claude Code 단독 세션 전용)
 
-Buzz에서는 위 역할이 Lead(Architect)/Builder(Backend, Frontend)/Reviewer 세 agent로 나뉘어 채널 메시지로 handoff한다.
+역할별 모델 라우팅과 사용량 보호 규칙은 프로젝트 루트 [`.hermes.md`](.hermes.md)를 따른다. 기존 spec-driven 문서와 규칙은 그대로 유지한다.
+
+1. 새 기능·계약 변경은 Architect가 `grilling` 절차로 요구사항을 정리하고, 사용자 승인 후 같은 역할이 phase/step plan을 작성한다.
+2. Builder는 확정된 plan의 **한 phase만** 구현하고 관련 단위 테스트를 작성·수정한다.
+3. Hermes QA가 build/test/lint/API smoke를 실제 실행한다. backend 또는 frontend 위험 phase는 Reviewer가 해당 도메인 checklist로 독립 검토한다.
+4. 마지막 코드 phase 후에는 QA가 `verify-e2e` 절차로 브라우저 E2E를 수행한다. 이후 재실행은 통과한 스크립트를 우선 사용한다.
+
+Buzz는 선택적인 외부 협업 채널이며, Momentive의 기본 개발 workflow나 역할별 모델 라우팅에 필요하지 않다.
 
 ## 디렉토리
 - `docs/specs/` — 기능 스펙
@@ -23,6 +25,4 @@ Buzz에서는 위 역할이 Lead(Architect)/Builder(Backend, Frontend)/Reviewer 
 - `docs/e2e/` — E2E 케이스
 - `.claude/rules/` — spec/plan/backlog/e2e 작성 규격 + git 규칙 (필수 준수)
 - `.claude/skills/` — grilling, write-plan, review-phase, verify-e2e 절차
-- `.claude/agents/` — planner, backend-reviewer, frontend-reviewer, e2e-tester, plan-runner
-- `.claude/commands/grillme.md` — 스펙 인터뷰 커맨드
 - `backend/`, `frontend/` — 각 도메인 컨벤션은 하위 `CLAUDE.md`
